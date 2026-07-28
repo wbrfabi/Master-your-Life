@@ -13630,7 +13630,12 @@ try {
       if (!reflections) return;
       saveReflections(__spreadProps(__spreadValues({}, reflections), { anfangs: __spreadProps(__spreadValues({}, reflections.anfangs), { completed: true }) }));
       setShowAnfangsReflexion(false);
-      setTourStep(0);
+      if (!appState.tourSeen) {
+        saveAppState(__spreadProps(__spreadValues({}, appState), { tourSeen: true }));
+        setTourPaused(false);
+        setActiveTab(TOUR_STEPS[0].tab);
+        setTourStep(0);
+      }
     }
     function completeAbschlussReflexion() {
       if (!reflections) return;
@@ -13827,6 +13832,16 @@ try {
       "Abgehakt. Der n\xE4chste Abschnitt kann kommen."
     ];
     const pickCheer = (list) => list[Math.floor(Math.random() * list.length)];
+    (0, import_react.useEffect)(() => {
+      if (!ready || !reflections) return;
+      if (!appState.onboardingDone || appState.tourSeen) return;
+      const anfangsOffen = !reflections.anfangs.completed && !appState.anfangsPromptDismissed;
+      if (anfangsOffen) return;
+      saveAppState(__spreadProps(__spreadValues({}, appState), { tourSeen: true }));
+      setTourPaused(false);
+      setActiveTab(TOUR_STEPS[0].tab);
+      setTourStep(0);
+    }, [ready, reflections, appState.onboardingDone, appState.tourSeen, appState.anfangsPromptDismissed]);
     (0, import_react.useEffect)(() => {
       if (!ready) return;
       const d = appState.testDateOverride ? new Date(appState.testDateOverride) : /* @__PURE__ */ new Date();
@@ -14394,7 +14409,13 @@ try {
       };
     }
     function completeOnboarding() {
-      saveAppState(__spreadProps(__spreadValues({}, appState), { onboardingDone: true }));
+      const first = !appState.tourSeen;
+      saveAppState(__spreadProps(__spreadValues({}, appState), { onboardingDone: true, tourSeen: true }));
+      if (first) {
+        setTourPaused(false);
+        setActiveTab(TOUR_STEPS[0].tab);
+        setTourStep(0);
+      }
     }
     function resetAllData() {
       return __async(this, null, function* () {
