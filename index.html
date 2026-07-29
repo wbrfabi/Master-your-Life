@@ -12851,7 +12851,7 @@ try {
   function ymKey(year, monthIdx0) {
     return `${year}-${pad(monthIdx0 + 1)}`;
   }
-  var APP_BUILD = "Aufbau 34 \u2014 29.07.2026";
+  var APP_BUILD = "Aufbau 80 \u2014 29.07.2026";
   var ALARM_CATCHUP_MINUTES = 5;
   function hhmm(d = /* @__PURE__ */ new Date()) {
     return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
@@ -12951,9 +12951,11 @@ try {
     lastDismissedDate: "",
     mandatorySentences: DEFAULT_SENTENCES,
     theme: "light",
+    bgChoice: "creme",
     plainMode: false,
-    fontChoice: "elegant",
-    accentChoice: "amber",
+    fontChoice: "modern",
+    accentChoice: "blau",
+    sectionIcons: { month: "\u{1F3C6}", today: "\u{1F4CB}", todos: "\u2705", business: "\u{1F4BC}", notes: "\u{1F4D4}" },
     soundsEnabled: true,
     userName: "",
     lastMissedBannerDate: "",
@@ -12965,6 +12967,9 @@ try {
     // 'text' | 'notext' | 'none'
     alarmPromptSeen: false,
     showQuartalGoal: false,
+    showBusiness: false,
+    multiGoals: false,
+    startSection: "none",
     onboardingDone: false,
     sectionOrder: ["monthGoal", "anfangsVision", "calendar", "todos", "planning", "abschluss"],
     habitTemplate: [
@@ -12988,7 +12993,7 @@ try {
     {
       icon: "\u{1F3C6}",
       title: "Willkommen",
-      body: "Sch\xF6n, dass du da bist. Wecker, Kalender, To-Dos, Habits und Notizen findest du hier in einer einzigen App \u2014 du musst also nicht mehr zwischen f\xFCnf verschiedenen hin und her springen. Auf den n\xE4chsten Karten zeige ich dir kurz, wie das Ganze gedacht ist."
+      body: "Der Kalender, der dein Jahresziel \xFCber dem heutigen Tag stehen hat. Genau das fehlt \xFCberall sonst: Kalender wissen nichts von deinen Zielen, Ziel-Apps nichts von deinen Terminen. Hier steht beides auf einem Bildschirm \u2014 Jahr, Quartal, Monat, Woche und darunter der Tag, an dem du sie einl\xF6st."
     },
     {
       icon: "\u270D\uFE0F",
@@ -13009,11 +13014,6 @@ try {
       icon: "\u{1F4C8}",
       title: "Habits & KPIs",
       body: "KPIs sind messbare Gewohnheiten, an denen du deinen Fortschritt ablesen kannst. Zwei sind ein guter Anfang, damit es machbar bleibt. Die App z\xE4hlt die Tage mit, bis daraus eine echte Gewohnheit geworden ist \u2014 laut Forschung dauert das im Schnitt 66 Tage."
-    },
-    {
-      icon: "\u23F0",
-      title: "Der Wecker",
-      body: "Deine Weckzeit kannst du im Zahnrad-Men\xFC einstellen. Ausgeschaltet wird der Wecker, indem du einen selbst gew\xE4hlten Text abschreibst. Genau darin liegt der Sinn: Dort hinein kannst du deine Ziele, Affirmationen oder einen Satz schreiben, der dich morgens in die richtige Richtung schiebt. So bist du wach, bevor der Tag beginnt \u2014 und hast das Wichtigste schon einmal gelesen."
     }
 
   ];
@@ -13151,16 +13151,13 @@ try {
       { tab: "daily", icon: "\u{1F4C6}", title: "Dein Wochenziel", body: "In der Zeitleiste steht dein Wochenziel \u2014 eine Sache f\u00fcr diese Woche. Es muss nichts Gro\u00dfes sein, \u201eWohnung streichen\u201c z\u00e4hlt genauso wie ein Trainingsziel.", action: "Wochenziel eintragen", target: "wochenziel", view: "timeline", back: "Zur\u00fcck zum Wochenziel", check: "weekGoal" },
       { tab: "daily", icon: "\u2705", title: "Deine erste Habit", body: "\u00dcber \u201e+ Habit\u201c kannst du eine neue Gewohnheit anlegen \u2014 mit Namen, einem Warum und einem Ziel. Das Warum tr\u00e4gt dich an den Tagen, an denen du keine Lust hast.", action: "Habit anlegen", target: "habits", view: "timeline", back: "Zur\u00fcck zu den Habits", check: "habit" },
       { tab: "daily", icon: "\u{1F551}", title: "Dein erster Termin", body: "Ein Tipp auf eine Uhrzeit in der Zeitleiste gen\u00fcgt, dann f\u00fchrt dich die App durch Start, Name, Ende und Wiederholung. Du kannst auch nur hineinschauen und wieder abbrechen \u2014 das reicht f\u00fcr diesen Schritt.", action: "Termin eintragen", target: "termine", view: "timeline", back: "Zur\u00fcck zur Zeitleiste", check: "appt" },
-      { tab: "daily", icon: "\u23F0", title: "Der Wecker", body: "Ich \u00f6ffne dir das Wecker-Fenster. Dort kannst du Zeit, Sound und Modus festlegen. Der Text, den du zum Ausschalten abschreibst, kann alles sein \u2014 deine Ziele, Affirmationen oder ein Leitsatz. Wenn du gar keinen Wecker willst, w\u00e4hle \u201eKein Wecker\u201c und best\u00e4tige \u2014 das z\u00e4hlt genauso.", action: "Wecker stellen", openSettings: true, check: "alarm" },
       { tab: "todos", intro: true, icon: "\u2705", title: "N\u00e4chste Seite: To-Dos", body: "Hier landet alles, was erledigt werden muss \u2014 auf Wunsch in mehreren Listen." },
       { tab: "todos", icon: "\u270F\uFE0F", title: "Dein erstes To-Do", body: "Ein To-Do ist einfach eine Aufgabe: Du schreibst hin, was zu tun ist. Wie wichtig sie ist, wie lange sie dauert und bis wann sie fertig sein soll, kannst du dazuschreiben \u2014 musst du aber nicht. Mit \u201eEinplanen\u201c wandert die Aufgabe als Termin in deinen Kalender.", action: "To-Do anlegen", check: "todo" },
-      { tab: "business", intro: true, icon: "\u{1F4BC}", title: "N\u00e4chste Seite: Business", body: "Umsatz, Kosten und was am Ende \u00fcbrig bleibt. Das ist vor allem f\u00fcr Selbstst\u00e4ndige gedacht \u2014 wenn dich das nicht betrifft, kannst du diesen Teil einfach \u00fcberspringen.", skipLabel: "Business \u00fcberspringen" },
-      { tab: "business", icon: "\u{1F4B0}", title: "Dein Umsatzziel", body: "Sobald hier ein Umsatzziel steht und du Verk\u00e4ufe eintr\u00e4gst, zeigt dir die App, wie viele Abschl\u00fcsse noch fehlen \u2014 und was du f\u00fcr Steuern zur\u00fccklegen solltest.", action: "Umsatzziel eintragen", target: "umsatzziel", back: "Zur\u00fcck zum Umsatzziel" },
       { tab: "notizen", intro: true, icon: "\u{1F4DD}", title: "Letzte Seite: Notizen", body: "Platz f\u00fcr Gedanken, Ideen und alles zum Nachlesen. Oben siehst du das Cover deines Buches, darunter die Seite zum Schreiben." },
       { tab: "notizen", icon: "\u{1F4D3}", title: "Deine erste Notiz", body: "Schreibe etwas auf die Seite \u2014 ganz gleich, was. \u00dcber die Suche oben findest du sp\u00e4ter jedes Wort wieder.", action: "Notiz schreiben", target: "notizen", back: "Zur\u00fcck zum Notizbuch", check: "note" },
       { tab: "notizen", icon: "\u{1F449}", title: "Seiten bl\u00e4ttern", body: "Wische unten auf der beschriebenen Seite nach links \u2014 so bl\u00e4tterst du zur n\u00e4chsten Seite, wie in einem echten Buch. Nach rechts geht es zur\u00fcck. Bist du auf der letzten Seite, bringt dich derselbe Wisch ins n\u00e4chste Buch. F\u00fcr diesen Schritt z\u00e4hlt nur das Wischen, nicht die Pfeile.", action: "Bl\u00e4ttern ausprobieren", target: "notizen", back: "Zur\u00fcck zum Notizbuch", check: "flip" },
       { tab: "notizen", icon: "\u{1F4DA}", title: "Buch wechseln", body: "Ganz oben steht das Cover. Wische dar\u00fcber nach links oder rechts, um zum n\u00e4chsten Buch zu kommen \u2014 oder tippe es an und w\u00e4hle aus. \u00dcber \u201e+ Neues Buch\u201c legst du eines an, etwa ein Tagebuch.", action: "Buch wechseln", back: "Zur\u00fcck zum Cover", check: "book" },
-      { tab: "daily", icon: "\u{1F3A8}", title: "Das Aussehen geh\u00f6rt dir", body: "Falls dir das Design nicht zusagt: Im Zahnrad-Men\u00fc lassen sich Hintergrund, Farbton und Schriftart \u00e4ndern, und es gibt eine schlichte Variante ganz ohne Schn\u00f6rkel. Du kannst das jederzeit umstellen, so oft du magst." },
+      { tab: "daily", icon: "\u{1F3A8}", title: "Hell oder dunkel?", body: "Jetzt, wo du die App kennst: Ich \u00f6ffne dir die Einstellungen. Ganz oben w\u00e4hlst du zwischen Hell und Schwarz, darunter aus neun Hintergr\u00fcnden, f\u00fcnf Farbt\u00f6nen und vier Schriftarten. Nimm dir kurz Zeit \u2014 \u00e4ndern kannst du es sp\u00e4ter jederzeit wieder.", action: "Design w\u00e4hlen", openDesign: true },
       { tab: "daily", icon: "\u{1F680}", title: "Fertig", body: "Die App ist eingerichtet. Alles Weitere ergibt sich im Alltag: Der Wecker meldet sich morgens, die Habits warten in der Zeitleiste, und deine Ziele stehen immer ganz oben." }
     ];
     (0, import_react.useEffect)(() => {
@@ -13200,13 +13197,13 @@ try {
       };
     }, [tourPaused, tourStep]);
     const [todos, setTodos] = (0, import_react.useState)([]);
-    const [todoLists, setTodoLists] = (0, import_react.useState)([{ id: "default", name: "To-Dos", schedulable: true }]);
+    const [todoLists, setTodoLists] = (0, import_react.useState)([{ id: "default", name: "To-Dos", schedulable: false }, { id: "planbar", name: "Terminierbar", schedulable: true }]);
     const [activeTodoList, setActiveTodoList] = (0, import_react.useState)("default");
     const [addingTodoList, setAddingTodoList] = (0, import_react.useState)(false);
     const [showAddTodo, setShowAddTodo] = (0, import_react.useState)(false);
     const [notesPages, setNotesPages] = (0, import_react.useState)([{ id: "n1", title: "Seite 1", content: "" }]);
     const [notesPageIndex, setNotesPageIndex] = (0, import_react.useState)(0);
-    const [notebooks, setNotebooks] = (0, import_react.useState)([{ id: "default", name: "Notizbuch" }]);
+    const [notebooks, setNotebooks] = (0, import_react.useState)([{ id: "default", name: "Notizbuch", icon: "\u{1F4D4}" }, { id: "tagebuch", name: "Tagebuch", icon: "\u{1F4D3}" }]);
     const [activeNotebookId, setActiveNotebookId] = (0, import_react.useState)("default");
     const [addingNotebook, setAddingNotebook] = (0, import_react.useState)(false);
     const [newNotebookName, setNewNotebookName] = (0, import_react.useState)("");
@@ -13233,10 +13230,14 @@ try {
     const [showAddSale, setShowAddSale] = (0, import_react.useState)(false);
     const [showAddExpense, setShowAddExpense] = (0, import_react.useState)(false);
     const [activeTab, setActiveTab] = (0, import_react.useState)("daily");
+    (0, import_react.useEffect)(() => {
+      if (!appState.showBusiness && activeTab === "business") setActiveTab("daily");
+    }, [appState.showBusiness, activeTab]);
     const [newTodoText, setNewTodoText] = (0, import_react.useState)("");
     const [newTodoDuration, setNewTodoDuration] = (0, import_react.useState)("");
     const [newTodoPriority, setNewTodoPriority] = (0, import_react.useState)("");
     const [todoExtras, setTodoExtras] = (0, import_react.useState)(false);
+    const [movingTodo, setMovingTodo] = (0, import_react.useState)(null);
     const [newTodoCategory, setNewTodoCategory] = (0, import_react.useState)("");
     const [newTodoEnergy, setNewTodoEnergy] = (0, import_react.useState)("mittel");
     const [newTodoLocation, setNewTodoLocation] = (0, import_react.useState)("");
@@ -13582,6 +13583,26 @@ try {
         setStorageWarning(true);
       }
     }), [activeNotebookId]);
+    function stampNotePage(index) {
+      const page = notesPages[index];
+      if (!page) return;
+      const key = appState.testDateOverride || todayStr();
+      if (page.stampDate === key) return;
+      const stamp = formatLongDate(key);
+      const base = (page.content || "").replace(/\s+$/, "");
+      if (base.endsWith(stamp) || base.indexOf(stamp) !== -1) {
+        const same = notesPages.map((p, i) => i === index ? __spreadProps(__spreadValues({}, p), { stampDate: key }) : p);
+        saveNotesPages(same);
+        return;
+      }
+      const content = base ? `${base}
+
+${stamp}
+` : `${stamp}
+`;
+      const next = notesPages.map((p, i) => i === index ? __spreadProps(__spreadValues({}, p), { content, stampDate: key }) : p);
+      saveNotesPages(next);
+    }
     function updateNotePage(index, content) {
       const next = notesPages.map((p, i) => i === index ? __spreadProps(__spreadValues({}, p), { content }) : p);
       saveNotesPages(next);
@@ -13602,7 +13623,13 @@ try {
       (() => __async(null, null, function* () {
         try {
           const res = yield window.storage.get("todo-lists", false);
-          if (res && res.value) setTodoLists(JSON.parse(res.value));
+          if (res && res.value) setTodoLists((() => {
+              const saved = JSON.parse(res.value) || [];
+              const out = saved.map((l) => l.id === "default" ? __spreadProps(__spreadValues({}, l), { name: "To-Dos", schedulable: false }) : l.id === "planbar" ? __spreadProps(__spreadValues({}, l), { name: "Terminierbar", schedulable: true }) : l);
+              if (!out.some((l) => l.id === "default")) out.unshift({ id: "default", name: "To-Dos", schedulable: false });
+              if (!out.some((l) => l.id === "planbar")) out.push({ id: "planbar", name: "Terminierbar", schedulable: true });
+              return out;
+            })());
         } catch (e) {
         }
       }))();
@@ -13653,7 +13680,12 @@ try {
       setNewTodoDeadline("");
     }
     function toggleTodoDone(id) {
+      const wasDone = !!(todos.find((t) => t.id === id) || {}).done;
       saveTodos(todos.map((t) => t.id === id ? __spreadProps(__spreadValues({}, t), { done: !t.done }) : t));
+      if (!wasDone) {
+        playCheckSound();
+        buzz(22);
+      }
     }
     function removeTodo(id) {
       saveTodos(todos.filter((t) => t.id !== id));
@@ -13808,6 +13840,7 @@ try {
       if (yearGoalData) saveYearGoal(__spreadProps(__spreadValues({}, yearGoalData), { goal: val }));
     }
     function toggleYearGoalDone() {
+      keepInPlace('[data-tour="jahresziel"]');
       if (yearGoalData) {
         const n = !yearGoalData.done;
         saveYearGoal(__spreadProps(__spreadValues({}, yearGoalData), { done: n }));
@@ -13889,6 +13922,32 @@ try {
       "Das war die halbe Miete f\xFCrs Jahr. Gl\xFCckwunsch!",
       "Abgehakt. Der n\xE4chste Abschnitt kann kommen."
     ];
+    const goalExtras = (data) => data && data.extras || [];
+    const saveExtras = (data, saveFn, extras) => saveFn(__spreadProps(__spreadValues({}, data || {}), { extras }));
+    const renderExtraGoals = (data, saveFn, placeholder, cheers) => {
+      if (!appState.multiGoals) return null;
+      const list = goalExtras(data);
+      const rows = list.map((g, i) => /* @__PURE__ */ import_react.default.createElement("div", { key: `xg${i}`, className: "mini-goal-row extra-goal-row" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "mini-check" + (g.done ? " checked" : ""), onClick: () => {
+        const next = list.map((x, j) => j === i ? __spreadProps(__spreadValues({}, x), { done: !x.done }) : x);
+        saveExtras(data, saveFn, next);
+        if (!g.done) {
+          playCelebrationSound();
+          celebrate("\u{1F389}", "Ziel erreicht!", pickCheer(cheers || MONTH_CHEERS));
+        }
+      }, "aria-label": "Ziel erledigt umschalten" }, g.done ? "\u2713" : ""), /* @__PURE__ */ import_react.default.createElement("input", {
+        className: "mini-input" + (g.done ? " done" : ""),
+        value: g.text || "",
+        onChange: (e) => saveExtras(data, saveFn, list.map((x, j) => j === i ? __spreadProps(__spreadValues({}, x), { text: e.target.value }) : x)),
+        placeholder
+      }), /* @__PURE__ */ import_react.default.createElement("button", { className: "hierarchy-hide", onClick: () => saveExtras(data, saveFn, list.filter((_, j) => j !== i)), "aria-label": "Ziel l\xF6schen" }, "\xD7")));
+      rows.push(/* @__PURE__ */ import_react.default.createElement("button", { key: "xg-add", className: "hierarchy-add", onClick: () => saveExtras(data, saveFn, [...list, { text: "", done: false }]) }, "+ Ziel"));
+      return rows;
+    };
+    const secIcon = (key) => {
+      const icons = appState.sectionIcons || {};
+      const v = icons[key];
+      return v ? v + " " : "";
+    };
     const pickCheer = (list) => list[Math.floor(Math.random() * list.length)];
     (0, import_react.useEffect)(() => {
       if (!ready || !reflections) return;
@@ -13919,14 +13978,17 @@ try {
             setShowSettings(false);
             setShowAlarmSettings(false);
           }
-          if (!t.closest(".timeline-add-form") && !t.closest(".timeline-lane")) {
+          if (!t.closest(".timeline-add-form")) {
             closeApptForm();
           }
         } catch (err) {
         }
       };
-      document.addEventListener("click", onOutside);
-      return () => document.removeEventListener("click", onOutside);
+      const armed = setTimeout(() => document.addEventListener("click", onOutside), 80);
+      return () => {
+        clearTimeout(armed);
+        document.removeEventListener("click", onOutside);
+      };
     }, [showSettings, showAlarmSettings, tappedHour]);
     (0, import_react.useEffect)(() => {
       if (phase !== "locked" || appState.blockExit === false) return;
@@ -13940,6 +14002,7 @@ try {
     }, [phase, appState.blockExit]);
     const [apptStep, setApptStep] = (0, import_react.useState)(1);
     const [tappedMinute, setTappedMinute] = (0, import_react.useState)(0);
+    const [apptAllDay, setApptAllDay] = (0, import_react.useState)(false);
     const [movingAppt, setMovingAppt] = (0, import_react.useState)(null);
     const apptDragRef = (0, import_react.useRef)(null);
     const justDraggedRef = (0, import_react.useRef)(0);
@@ -13948,6 +14011,7 @@ try {
       setTimelineApptTitle("");
       setTimelineApptEndTime("");
       setTimelineApptRecurrence("none");
+      setApptAllDay(false);
       setApptStep(1);
     }, []);
     const saveTimelineAppt = (0, import_react.useCallback)((hour, minute, recurrence) => {
@@ -13960,10 +14024,10 @@ try {
         const diff = eh * 60 + em - (sh * 60 + sm);
         if (diff > 0) durationMin = String(diff);
       }
-      addAppointment(selectedDay, startTime, timelineApptTitle, recurrence, { context: activeTab, duration: durationMin });
+      addAppointment(selectedDay, startTime, timelineApptTitle, recurrence, { context: activeTab, duration: apptAllDay ? "" : durationMin, allDay: apptAllDay });
       playApptDoneSound();
       closeApptForm();
-    }, [timelineApptTitle, timelineApptEndTime, selectedDay, activeTab, closeApptForm]);
+    }, [timelineApptTitle, timelineApptEndTime, selectedDay, activeTab, apptAllDay, closeApptForm]);
     const [savedFlash, setSavedFlash] = (0, import_react.useState)(null);
     const savedFlashRef = (0, import_react.useRef)(null);
     const flashSaved = (0, import_react.useCallback)((id) => {
@@ -14031,6 +14095,40 @@ try {
       }),
       [weekMonday]
     );
+    (0, import_react.useEffect)(() => {
+      try {
+        const el = document.querySelector(".md-root");
+        if (!el) return;
+        const val = getComputedStyle(el).getPropertyValue("--ink-950").trim();
+        if (val) {
+          document.body.style.backgroundColor = val;
+          document.documentElement.style.backgroundColor = val;
+          const meta = document.querySelector('meta[name="theme-color"]');
+          if (meta) meta.setAttribute("content", val);
+        }
+      } catch (e) {
+      }
+    });
+    const cleanupDoneRef = (0, import_react.useRef)(false);
+    (0, import_react.useEffect)(() => {
+      if (!ready || cleanupDoneRef.current) return;
+      cleanupDoneRef.current = true;
+      try {
+        let touched = false;
+        const days = {};
+        Object.keys(daysData).forEach((k) => {
+          const d = daysData[k];
+          const list = d && d.appointments || [];
+          const kept = list.filter((a) => (a.title || "").trim());
+          if (kept.length !== list.length) touched = true;
+          days[k] = d && d.appointments ? __spreadProps(__spreadValues({}, d), { appointments: kept }) : d;
+        });
+        if (touched) saveDaysData(days);
+        const rules = recurringAppts.filter((r) => (r.title || "").trim());
+        if (rules.length !== recurringAppts.length) saveRecurringAppts(rules);
+      } catch (e) {
+      }
+    }, [ready, daysData, recurringAppts]);
     const dayRollRef = (0, import_react.useRef)(null);
     (0, import_react.useEffect)(() => {
       if (!ready) return;
@@ -14038,6 +14136,18 @@ try {
         const key = appState.testDateOverride || todayStr();
         dayRollRef.current = key;
         setSelectedDay(key);
+        const target = appState.startSection || "none";
+        if (target === "none") return;
+        setTimeout(() => {
+          try {
+            if (tourStep >= 0) return;
+            const map = { monthGoal: '[data-tour="monatsziel"]', yearGoal: '[data-tour="jahresziel"]', weekGoal: '[data-tour="wochenziel"]', calendar: '[data-tour="habits"]' };
+            if (target === "weekGoal" || target === "calendar") setCalView("timeline");
+            const el = document.querySelector(map[target] || map.calendar) || document.querySelector(".timeline-wrap");
+            if (el && el.scrollIntoView) el.scrollIntoView({ behavior: "smooth", block: "start" });
+          } catch (e) {
+          }
+        }, 400);
       };
       jumpToToday();
       const onVisible = () => {
@@ -14049,7 +14159,7 @@ try {
         document.removeEventListener("visibilitychange", onVisible);
         window.removeEventListener("focus", onVisible);
       };
-    }, [ready, appState.testDateOverride]);
+    }, [ready, appState.testDateOverride, appState.startSection]);
     (0, import_react.useEffect)(() => {
       const iv = setInterval(() => {
         const t = /* @__PURE__ */ new Date();
@@ -14160,33 +14270,8 @@ try {
     }, []);
     function playSuccessChime() {
       if (!appState.soundsEnabled) return;
-      try {
-        const Ctx = window.AudioContext || window.webkitAudioContext;
-        if (!Ctx) return;
-        const ctx = new Ctx();
-        const now = ctx.currentTime;
-        [660, 880].forEach((freq, i) => {
-          const osc = ctx.createOscillator();
-          const gain = ctx.createGain();
-          osc.type = "sine";
-          osc.frequency.value = freq;
-          gain.gain.setValueAtTime(1e-4, now + i * 0.09);
-          gain.gain.linearRampToValueAtTime(0.3, now + i * 0.09 + 0.02);
-          gain.gain.exponentialRampToValueAtTime(1e-4, now + i * 0.09 + 0.28);
-          osc.connect(gain).connect(ctx.destination);
-          osc.start(now + i * 0.09);
-          osc.stop(now + i * 0.09 + 0.3);
-        });
-        setTimeout(() => {
-          try {
-            ctx.close();
-          } catch (e) {
-          }
-        }, 600);
-      } catch (e) {
-      }
-    }
-    function playDismissSound() {
+      playCheckSound();
+    }    function playDismissSound() {
       try {
         const ctx = getSharedAudioCtx();
         if (!ctx) return;
@@ -14243,100 +14328,75 @@ try {
     }
     function playPageSound() {
       if (!appState.soundsEnabled) return;
+      mymNoise({ dur: 0.19, from: 700, to: 4200, q: 0.6, gain: 0.085, shape: "swell" });
+      mymTone({ freq: 174.61, dur: 0.14, gain: 0.05, type: "sine", ratio: 2, h: 0.06, attack: 0.005, reverb: false });
+    }    function buzz(ms) {
       try {
-        const ctx = getSharedAudioCtx();
-        if (!ctx) return;
-        const now = ctx.currentTime;
-        const dur = 0.16;
-        const len = Math.max(1, Math.ceil(ctx.sampleRate * dur));
-        const buf = ctx.createBuffer(1, len, ctx.sampleRate);
-        const data = buf.getChannelData(0);
-        for (let i = 0; i < len; i++) {
-          const p = i / len;
-          data[i] = (Math.random() * 2 - 1) * Math.sin(Math.PI * p) * 0.8;
-        }
-        const src = ctx.createBufferSource();
-        src.buffer = buf;
-        const filt = ctx.createBiquadFilter();
-        filt.type = "bandpass";
-        filt.frequency.setValueAtTime(900, now);
-        filt.frequency.exponentialRampToValueAtTime(3200, now + dur);
-        filt.Q.value = 0.7;
-        const gain = ctx.createGain();
-        gain.gain.value = 0.12;
-        src.connect(filt).connect(gain).connect(ctx.destination);
-        src.start(now);
+        if (appState.soundsEnabled && navigator.vibrate) navigator.vibrate(ms);
       } catch (e) {
       }
+    }
+    function playCheckSound() {
+      if (!appState.soundsEnabled) return;
+      mymTone({ freq: 783.99, dur: 0.3, gain: 0.085, ratio: 2, h: 0.2, attack: 0.006 });
+      mymTone({ freq: 1174.66, dur: 0.42, gain: 0.07, delay: 0.06, ratio: 2, h: 0.16 });
+      mymTone({ freq: 1567.98, dur: 0.5, gain: 0.035, delay: 0.11, ratio: 2, h: 0.1 });
+    }    function exportAllData() {
+      try {
+        const data = {};
+        for (let i = 0; i < localStorage.length; i++) {
+          const k = localStorage.key(i);
+          if (k && k.indexOf("mym:") === 0) data[k.slice(4)] = localStorage.getItem(k);
+        }
+        const payload = { app: "master-your-life", build: APP_BUILD, exported: (/* @__PURE__ */ new Date()).toISOString(), data };
+        const blob = new Blob([JSON.stringify(payload)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `master-your-life-sicherung-${todayStr()}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 2e3);
+      } catch (e) {
+        alert("Sicherung fehlgeschlagen.");
+      }
+    }
+    function importAllData(e) {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const r = new FileReader();
+      r.onload = () => {
+        try {
+          const parsed = JSON.parse(r.result);
+          const d = parsed && parsed.data;
+          if (!d || typeof d !== "object") {
+            alert("Das ist keine g\xFCltige Sicherungsdatei.");
+            return;
+          }
+          Object.keys(d).forEach((k) => localStorage.setItem("mym:" + k, d[k]));
+          alert("Daten wiederhergestellt. Die App startet neu.");
+          window.location.reload();
+        } catch (err) {
+          alert("Die Datei konnte nicht gelesen werden.");
+        }
+      };
+      r.readAsText(file);
     }
     function playSoftBlip() {
       if (!appState.soundsEnabled) return;
-      try {
-        const ctx = getSharedAudioCtx();
-        if (!ctx) return;
-        const now = ctx.currentTime;
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = "sine";
-        osc.frequency.setValueAtTime(523.25, now);
-        osc.frequency.exponentialRampToValueAtTime(659.25, now + 0.07);
-        gain.gain.setValueAtTime(1e-4, now);
-        gain.gain.linearRampToValueAtTime(0.09, now + 0.02);
-        gain.gain.exponentialRampToValueAtTime(1e-4, now + 0.17);
-        osc.connect(gain).connect(ctx.destination);
-        osc.start(now);
-        osc.stop(now + 0.18);
-      } catch (e) {
-      }
-    }
-    function playApptDoneSound() {
+      mymTone({ freq: 587.33, dur: 0.26, gain: 0.075, ratio: 2, h: 0.18, attack: 0.008 });
+      mymTone({ freq: 880, dur: 0.34, gain: 0.06, delay: 0.055, ratio: 3, h: 0.12 });
+    }    function playApptDoneSound() {
       if (!appState.soundsEnabled) return;
-      try {
-        const ctx = getSharedAudioCtx();
-        if (!ctx) return;
-        const now = ctx.currentTime;
-        [[587.33, 0], [880, 0.11]].forEach(([freq, delay]) => {
-          const t0 = now + delay;
-          const osc = ctx.createOscillator();
-          const gain = ctx.createGain();
-          osc.type = "triangle";
-          osc.frequency.value = freq;
-          gain.gain.setValueAtTime(1e-4, t0);
-          gain.gain.linearRampToValueAtTime(0.14, t0 + 0.02);
-          gain.gain.exponentialRampToValueAtTime(1e-4, t0 + 0.42);
-          osc.connect(gain).connect(ctx.destination);
-          osc.start(t0);
-          osc.stop(t0 + 0.44);
-        });
-      } catch (e) {
-      }
-    }
-    function playTapSound() {
+      [[523.25, 0], [659.25, 0.075], [987.77, 0.15]].forEach(function (n) {
+        mymTone({ freq: n[0], dur: 0.55, gain: 0.075, delay: n[1], ratio: 2, h: 0.2, attack: 0.008 });
+      });
+    }    function playTapSound() {
       if (!appState.soundsEnabled) return;
-      try {
-        const ctx = getSharedAudioCtx();
-        if (!ctx) return;
-        const dur = 0.03;
-        const len = Math.max(1, Math.ceil(ctx.sampleRate * dur));
-        const buf = ctx.createBuffer(1, len, ctx.sampleRate);
-        const data = buf.getChannelData(0);
-        for (let i = 0; i < len; i++) {
-          data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 4);
-        }
-        const src = ctx.createBufferSource();
-        src.buffer = buf;
-        const filt = ctx.createBiquadFilter();
-        filt.type = "bandpass";
-        filt.frequency.value = 1700;
-        filt.Q.value = 0.8;
-        const gain = ctx.createGain();
-        gain.gain.value = 0.14;
-        src.connect(filt).connect(gain).connect(ctx.destination);
-        src.start();
-      } catch (e) {
-      }
-    }
-    function playClickSound() {
+      mymNoise({ dur: 0.022, from: 2200, to: 1500, q: 1.1, gain: 0.075, curve: 6, reverb: false });
+      mymTone({ freq: 1318.51, dur: 0.09, gain: 0.045, ratio: 2, h: 0.1, attack: 0.004, cutoff: 5200 });
+    }    function playClickSound() {
       if (!appState.soundsEnabled) return;
       try {
         const ctx = getSharedAudioCtx();
@@ -14357,170 +14417,13 @@ try {
     }
     function playCelebrationSound() {
       if (!appState.soundsEnabled) return;
-      try {
-        const ctx = getSharedAudioCtx();
-        if (!ctx) return;
-        const now = ctx.currentTime;
-        const notes = [523.25, 659.25, 783.99, 1046.5];
-        notes.forEach((freq, i) => {
-          const t0 = now + i * 0.1;
-          const osc = ctx.createOscillator();
-          const gain = ctx.createGain();
-          osc.type = "sawtooth";
-          osc.frequency.value = freq;
-          gain.gain.setValueAtTime(1e-4, t0);
-          gain.gain.linearRampToValueAtTime(0.22, t0 + 0.02);
-          gain.gain.exponentialRampToValueAtTime(1e-4, t0 + 0.35);
-          osc.connect(gain).connect(ctx.destination);
-          osc.start(t0);
-          osc.stop(t0 + 0.37);
-        });
-        const chordT = now + 0.45;
-        [523.25, 659.25, 783.99, 1046.5].forEach((freq) => {
-          const osc = ctx.createOscillator();
-          const gain = ctx.createGain();
-          osc.type = "triangle";
-          osc.frequency.value = freq;
-          gain.gain.setValueAtTime(1e-4, chordT);
-          gain.gain.linearRampToValueAtTime(0.18, chordT + 0.03);
-          gain.gain.exponentialRampToValueAtTime(1e-4, chordT + 0.9);
-          osc.connect(gain).connect(ctx.destination);
-          osc.start(chordT);
-          osc.stop(chordT + 0.95);
-        });
-        if (navigator.vibrate) navigator.vibrate([80, 40, 80, 40, 160]);
-      } catch (e) {
-      }
-    }
-    const stopVibration = (0, import_react.useCallback)(() => {
-      if (vibrateIntervalRef.current) {
-        clearInterval(vibrateIntervalRef.current);
-        vibrateIntervalRef.current = null;
-      }
-      if (navigator.vibrate) navigator.vibrate(0);
-    }, []);
-    const startVibration = (0, import_react.useCallback)(() => {
-      if (!navigator.vibrate) return;
-      navigator.vibrate([500, 150, 500]);
-      vibrateIntervalRef.current = setInterval(() => {
-        navigator.vibrate([500, 150, 500]);
-      }, 1300);
-    }, []);
-    const releaseWakeLock = (0, import_react.useCallback)(() => {
-      if (wakeLockRef.current) {
-        try {
-          wakeLockRef.current.release();
-        } catch (e) {
-        }
-        wakeLockRef.current = null;
-      }
-    }, []);
-    const requestWakeLock = (0, import_react.useCallback)(() => {
-      if (navigator.wakeLock && navigator.wakeLock.request) {
-        navigator.wakeLock.request("screen").then((lock) => {
-          wakeLockRef.current = lock;
-        }).catch(() => {
-        });
-      }
-    }, []);
-    (0, import_react.useEffect)(() => {
-      if (phase === "locked") {
-        setCopyText("");
-        setCopyError(false);
-        setMissionStarted(false);
-        startAlarmSound();
-        startVibration();
-        requestWakeLock();
-      } else {
-        stopAlarmSound();
-        stopVibration();
-        releaseWakeLock();
-      }
-      return () => {
-        if (phase !== "locked") {
-          stopAlarmSound();
-          stopVibration();
-        }
-      };
-    }, [phase, startAlarmSound, stopAlarmSound, startVibration, stopVibration, requestWakeLock, releaseWakeLock]);
-    (0, import_react.useEffect)(() => {
-      return () => {
-        stopAlarmSound();
-        stopVibration();
-        releaseWakeLock();
-      };
-    }, [stopAlarmSound, stopVibration, releaseWakeLock]);
-    (0, import_react.useEffect)(() => {
-      if (phase !== "locked") return;
-      const unloadHandler = (e) => {
-        e.preventDefault();
-        e.returnValue = "";
-        return "";
-      };
-      window.addEventListener("beforeunload", unloadHandler);
-      const el = document.documentElement;
-      const reqFs = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
-      if (reqFs) {
-        try {
-          reqFs.call(el).catch(() => {
-          });
-        } catch (e) {
-        }
-      }
-      try {
-        window.history.pushState({ mymLock: true }, "");
-      } catch (e) {
-      }
-      const popHandler = () => {
-        try {
-          window.history.pushState({ mymLock: true }, "");
-        } catch (e) {
-        }
-      };
-      window.addEventListener("popstate", popHandler);
-      const visHandler = () => {
-        if (document.visibilityState === "visible" && navigator.vibrate) {
-          navigator.vibrate([300, 100, 300]);
-        }
-      };
-      document.addEventListener("visibilitychange", visHandler);
-      return () => {
-        window.removeEventListener("beforeunload", unloadHandler);
-        window.removeEventListener("popstate", popHandler);
-        document.removeEventListener("visibilitychange", visHandler);
-        const exitFs = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
-        if (document.fullscreenElement && exitFs) {
-          try {
-            exitFs.call(document).catch(() => {
-            });
-          } catch (e) {
-          }
-        }
-      };
-    }, [phase]);
-    function handleCopyChange(val) {
-      setCopyText(val);
-      if (!missionStarted && val.length > 0) {
-        setMissionStarted(true);
-        stopAlarmSound();
-        stopVibration();
-      }
-      setTimeout(() => {
-        if (copyTextareaRef.current) {
-          copyTextareaRef.current.scrollTop = copyTextareaRef.current.scrollHeight;
-          if (ghostRef.current) ghostRef.current.scrollTop = copyTextareaRef.current.scrollTop;
-        }
-      }, 0);
-    }
-    function submitCopy() {
-      if (copyText.trim() === appState.mandatorySentences.trim()) {
-        saveAppState(__spreadProps(__spreadValues({}, appState), { lastDismissedDate: todayStr() }));
-        setPhase("dashboard");
-      } else {
-        setCopyError(true);
-      }
-    }
-    function dismissAlarmSimple() {
+      [[523.25, 0], [659.25, 0.085], [783.99, 0.17], [1046.5, 0.255]].forEach(function (n) {
+        mymTone({ freq: n[0], dur: 0.7, gain: 0.09, delay: n[1], ratio: 2, h: 0.24, attack: 0.006 });
+      });
+      [523.25, 659.25, 783.99, 1318.51].forEach(function (f) {
+        mymTone({ freq: f, dur: 1.5, gain: 0.055, delay: 0.4, ratio: 2, h: 0.18, attack: 0.05, cutoff: 3600 });
+      });
+    }    function dismissAlarmSimple() {
       saveAppState(__spreadProps(__spreadValues({}, appState), { lastDismissedDate: todayStr() }));
       stopAlarmSound();
       stopVibration();
@@ -14620,17 +14523,183 @@ try {
         window.location.reload();
       });
     }
+    function mymAudio() {
+      const ctx = getSharedAudioCtx();
+      if (!ctx) return null;
+      if (!ctx.__mymChain) {
+        const master = ctx.createGain();
+        master.gain.value = 0.85;
+        const comp = ctx.createDynamicsCompressor();
+        comp.threshold.value = -20;
+        comp.knee.value = 26;
+        comp.ratio.value = 3;
+        comp.attack.value = 0.003;
+        comp.release.value = 0.28;
+        master.connect(comp);
+        comp.connect(ctx.destination);
+        const conv = ctx.createConvolver();
+        const len = Math.floor(ctx.sampleRate * 1.5);
+        const ir = ctx.createBuffer(2, len, ctx.sampleRate);
+        for (let c = 0; c < 2; c++) {
+          const d = ir.getChannelData(c);
+          for (let i = 0; i < len; i++) {
+            d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3.4);
+          }
+        }
+        conv.buffer = ir;
+        const send = ctx.createGain();
+        send.gain.value = 0.3;
+        const wet = ctx.createGain();
+        wet.gain.value = 0.45;
+        send.connect(conv);
+        conv.connect(wet);
+        wet.connect(master);
+        ctx.__mymChain = { master, send };
+      }
+      return ctx.__mymChain;
+    }
+    function mymTone(o) {
+      const ctx = getSharedAudioCtx();
+      const chain = mymAudio();
+      if (!ctx || !chain) return;
+      const t0 = ctx.currentTime + (o.delay || 0);
+      const dur = o.dur || 0.3;
+      const osc = ctx.createOscillator();
+      const osc2 = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const harm = ctx.createGain();
+      const filt = ctx.createBiquadFilter();
+      filt.type = "lowpass";
+      filt.frequency.value = o.cutoff || 4600;
+      filt.Q.value = 0.4;
+      osc.type = o.type || "sine";
+      osc2.type = o.type2 || "triangle";
+      osc.frequency.value = o.freq;
+      osc2.frequency.value = o.freq * (o.ratio || 2);
+      osc2.detune.value = o.detune === undefined ? 7 : o.detune;
+      harm.gain.value = o.h === undefined ? 0.22 : o.h;
+      const g = o.gain || 0.11;
+      gain.gain.setValueAtTime(1e-4, t0);
+      gain.gain.linearRampToValueAtTime(g, t0 + (o.attack || 0.014));
+      gain.gain.exponentialRampToValueAtTime(1e-4, t0 + dur);
+      osc.connect(gain);
+      osc2.connect(harm);
+      harm.connect(gain);
+      gain.connect(filt);
+      filt.connect(chain.master);
+      if (o.reverb !== false) filt.connect(chain.send);
+      osc.start(t0);
+      osc2.start(t0);
+      osc.stop(t0 + dur + 0.08);
+      osc2.stop(t0 + dur + 0.08);
+    }
+    function mymNoise(o) {
+      const ctx = getSharedAudioCtx();
+      const chain = mymAudio();
+      if (!ctx || !chain) return;
+      const t0 = ctx.currentTime + (o.delay || 0);
+      const dur = o.dur || 0.16;
+      const len = Math.max(1, Math.ceil(ctx.sampleRate * dur));
+      const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+      const d = buf.getChannelData(0);
+      const shape = o.shape || "decay";
+      for (let i = 0; i < len; i++) {
+        const p = i / len;
+        const env = shape === "swell" ? Math.sin(Math.PI * p) : Math.pow(1 - p, o.curve || 4);
+        d[i] = (Math.random() * 2 - 1) * env;
+      }
+      const src = ctx.createBufferSource();
+      src.buffer = buf;
+      const filt = ctx.createBiquadFilter();
+      filt.type = "bandpass";
+      filt.frequency.setValueAtTime(o.from || 1200, t0);
+      filt.frequency.exponentialRampToValueAtTime(o.to || 3000, t0 + dur);
+      filt.Q.value = o.q || 0.7;
+      const gain = ctx.createGain();
+      gain.gain.value = o.gain || 0.1;
+      src.connect(filt);
+      filt.connect(gain);
+      gain.connect(chain.master);
+      if (o.reverb !== false) gain.connect(chain.send);
+      src.start(t0);
+    }
+    function mymAudioDb() {
+      return new Promise(function (resolve, reject) {
+        try {
+          const req = indexedDB.open("mym-audio", 1);
+          req.onupgradeneeded = function () {
+            req.result.createObjectStore("files");
+          };
+          req.onsuccess = function () {
+            resolve(req.result);
+          };
+          req.onerror = function () {
+            reject(req.error);
+          };
+        } catch (e) {
+          reject(e);
+        }
+      });
+    }
+    function saveCustomAudioFile(file) {
+      return mymAudioDb().then(function (db) {
+        return new Promise(function (resolve, reject) {
+          const tx = db.transaction("files", "readwrite");
+          tx.objectStore("files").put({ blob: file, name: file.name }, "alarm");
+          tx.oncomplete = function () {
+            resolve();
+          };
+          tx.onerror = function () {
+            reject(tx.error);
+          };
+        });
+      });
+    }
+    function loadCustomAudioFile() {
+      return mymAudioDb().then(function (db) {
+        return new Promise(function (resolve) {
+          const tx = db.transaction("files", "readonly");
+          const rq = tx.objectStore("files").get("alarm");
+          rq.onsuccess = function () {
+            resolve(rq.result || null);
+          };
+          rq.onerror = function () {
+            resolve(null);
+          };
+        });
+      });
+    }
+    function deleteCustomAudioFile() {
+      return mymAudioDb().then(function (db) {
+        const tx = db.transaction("files", "readwrite");
+        tx.objectStore("files").delete("alarm");
+      }).catch(function () {});
+    }
+    (0, import_react.useEffect)(() => {
+      let cancelled = false;
+      loadCustomAudioFile().then(function (rec) {
+        if (cancelled || !rec || !rec.blob) return;
+        if (customAudioUrlRef.current) URL.revokeObjectURL(customAudioUrlRef.current);
+        customAudioUrlRef.current = URL.createObjectURL(rec.blob);
+        setCustomAudioName(rec.name || "Eigener Sound");
+      }).catch(function () {});
+      return () => {
+        cancelled = true;
+      };
+    }, []);
     function handleCustomAudioSelect(e) {
       const file = e.target.files && e.target.files[0];
       if (!file) return;
       if (customAudioUrlRef.current) URL.revokeObjectURL(customAudioUrlRef.current);
       customAudioUrlRef.current = URL.createObjectURL(file);
       setCustomAudioName(file.name);
+      saveCustomAudioFile(file).catch(function () {});
     }
     function clearCustomAudio() {
       if (customAudioUrlRef.current) URL.revokeObjectURL(customAudioUrlRef.current);
       customAudioUrlRef.current = null;
       setCustomAudioName("");
+      deleteCustomAudioFile();
     }
     function addHabit() {
       const name = newHabitName.trim();
@@ -14685,7 +14754,10 @@ try {
       day.checks[habitId] = !wasChecked;
       days[dayKey] = day;
       saveDaysData(days);
-      if (!wasChecked) playSuccessChime();
+      if (!wasChecked) {
+        playSuccessChime();
+        buzz(22);
+      }
     }
     function matchesRecurrence(rule, dayKey) {
       if (dayKey < rule.startDate) return false;
@@ -14804,8 +14876,29 @@ try {
       if (!monthGoalData) return;
       saveMonthGoal(__spreadProps(__spreadValues({}, monthGoalData), { monthGoal: val }));
     }
+    function keepInPlace(selector) {
+      let before = null;
+      try {
+        const el = document.querySelector(selector);
+        if (el) before = el.getBoundingClientRect().top;
+      } catch (e) {
+      }
+      if (before === null) return;
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          try {
+            const el2 = document.querySelector(selector);
+            if (!el2) return;
+            const delta = el2.getBoundingClientRect().top - before;
+            if (Math.abs(delta) > 1) window.scrollBy(0, delta);
+          } catch (e) {
+          }
+        });
+      });
+    }
     function toggleMonthDone() {
       if (!monthGoalData) return;
+      keepInPlace('[data-tour="monatsziel"]');
       const next = !monthGoalData.monthDone;
       const updated = __spreadProps(__spreadValues({}, monthGoalData), { monthDone: next });
       saveMonthGoal(updated);
@@ -14855,6 +14948,7 @@ try {
       });
     }
     function toggleWeekDone() {
+      keepInPlace('[data-tour="wochenziel"]');
       if (!weekData) return;
       const next = !weekData.done;
       const updated = __spreadProps(__spreadValues({}, weekData), { done: next });
@@ -14996,8 +15090,8 @@ try {
     }
     .lock-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--amber); animation: pulse 1.2s infinite ease-in-out; }
     @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.25; } }
-    @keyframes slideFade { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: translateX(0); } }
-    .slide-fade-in { animation: slideFade 0.22s ease-out; }
+    @keyframes slideFade { from { opacity: 0; } to { opacity: 1; } }
+    .slide-fade-in { animation: slideFade 0.34s cubic-bezier(0.16, 1, 0.3, 1); }
     .lock-clock { font-family: 'Playfair Display', serif; font-style: italic; font-weight: 800; font-size: clamp(68px, 15vw, 150px); line-height: 1; color: var(--paper); letter-spacing: 0.01em; }
     .lock-sub { color: var(--fog); margin-top: 4px; font-size: 15px; text-align: center; }
     .lock-card {
@@ -15099,6 +15193,11 @@ try {
     .md-root[data-theme="light"][data-bg="weiss"] { --ink-950: #FFFFFF; --ink-900: #FFFFFF; --panel: #FFFFFF; --panel-2: #FAFAFA; --hairline: rgba(0,0,0,0.14); --paper: #000000; --fog: #5A5F66; }
     .md-root[data-theme="light"][data-bg="hellgrau"] { --ink-950: #ECEEF1; --ink-900: #E3E6EA; --panel: #FFFFFF; --panel-2: #F2F4F7; --hairline: rgba(0,0,0,0.12); --paper: #1B1E23; --fog: #62686F; }
     .md-root[data-theme="light"][data-bg="sand"] { --ink-950: #F3EADA; --ink-900: #EADFCB; --panel: #FFFBF3; --panel-2: #EFE5D3; --hairline: rgba(0,0,0,0.1); --paper: #2A2114; --fog: #7A6B52; }
+    .todo-move-btn {
+      background: none; border: 1px solid var(--hairline); color: var(--amber);
+      border-radius: 8px; font-size: 13px; padding: 5px 9px; margin-left: 4px;
+      flex-shrink: 0; letter-spacing: -0.05em;
+    }
     .todo-more-btn { flex: 0 0 40px; background: none; border: 1px dashed var(--hairline); color: var(--fog); border-radius: 8px; font-size: 18px; opacity: 0.6; }
     .nb-pick-row { display: flex; gap: 8px; margin-bottom: 8px; }
     .nb-pick-btn {
@@ -15137,6 +15236,263 @@ try {
       background: var(--ink-900); border: 1px solid var(--amber-dim); color: var(--paper);
       border-radius: 12px; margin: 0 auto 10px; display: block;
     }
+    .sec-icon-grid { display: flex; flex-direction: column; gap: 8px; margin-bottom: 6px; }
+    .sec-icon-row { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--paper); }
+    .sec-icon-input {
+      flex: 0 0 52px; height: 42px; text-align: center; font-size: 20px;
+      background: var(--ink-900); border: 1px solid var(--hairline); color: var(--paper); border-radius: 10px;
+    }
+
+    .theme-choice-row { display: flex; gap: 12px; }
+    .theme-choice {
+      flex: 1; display: flex; flex-direction: column; align-items: center; gap: 10px;
+      background: var(--panel-2); border: 1px solid var(--hairline); color: var(--paper);
+      border-radius: 16px; padding: 20px 12px; font-size: 15px; font-weight: 600;
+    }
+    .theme-choice:active { transform: scale(0.96); }
+    .theme-choice-dot { width: 46px; height: 46px; border-radius: 12px; border: 1px solid var(--hairline); }
+    .theme-choice-dot.dark { background: linear-gradient(135deg, #1d1d1d, #000); }
+    .theme-choice-dot.light { background: linear-gradient(135deg, #fff, #ececec); }
+
+    .timeline-row:last-child { border-bottom: none; }
+    .timeline-hours-wrap { position: relative; overflow: hidden; }
+    .extra-goal-row {
+      display: flex; align-items: center; gap: 8px;
+      width: 100%; min-width: 0; margin-top: 6px;
+    }
+    .extra-goal-row .mini-input {
+      flex: 1 1 auto; min-width: 0; width: auto;
+    }
+    .extra-goal-row .mini-check, .extra-goal-row .hierarchy-hide { flex: 0 0 auto; }
+    .extra-goal-row .hierarchy-hide { font-size: 20px; line-height: 1; padding: 0 4px; color: var(--fog); }
+    .hierarchy-add { margin-top: 6px; }
+
+    .timeline-allday:empty { display: none; }
+    .today-pill {
+      position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%);
+      z-index: 880; white-space: nowrap;
+      background: var(--panel); color: var(--amber);
+      border: 1px solid var(--amber-dim); border-radius: 999px;
+      padding: 10px 18px; font-size: 13px; font-weight: 600;
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+      animation: pillIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .today-pill:active { transform: translateX(-50%) scale(0.95); }
+    @keyframes pillIn {
+      from { opacity: 0; transform: translate(-50%, 14px); }
+      to { opacity: 1; transform: translate(-50%, 0); }
+    }
+
+    /* ---------- Das Jahr auf einen Blick ---------- */
+    .year-strip { margin: 14px 0 10px; }
+    .year-strip-dots {
+      display: flex; flex-wrap: wrap; gap: 2px; align-content: flex-start;
+      animation: stripIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+    @keyframes stripIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+    .year-dot {
+      width: 4px; height: 4px; border-radius: 1px;
+      background: var(--hairline);
+    }
+    .year-dot.past { background: var(--amber-dim); }
+    .year-dot.today {
+      background: var(--amber); box-shadow: 0 0 8px 1px var(--amber);
+      animation: todayPulse 2.6s ease-in-out infinite;
+    }
+    @keyframes todayPulse {
+      0%, 100% { box-shadow: 0 0 6px 0 var(--amber); }
+      50% { box-shadow: 0 0 12px 2px var(--amber); }
+    }
+    .year-strip-label {
+      margin-top: 7px; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--fog); font-variant-numeric: tabular-nums;
+    }
+
+    /* ---------- Startsequenz ---------- */
+    .top-tabs { animation: bootIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.08s both; }
+    @keyframes bootIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: none; } }
+
+    /* ---------- Handwerk: gr\xF6\xDFere Trefferfl\xE4chen ---------- */
+    .habit-remove, .timeline-block-delete, .todo-list-remove, .hierarchy-hide, .pop-close, .todo-move-btn {
+      position: relative;
+    }
+    .habit-remove::after, .timeline-block-delete::after, .todo-list-remove::after,
+    .hierarchy-hide::after, .pop-close::after, .todo-move-btn::after {
+      content: ""; position: absolute; inset: -11px;
+    }
+
+    /* ---------- Hochwertigkeit III: Licht, Korn, Jubel ---------- */
+    .md-root {
+      background-image:
+        url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/></filter><rect width='140' height='140' filter='url(%23n)' opacity='0.05'/></svg>"),
+        radial-gradient(120% 55% at 50% 0%, var(--highlight), transparent 60%);
+      background-attachment: fixed, fixed;
+      background-repeat: repeat, no-repeat;
+    }
+
+    .month-hero-title, .section-title, .onboard-title, .appt-step-label, .nb-cover-name {
+      letter-spacing: -0.01em;
+    }
+    .section-title, .reflect-label, .timeline-list-label, .settings-note { text-wrap: pretty; }
+
+    .celebrate-toast { overflow: visible; }
+    .celebrate-toast::before, .celebrate-toast::after {
+      content: ""; position: absolute; left: 50%; top: 26px; width: 8px; height: 8px;
+      border-radius: 50%; pointer-events: none;
+      animation: burst 1.1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    .celebrate-toast::after { animation-delay: 0.12s; }
+    @keyframes burst {
+      0% { opacity: 1; transform: translate(-50%, 0) scale(0.4);
+           box-shadow: 0 0 0 0 var(--amber), 0 0 0 0 var(--signal), 0 0 0 0 var(--amber); }
+      100% { opacity: 0; transform: translate(-50%, 0) scale(1);
+             box-shadow: -90px -46px 0 -1px var(--amber), 92px -40px 0 -1px var(--signal),
+                         -58px 64px 0 -2px var(--amber), 66px 58px 0 -2px var(--signal),
+                         0 -84px 0 -1px var(--amber), 0 78px 0 -2px var(--signal); }
+    }
+
+    .goal-toggle.done, .habit-check.checked { position: relative; }
+    .month-hero { position: relative; overflow: hidden; }
+    .month-hero::after {
+      content: ""; position: absolute; inset: -40% -10% auto -10%; height: 160px; pointer-events: none;
+      background: radial-gradient(60% 100% at 50% 0%, var(--highlight), transparent 70%);
+      opacity: 0.55;
+    }
+
+    /* ---------- Hochwertigkeit II: Typografie, Material, Ruhe ---------- */
+    .md-root { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+    .timeline-hour-label, .week-strip-day, .month-cell, .timeline-block-text, .mini-goal-row,
+    .biz-summary-row, .todo-tag, .appt-duration, .nb-cover-count, .settings-note {
+      font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1;
+    }
+    ::selection { background: var(--amber); color: var(--ink-950); }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-thumb { background: var(--amber-dim); border-radius: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+
+    .top-tabs { padding-bottom: 2px; }
+
+
+    .habit-check.checked { box-shadow: 0 0 14px -2px var(--amber); }
+
+    .notes-book {
+      box-shadow: 0 6px 18px rgba(0,0,0,0.25),
+                  4px 4px 0 -1px var(--panel-2), 7px 7px 0 -2px var(--panel),
+                  10px 10px 0 -3px var(--panel-2);
+    }
+    .notes-textarea {
+      background-image: repeating-linear-gradient(180deg, transparent, transparent 27px, var(--hairline) 27px, var(--hairline) 28px);
+      line-height: 28px;
+    }
+    .nb-cover { background-image: linear-gradient(135deg, rgba(255,255,255,0.09), transparent 45%), linear-gradient(135deg, var(--panel-2), var(--panel)); }
+    .nb-cover::after {
+      content: ""; position: absolute; right: 0; top: 6px; bottom: 6px; width: 5px;
+      border-radius: 0 6px 6px 0;
+      background: repeating-linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.16) 1px, transparent 1px, transparent 3px);
+    }
+
+    button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
+      outline: 2px solid var(--amber); outline-offset: 2px;
+    }
+    button[disabled] { filter: grayscale(0.4); }
+
+    /* ---------- Hochwertigkeit: Tiefe, Licht, Bewegung ---------- */
+    .day-modal, .settings-pop, .timeline-add-form, .timeline-habit-add-form, .delete-confirm {
+      backdrop-filter: blur(2px);
+    }
+    .day-modal-backdrop { backdrop-filter: blur(5px) saturate(1.1); }
+
+    .top-tab {
+      position: relative; overflow: hidden;
+      background-image: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(0,0,0,0.05));
+    }
+    .top-tab.active::after {
+      content: ""; position: absolute; inset: 0;
+      background: linear-gradient(120deg, transparent 20%, rgba(255,255,255,0.22) 48%, transparent 74%);
+      transform: translateX(-120%);
+      animation: sheen 0.75s cubic-bezier(0.22, 1, 0.36, 1) 0.05s;
+    }
+    @keyframes sheen { to { transform: translateX(120%); } }
+
+    .section {
+      background-image: linear-gradient(180deg, rgba(255,255,255,0.035), transparent 42%);
+      box-shadow: 0 1px 0 rgba(255,255,255,0.05) inset, 0 6px 20px rgba(0,0,0,0.24);
+    }
+    .month-hero { box-shadow: 0 1px 0 rgba(255,255,255,0.07) inset, 0 10px 30px rgba(0,0,0,0.3); }
+
+    .timeline-block {
+      background-image: linear-gradient(135deg, rgba(255,255,255,0.07), transparent 60%);
+      box-shadow: 0 3px 12px rgba(0,0,0,0.3), 0 1px 0 rgba(255,255,255,0.06) inset;
+    }
+
+    .habit-row, .todo-block, .timeline-habit-row {
+      animation: rowIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+    @keyframes rowIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .celebrate-toast {
+      background-image: linear-gradient(160deg, rgba(255,255,255,0.09), transparent 55%);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 0 1px var(--amber-dim) inset;
+    }
+    .celebrate-icon { animation: iconPop 0.65s cubic-bezier(0.34, 1.56, 0.64, 1); }
+    @keyframes iconPop {
+      0% { transform: scale(0.3) rotate(-18deg); opacity: 0; }
+      55% { transform: scale(1.25) rotate(6deg); opacity: 1; }
+      100% { transform: scale(1) rotate(0deg); }
+    }
+
+    .save-btn, .timeline-add-confirm, .prompt-banner-btn, .onboard-next, .tour-bar-btn, .delete-confirm-btn {
+      background-image: linear-gradient(180deg, rgba(255,255,255,0.16), rgba(0,0,0,0.08));
+    }
+
+    /* ---------- Feinschliff: Bewegung, Tiefe, R\xFCckmeldung ---------- */
+    html { scroll-behavior: smooth; }
+    button, .habit-check, .mini-check, .goal-toggle, .top-tab, .todo-list-tab, .theme-btn, .nb-cover, .timeline-block {
+      transition: transform 0.13s cubic-bezier(0.34, 1.4, 0.64, 1), background 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.22s ease, opacity 0.2s ease;
+    }
+    button:active, .habit-check:active, .mini-check:active, .goal-toggle:active, .top-tab:active, .todo-list-tab:active, .theme-btn:active { transform: scale(0.92); filter: brightness(1.18); }
+    .nb-cover:active { transform: scale(0.985); }
+    .timeline-block:active { transform: scale(0.99); }
+
+    .habit-check.checked, .mini-check.checked { animation: checkPop 0.46s cubic-bezier(0.34, 1.56, 0.64, 1); }
+    @keyframes checkPop {
+      0% { transform: scale(0.4) rotate(-12deg); box-shadow: 0 0 0 0 var(--amber); }
+      45% { transform: scale(1.35) rotate(4deg); box-shadow: 0 0 0 9px transparent; }
+      70% { transform: scale(0.94) rotate(0deg); }
+      100% { transform: scale(1); box-shadow: 0 0 0 0 transparent; }
+    }
+
+    input:focus, textarea:focus, select:focus {
+      outline: none;
+      border-color: var(--amber) !important;
+      box-shadow: 0 0 0 3px var(--highlight);
+    }
+
+    .section { animation: sectionIn 0.42s cubic-bezier(0.16, 1, 0.3, 1) both; }
+    @keyframes sectionIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    .reorder-block:nth-of-type(2) .section { animation-delay: 0.05s; }
+    .reorder-block:nth-of-type(3) .section { animation-delay: 0.1s; }
+    .reorder-block:nth-of-type(4) .section { animation-delay: 0.15s; }
+    .reorder-block:nth-of-type(5) .section { animation-delay: 0.2s; }
+    .reorder-block:nth-of-type(6) .section { animation-delay: 0.25s; }
+    .top-tab.active { box-shadow: 0 6px 20px rgba(0, 0, 0, 0.38); transform: translateY(-1px); }
+    .section { box-shadow: 0 2px 10px rgba(0, 0, 0, 0.16); }
+    .timeline-block { box-shadow: 0 2px 8px rgba(0, 0, 0, 0.22); }
+    .prompt-banner { animation: modalPop 0.32s cubic-bezier(0.16, 1, 0.3, 1); }
+
+    .add-plus-btn, .timeline-habit-add-btn, .nb-cover-add { transition: border-color 0.2s ease, color 0.2s ease, transform 0.13s ease; }
+    .add-plus-btn:active, .timeline-habit-add-btn:active, .nb-cover-add:active { transform: scale(0.96); }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+    }
+
     .appt-name-big {
       width: 100%; box-sizing: border-box;
       background: var(--ink-900); border: 1px solid var(--amber-dim); color: var(--paper);
@@ -15949,7 +16305,7 @@ try {
       }
       return /* @__PURE__ */ import_react.default.createElement("div", { className: "appt-row", key: a.id }, /* @__PURE__ */ import_react.default.createElement("span", { className: "appt-time" }, a.isBirthday ? "\u{1F382}" : a.allDay ? "ganzt\xE4gig" : a.time), a.recurring && /* @__PURE__ */ import_react.default.createElement("span", { className: "appt-recur", title: a.recurrence }, "\u{1F501} ", RECURRENCE_LABEL[a.recurrence]), /* @__PURE__ */ import_react.default.createElement("span", { className: "appt-title", onClick: () => startEditAppt(a) }, a.title, a.duration ? /* @__PURE__ */ import_react.default.createElement("span", { className: "appt-duration" }, "(", a.duration, " Min)") : null), /* @__PURE__ */ import_react.default.createElement("button", { className: "appt-edit-btn", onClick: () => startEditAppt(a), "aria-label": `${a.title} bearbeiten` }, "\u270E"), /* @__PURE__ */ import_react.default.createElement("button", { className: "habit-remove", onClick: () => requestRemoveAppointment(dayKey, a), "aria-label": `${a.title} entfernen` }, "\xD7"));
     };
-    return /* @__PURE__ */ import_react.default.createElement("div", { className: "md-root", "data-theme": appState.theme, "data-bg": appState.bgChoice || (appState.theme === "light" ? "creme" : "schwarz"), "data-plain": appState.plainMode ? "true" : "false", "data-font": appState.fontChoice || "elegant", "data-accent": appState.accentChoice || "amber" }, /* @__PURE__ */ import_react.default.createElement("style", null, styles), /* @__PURE__ */ import_react.default.createElement("div", { className: "app-col" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "top-tabs", style: { order: -1001 } }, /* @__PURE__ */ import_react.default.createElement("button", { className: "top-tab" + (activeTab === "daily" ? " active" : ""), onClick: () => setActiveTab("daily") }, "\u2600\uFE0F Daily"), /* @__PURE__ */ import_react.default.createElement("button", { className: "top-tab" + (activeTab === "todos" ? " active" : ""), onClick: () => setActiveTab("todos") }, "\u2705 To-Dos"), /* @__PURE__ */ import_react.default.createElement("button", { className: "top-tab" + (activeTab === "business" ? " active" : ""), onClick: () => setActiveTab("business") }, "\u{1F4BC} Business"), /* @__PURE__ */ import_react.default.createElement("button", { className: "top-tab" + (activeTab === "notizen" ? " active" : ""), onClick: () => setActiveTab("notizen") }, "\u{1F4DD} Notizen")), /* @__PURE__ */ import_react.default.createElement("div", { style: { order: -999 } }, storageWarning && /* @__PURE__ */ import_react.default.createElement("div", { className: "warn-banner" }, "Das Speichern hat gerade nicht funktioniert \u2014 versuche es gleich noch einmal."), activeTab !== "business" && showYearEndBanner && /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-title" }, "\u{1F56F} Jahresende \u2014 Zeit f\xFCr die Abschlussreflexion"), /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-text" }, "Ein Jahr ist fast vorbei. Ein guter Moment zur\xFCckzuschauen, bevor der n\xE4chste Zyklus beginnt \u2014 was hat funktioniert, was nicht?"), /* @__PURE__ */ import_react.default.createElement("button", { className: "prompt-banner-btn", onClick: () => {
+    return /* @__PURE__ */ import_react.default.createElement("div", { className: "md-root", "data-theme": appState.theme, "data-bg": appState.bgChoice || (appState.theme === "light" ? "creme" : "schwarz"), "data-plain": appState.plainMode ? "true" : "false", "data-font": appState.fontChoice || "elegant", "data-accent": appState.accentChoice || "amber" }, /* @__PURE__ */ import_react.default.createElement("style", null, styles), /* @__PURE__ */ import_react.default.createElement("div", { className: "app-col" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "top-tabs", style: { order: -1001 } }, /* @__PURE__ */ import_react.default.createElement("button", { className: "top-tab" + (activeTab === "daily" ? " active" : ""), onClick: () => setActiveTab("daily") }, "\u2600\uFE0F Daily"), /* @__PURE__ */ import_react.default.createElement("button", { className: "top-tab" + (activeTab === "todos" ? " active" : ""), onClick: () => setActiveTab("todos") }, "\u2705 To-Dos"), appState.showBusiness && /* @__PURE__ */ import_react.default.createElement("button", { className: "top-tab" + (activeTab === "business" ? " active" : ""), onClick: () => setActiveTab("business") }, "\u{1F4BC} Business"), /* @__PURE__ */ import_react.default.createElement("button", { className: "top-tab" + (activeTab === "notizen" ? " active" : ""), onClick: () => setActiveTab("notizen") }, "\u{1F4DD} Notizen")), /* @__PURE__ */ import_react.default.createElement("div", { style: { order: -999 } }, storageWarning && /* @__PURE__ */ import_react.default.createElement("div", { className: "warn-banner" }, "Das Speichern hat gerade nicht funktioniert \u2014 versuche es gleich noch einmal."), activeTab !== "business" && showYearEndBanner && /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-title" }, "\u{1F56F} Jahresende \u2014 Zeit f\xFCr die Abschlussreflexion"), /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-text" }, "Ein Jahr ist fast vorbei. Ein guter Moment zur\xFCckzuschauen, bevor der n\xE4chste Zyklus beginnt \u2014 was hat funktioniert, was nicht?"), /* @__PURE__ */ import_react.default.createElement("button", { className: "prompt-banner-btn", onClick: () => {
       setActiveTab("daily");
       setShowAbschlussReflexion(true);
     } }, "Jetzt ausf\xFCllen")), showMonthlyGoalBanner && /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-title" }, "\u{1F3AF} Neuer Monat \u2014 neue Ziele"), /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-text" }, "Hier kannst du dein Monatsziel setzen f\xFCr ", MONTH_NAMES[todayDate.getMonth()], " und die Wochenziele f\xFCr die n\xE4chsten 4 Wochen."), /* @__PURE__ */ import_react.default.createElement("button", { className: "prompt-banner-btn", onClick: openMonthlyPlan }, "Jetzt planen")), monthlyPlanOpen && monthlyPlanWeeks && /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-title" }, "\u{1F4C5} Wochenziele f\xFCr die n\xE4chsten 4 Wochen"), monthlyPlanWeeks.map((w, i) => /* @__PURE__ */ import_react.default.createElement("div", { key: w.monday, className: "monthly-plan-row" }, /* @__PURE__ */ import_react.default.createElement("span", { className: "monthly-plan-label" }, w.rangeLabel), /* @__PURE__ */ import_react.default.createElement(
@@ -15960,10 +16316,7 @@ try {
         onChange: (e) => updateMonthlyPlanText(i, e.target.value),
         placeholder: "Wochenziel \u2026"
       }
-    ))), /* @__PURE__ */ import_react.default.createElement("div", { className: "monthly-plan-actions" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "prompt-banner-btn", onClick: saveMonthlyPlan }, "Speichern"), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn cancel", onClick: () => setMonthlyPlanOpen(false) }, "Abbrechen"))), activeTab !== "business" && showAnfangsPromptBanner && !showYearEndBanner && /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-title" }, "\u270D\uFE0F Deine Anfangsreflexion fehlt noch"), /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-text" }, "Sie ist dein Ausgangspunkt f\xFCr dieses Jahr und wird nur einmal pro Zyklus ausgef\xFCllt."), /* @__PURE__ */ import_react.default.createElement("button", { className: "prompt-banner-btn", onClick: openAnfangsReflexion }, "Jetzt ausf\xFCllen"), /* @__PURE__ */ import_react.default.createElement("button", { className: "banner-dismiss-link", onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { anfangsNeverRemind: true })) }, "Nie mehr erinnern")), activeTab === "daily" && !appState.alarmPromptSeen && /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-title" }, "\u23F0 Deinen Wecker einrichten"), /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-text" }, 'Der Wecker ist das Herzst\xFCck dieser App: Er soll dich wirklich zum Aufstehen bringen und nicht nur piepsen. Der Text zum Abschreiben kann alles sein \u2014 deine Ziele, Affirmationen oder ein Leitsatz f\xFCr den Tag. Du kannst w\xE4hlen zwischen "Mit Text" (Text exakt abschreiben, um ihn auszuschalten \u2014 am wirkungsvollsten), "Ohne Text" (einfacher Knopf) oder "Kein Wecker", falls du ihn gar nicht willst. Zeit, Sound und Modus stellst du oben beim \u23F0-Symbol ein.'), /* @__PURE__ */ import_react.default.createElement("button", { className: "prompt-banner-btn", onClick: () => {
-      setShowAlarmSettings(true);
-      saveAppState(__spreadProps(__spreadValues({}, appState), { alarmPromptSeen: true }));
-    } }, "Jetzt einrichten"), /* @__PURE__ */ import_react.default.createElement("button", { className: "banner-dismiss-link", onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { alarmPromptSeen: true })) }, "Sp\xE4ter")), activeTab === "daily" && showMissedHabitBanner && /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner accountability" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-title" }, appState.userName ? `${appState.userName}, ` : "", "wenn du deine Habits nicht erf\xFCllst, erreichst du deine Ziele nicht."), /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-text" }, "Diese Habits hast du nicht gemacht:"), /* @__PURE__ */ import_react.default.createElement("ul", { className: "missed-goals-list" }, missedYesterday.map((h) => /* @__PURE__ */ import_react.default.createElement("li", { key: h.id }, h.name))), /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-text" }, "Deine Ziele waren doch:"), /* @__PURE__ */ import_react.default.createElement("ul", { className: "missed-goals-list" }, missedYesterday.filter((h) => h.ziel).map((h) => /* @__PURE__ */ import_react.default.createElement("li", { key: h.id }, h.ziel)), monthGoalData && monthGoalData.monthGoal && /* @__PURE__ */ import_react.default.createElement("li", null, monthGoalData.monthGoal), weekData && weekData.goal && /* @__PURE__ */ import_react.default.createElement("li", null, weekData.goal)), /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-text" }, "Mach es. Wieso h\xE4ltst du dich nicht an das, was du dir vorgenommen hast? Fange an durchzuhalten \u2014 ob es dir Spa\xDF macht oder nicht."), /* @__PURE__ */ import_react.default.createElement("button", { className: "prompt-banner-btn", onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { lastMissedBannerDate: todayKey })) }, "Verstanden")), activeTab === "daily" && showWeekRolloverBanner && /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-title" }, "\u{1F4C5} Neue Woche \u2014 neues Wochenziel"), /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-text" }, pendingWeekRollover ? /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, 'Hast du dein Wochenziel erreicht: "', pendingWeekRollover.goal, '"?') : "Was ist dein Fokus diese Woche?"), pendingWeekRollover ? /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("button", { className: "prompt-banner-btn", onClick: () => archiveAndStartNewWeekGoal(true), style: { marginRight: 8 } }, "Ja, erreicht"), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn cancel", onClick: () => archiveAndStartNewWeekGoal(false) }, "Nein")) : /* @__PURE__ */ import_react.default.createElement("button", { className: "prompt-banner-btn", onClick: () => archiveAndStartNewWeekGoal(false) }, "Neues Wochenziel eintragen")), activeTab === "daily" && showMonthRolloverBanner && /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-title" }, "\u{1F3C6} Neuer Monat \u2014 neues Monatsziel"), /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-text" }, pendingMonthRollover ? /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, 'Hast du dein Monatsziel erreicht: "', pendingMonthRollover.goal, '"?') : "Was willst du diesen Monat erreichen?"), pendingMonthRollover ? /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("button", { className: "prompt-banner-btn", onClick: () => archiveAndStartNewMonthGoal(true), style: { marginRight: 8 } }, "Ja, erreicht"), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn cancel", onClick: () => archiveAndStartNewMonthGoal(false) }, "Nein")) : /* @__PURE__ */ import_react.default.createElement("button", { className: "prompt-banner-btn", onClick: () => archiveAndStartNewMonthGoal(false) }, "Neues Monatsziel eintragen"))), /* @__PURE__ */ import_react.default.createElement("div", { className: "topbar", style: { order: -1e3 } }, /* @__PURE__ */ import_react.default.createElement("div", null, /* @__PURE__ */ import_react.default.createElement("div", { className: "eyebrow" }, "Master Your Life"), /* @__PURE__ */ import_react.default.createElement("div", { className: "clock-mini" }, "Aktuelle Zeit ", clock, " \xB7 ", /* @__PURE__ */ import_react.default.createElement("span", { className: "wecker-click", onClick: () => setShowAlarmSettings(true) }, "Wecker ", appState.alarmMode === "none" ? "aus" : `${appState.alarmTime} Uhr`))), /* @__PURE__ */ import_react.default.createElement("div", { className: "topbar-gears" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "gear", onClick: () => setShowAlarmSettings((s) => !s), "aria-label": "Wecker-Einstellungen" }, "\u23F0"), /* @__PURE__ */ import_react.default.createElement("button", { className: "gear", onClick: () => setShowSettings((s) => !s), "aria-label": "Einstellungen" }, "\u2699")), showAlarmSettings && /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-pop" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "pop-close", onClick: () => setShowAlarmSettings(false), "aria-label": "Schlie\xDFen" }, "\xD7"), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: -4, marginBottom: 8 } }, "Der Wecker ist das Herzst\xFCck der App. Am besten stellst du ihn so ein, dass er dich wirklich zum Aufstehen bringt, statt dass du ihn im Halbschlaf wegtippst."), /* @__PURE__ */ import_react.default.createElement("label", null, "Wecker-Art"), /* @__PURE__ */ import_react.default.createElement("div", { className: "theme-row", style: { flexWrap: "wrap" } }, /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (alarmModeDraft === "text" ? " active" : ""), onClick: () => setAlarmModeDraft("text") }, "Mit Text"), /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (alarmModeDraft === "notext" ? " active" : ""), onClick: () => setAlarmModeDraft("notext") }, "Ohne Text"), /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (alarmModeDraft === "none" ? " active" : ""), onClick: () => setAlarmModeDraft("none") }, "Kein Wecker")), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: -4 } }, alarmModeDraft === "text" && "Der Wecker geht erst aus, wenn ein Text exakt abgeschrieben ist. Dort hinein kannst du deine Ziele, Affirmationen oder einen Satz schreiben, der dich morgens in die richtige Richtung schiebt \u2014 so liest du das Wichtigste, bevor der Tag beginnt.", alarmModeDraft === "notext" && 'Ein Knopf schaltet den Wecker aus \u2014 einfacher, aber leichter zu "snoozen".', alarmModeDraft === "none" && "Der Wecker ist komplett deaktiviert \u2014 die App weckt dich nicht."), alarmModeDraft !== "none" && /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("label", { style: { marginTop: 10 } }, "Weckzeit"), /* @__PURE__ */ import_react.default.createElement("input", { type: "time", value: alarmTimeDraft, onChange: (e) => setAlarmTimeDraft(e.target.value) })), /* @__PURE__ */ import_react.default.createElement(
+    ))), /* @__PURE__ */ import_react.default.createElement("div", { className: "monthly-plan-actions" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "prompt-banner-btn", onClick: saveMonthlyPlan }, "Speichern"), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn cancel", onClick: () => setMonthlyPlanOpen(false) }, "Abbrechen"))), activeTab !== "business" && showAnfangsPromptBanner && !showYearEndBanner && /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-title" }, "\u270D\uFE0F Deine Anfangsreflexion fehlt noch"), /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-text" }, "Sie ist dein Ausgangspunkt f\xFCr dieses Jahr und wird nur einmal pro Zyklus ausgef\xFCllt."), /* @__PURE__ */ import_react.default.createElement("button", { className: "prompt-banner-btn", onClick: openAnfangsReflexion }, "Jetzt ausf\xFCllen"), /* @__PURE__ */ import_react.default.createElement("button", { className: "banner-dismiss-link", onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { anfangsNeverRemind: true })) }, "Nie mehr erinnern")), activeTab === "daily" && showMissedHabitBanner && /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner accountability" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-title" }, appState.userName ? `${appState.userName}, ` : "", "wenn du deine Habits nicht erf\xFCllst, erreichst du deine Ziele nicht."), /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-text" }, "Diese Habits hast du nicht gemacht:"), /* @__PURE__ */ import_react.default.createElement("ul", { className: "missed-goals-list" }, missedYesterday.map((h) => /* @__PURE__ */ import_react.default.createElement("li", { key: h.id }, h.name))), /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-text" }, "Deine Ziele waren doch:"), /* @__PURE__ */ import_react.default.createElement("ul", { className: "missed-goals-list" }, missedYesterday.filter((h) => h.ziel).map((h) => /* @__PURE__ */ import_react.default.createElement("li", { key: h.id }, h.ziel)), monthGoalData && monthGoalData.monthGoal && /* @__PURE__ */ import_react.default.createElement("li", null, monthGoalData.monthGoal), weekData && weekData.goal && /* @__PURE__ */ import_react.default.createElement("li", null, weekData.goal)), /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-text" }, "Mach es. Wieso h\xE4ltst du dich nicht an das, was du dir vorgenommen hast? Fange an durchzuhalten \u2014 ob es dir Spa\xDF macht oder nicht."), /* @__PURE__ */ import_react.default.createElement("button", { className: "prompt-banner-btn", onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { lastMissedBannerDate: todayKey })) }, "Verstanden")), activeTab === "daily" && showWeekRolloverBanner && /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-title" }, "\u{1F4C5} Neue Woche \u2014 neues Wochenziel"), /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-text" }, pendingWeekRollover ? /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, 'Hast du dein Wochenziel erreicht: "', pendingWeekRollover.goal, '"?') : "Was ist dein Fokus diese Woche?"), pendingWeekRollover ? /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("button", { className: "prompt-banner-btn", onClick: () => archiveAndStartNewWeekGoal(true), style: { marginRight: 8 } }, "Ja, erreicht"), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn cancel", onClick: () => archiveAndStartNewWeekGoal(false) }, "Nein")) : /* @__PURE__ */ import_react.default.createElement("button", { className: "prompt-banner-btn", onClick: () => archiveAndStartNewWeekGoal(false) }, "Neues Wochenziel eintragen")), activeTab === "daily" && showMonthRolloverBanner && /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-title" }, "\u{1F3C6} Neuer Monat \u2014 neues Monatsziel"), /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-text" }, pendingMonthRollover ? /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, 'Hast du dein Monatsziel erreicht: "', pendingMonthRollover.goal, '"?') : "Was willst du diesen Monat erreichen?"), pendingMonthRollover ? /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("button", { className: "prompt-banner-btn", onClick: () => archiveAndStartNewMonthGoal(true), style: { marginRight: 8 } }, "Ja, erreicht"), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn cancel", onClick: () => archiveAndStartNewMonthGoal(false) }, "Nein")) : /* @__PURE__ */ import_react.default.createElement("button", { className: "prompt-banner-btn", onClick: () => archiveAndStartNewMonthGoal(false) }, "Neues Monatsziel eintragen"))), /* @__PURE__ */ import_react.default.createElement("div", { className: "topbar", style: { order: -1e3 } }, /* @__PURE__ */ import_react.default.createElement("div", null, /* @__PURE__ */ import_react.default.createElement("div", { className: "eyebrow" }, "Master Your Life"), /* @__PURE__ */ import_react.default.createElement("div", { className: "clock-mini" }, "Aktuelle Zeit ", clock, appState.alarmMode !== "none" ? /* @__PURE__ */ import_react.default.createElement("span", { className: "wecker-click", onClick: () => setShowAlarmSettings(true) }, " \xB7 Wecker ", `${appState.alarmTime} Uhr`) : null)), /* @__PURE__ */ import_react.default.createElement("div", { className: "topbar-gears" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "gear", onClick: () => setShowAlarmSettings((s) => !s), "aria-label": "Wecker-Einstellungen" }, "\u23F0"), /* @__PURE__ */ import_react.default.createElement("button", { className: "gear", onClick: () => setShowSettings((s) => !s), "aria-label": "Einstellungen" }, "\u2699")), showAlarmSettings && /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-pop" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "pop-close", onClick: () => setShowAlarmSettings(false), "aria-label": "Schlie\xDFen" }, "\xD7"), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: -4, marginBottom: 8 } }, "Der Wecker ist das Herzst\xFCck der App. Am besten stellst du ihn so ein, dass er dich wirklich zum Aufstehen bringt, statt dass du ihn im Halbschlaf wegtippst."), /* @__PURE__ */ import_react.default.createElement("label", null, "Wecker-Art"), /* @__PURE__ */ import_react.default.createElement("div", { className: "theme-row", style: { flexWrap: "wrap" } }, /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (alarmModeDraft === "text" ? " active" : ""), onClick: () => setAlarmModeDraft("text") }, "Mit Text"), /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (alarmModeDraft === "notext" ? " active" : ""), onClick: () => setAlarmModeDraft("notext") }, "Ohne Text"), /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (alarmModeDraft === "none" ? " active" : ""), onClick: () => setAlarmModeDraft("none") }, "Kein Wecker")), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: -4 } }, alarmModeDraft === "text" && "Der Wecker geht erst aus, wenn ein Text exakt abgeschrieben ist. Dort hinein kannst du deine Ziele, Affirmationen oder einen Satz schreiben, der dich morgens in die richtige Richtung schiebt \u2014 so liest du das Wichtigste, bevor der Tag beginnt.", alarmModeDraft === "notext" && 'Ein Knopf schaltet den Wecker aus \u2014 einfacher, aber leichter zu "snoozen".', alarmModeDraft === "none" && "Der Wecker ist komplett deaktiviert \u2014 die App weckt dich nicht."), alarmModeDraft !== "none" && /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("label", { style: { marginTop: 10 } }, "Weckzeit"), /* @__PURE__ */ import_react.default.createElement("input", { type: "time", value: alarmTimeDraft, onChange: (e) => setAlarmTimeDraft(e.target.value) })), /* @__PURE__ */ import_react.default.createElement(
       "button",
       {
         className: "save-btn" + (savedFlash === "alarm" ? " saved" : ""),
@@ -15983,19 +16336,22 @@ try {
     } }, savedFlash === "off" ? "\u2713 Wecker ausgeschaltet" : "Wecker jetzt ausschalten"), /* @__PURE__ */ import_react.default.createElement("label", { style: { marginTop: 10 } }, "Verlassen der App beim Wecker erschweren"), /* @__PURE__ */ import_react.default.createElement("div", { className: "theme-row" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (appState.blockExit !== false ? " active" : ""), onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { blockExit: true })) }, "An"), /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (appState.blockExit === false ? " active" : ""), onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { blockExit: false })) }, "Aus")), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: -2 } }, "Bei \u201eAn\u201c fragt der Browser nach, wenn du die Seite w\xE4hrend des Weckers schlie\xDFen willst, und der Wecker klingelt beim Zur\xFCckkommen sofort weiter. Ein echtes Sperren des Handys kann eine Website technisch nicht \u2014 der Startbildschirm-Knopf bleibt immer erreichbar."), alarmModeDraft === "text" && /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("label", { style: { marginTop: 6 } }, "Pflichttext zum Abschreiben (Ziele, Affirmationen, ein Leitsatz)"), /* @__PURE__ */ import_react.default.createElement("textarea", { className: "settings-textarea" + (savedFlash === "text" ? " saved" : ""), value: sentencesDraft, onChange: (e) => setSentencesDraft(e.target.value), rows: 5 }), /* @__PURE__ */ import_react.default.createElement("button", { className: "save-btn" + (savedFlash === "text" ? " saved" : ""), onClick: () => {
         updateSentences();
         flashSaved("text");
-      } }, savedFlash === "text" ? "\u2713 Text gespeichert" : "Text speichern")), alarmModeDraft !== "none" && /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("label", { style: { marginTop: 6 } }, "Eigener Wecker-Sound"), customAudioName ? /* @__PURE__ */ import_react.default.createElement("div", { className: "audio-current" }, "\u2713 ", customAudioName) : /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note" }, "Standard: eigens komponiertes motivierendes Wecker-Riff (in der App erzeugt). Eigene MP3 hochladen \u2014 bleibt nur bis zum Schlie\xDFen des Tabs gespeichert (zu gro\xDF f\xFCr dauerhaften Speicher). Spotify-Songs lassen sich technisch nicht einbinden, daf\xFCr br\xE4uchte es einen echten Server + Spotify-Premium-Login."), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note" }, "Eigener Sound (Musik von deinem Ger\xE4t):")), /* @__PURE__ */ import_react.default.createElement("div", { className: "audio-file-row" }, /* @__PURE__ */ import_react.default.createElement("input", { type: "file", accept: "audio/*", onChange: handleCustomAudioSelect }), customAudioName && /* @__PURE__ */ import_react.default.createElement("button", { className: "audio-clear-btn", onClick: clearCustomAudio }, "Entfernen")), /* @__PURE__ */ import_react.default.createElement("button", { className: "test-btn", onClick: triggerTestAlarm, style: { marginTop: 8 } }, "Wecker jetzt testen"))), showSettings && /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-pop" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "pop-close", onClick: () => setShowSettings(false), "aria-label": "Schlie\xDFen" }, "\xD7"), /* @__PURE__ */ import_react.default.createElement("label", null, "Sounds"), /* @__PURE__ */ import_react.default.createElement("div", { className: "theme-row" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (appState.soundsEnabled ? " active" : ""), onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { soundsEnabled: true })) }, "An"), /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (!appState.soundsEnabled ? " active" : ""), onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { soundsEnabled: false })) }, "Aus")), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: -4 } }, "Gilt f\xFCr Erfolgs-/Jubel-/Klick-T\xF6ne. Der Wecker selbst klingelt immer, unabh\xE4ngig davon."), /* @__PURE__ */ import_react.default.createElement("label", { style: { marginTop: 6 } }, "Hintergrund"), /* @__PURE__ */ import_react.default.createElement("div", { className: "theme-row" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (appState.theme === "dark" ? " active" : ""), onClick: () => setTheme("dark") }, "Schwarz"), /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn light" + (appState.theme === "light" ? " active" : ""), onClick: () => setTheme("light") }, "Wei\xDF")), /* @__PURE__ */ import_react.default.createElement("div", { className: "theme-row", style: { flexWrap: "wrap", marginTop: 6 } }, (appState.theme === "light" ? [["creme", "Creme"], ["weiss", "Tiefwei\xDF"], ["hellgrau", "Hellgrau"], ["sand", "Sand"]] : [["schwarz", "Tiefschwarz"], ["warm", "Warmbraun"], ["grau", "Anthrazit"], ["marine", "Marine"], ["wald", "Waldgr\xFCn"]]).map(([id, label]) => /* @__PURE__ */ import_react.default.createElement("button", { key: id, className: "theme-btn" + ((appState.bgChoice || (appState.theme === "light" ? "creme" : "schwarz")) === id ? " active" : ""), onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { bgChoice: id })) }, label))), /* @__PURE__ */ import_react.default.createElement("label", { style: { marginTop: 6 } }, "Farbton"), /* @__PURE__ */ import_react.default.createElement("div", { className: "theme-row", style: { flexWrap: "wrap" } }, [["amber", "Amber"], ["blau", "Blau"], ["gruen", "Gr\xFCn"], ["lila", "Lila"], ["rot", "Rot"]].map(([id, label]) => /* @__PURE__ */ import_react.default.createElement("button", { key: id, className: "theme-btn" + ((appState.accentChoice || "amber") === id ? " active" : ""), onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { accentChoice: id })) }, label))), /* @__PURE__ */ import_react.default.createElement("label", { style: { marginTop: 6 } }, "Schriftart"), /* @__PURE__ */ import_react.default.createElement("div", { className: "theme-row", style: { flexWrap: "wrap" } }, [["elegant", "Elegant"], ["modern", "Modern"], ["rund", "Rund"], ["klassisch", "Klassisch"]].map(([id, label]) => /* @__PURE__ */ import_react.default.createElement("button", { key: id, className: "theme-btn" + ((appState.fontChoice || "elegant") === id ? " active" : ""), onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { fontChoice: id })) }, label))), /* @__PURE__ */ import_react.default.createElement("label", { style: { marginTop: 6 } }, "Darstellung"), /* @__PURE__ */ import_react.default.createElement("div", { className: "theme-row" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (!appState.plainMode ? " active" : ""), onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { plainMode: false })) }, "Gestaltet"), /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (appState.plainMode ? " active" : ""), onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { plainMode: true })) }, "Schlicht")), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: -4 } }, "Schlicht: normale Schrift, kaum Farbe, minimales Design \u2014 \xFCberschreibt Schriftart und Farbton."), /* @__PURE__ */ import_react.default.createElement("button", { className: "test-btn", onClick: () => {
+      } }, savedFlash === "text" ? "\u2713 Text gespeichert" : "Text speichern")), alarmModeDraft !== "none" && /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("label", { style: { marginTop: 6 } }, "Eigener Wecker-Sound"), customAudioName ? /* @__PURE__ */ import_react.default.createElement("div", { className: "audio-current" }, "\u2713 ", customAudioName) : /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note" }, "Standard: eigens komponiertes motivierendes Wecker-Riff (in der App erzeugt). Eigene MP3 hochladen \u2014 sie bleibt dauerhaft gespeichert und steht beim n\xE4chsten Start wieder bereit. Spotify-Songs lassen sich technisch nicht einbinden, daf\xFCr br\xE4uchte es einen echten Server + Spotify-Premium-Login."), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note" }, "Eigener Sound (Musik von deinem Ger\xE4t):")), /* @__PURE__ */ import_react.default.createElement("div", { className: "audio-file-row" }, /* @__PURE__ */ import_react.default.createElement("input", { type: "file", accept: "audio/*", onChange: handleCustomAudioSelect }), customAudioName && /* @__PURE__ */ import_react.default.createElement("button", { className: "audio-clear-btn", onClick: clearCustomAudio }, "Entfernen")), /* @__PURE__ */ import_react.default.createElement("button", { className: "test-btn", onClick: triggerTestAlarm, style: { marginTop: 8 } }, "Wecker jetzt testen"))), showSettings && /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-pop" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "pop-close", onClick: () => setShowSettings(false), "aria-label": "Schlie\xDFen" }, "\xD7"), /* @__PURE__ */ import_react.default.createElement("label", null, "Sounds"), /* @__PURE__ */ import_react.default.createElement("div", { className: "theme-row" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (appState.soundsEnabled ? " active" : ""), onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { soundsEnabled: true })) }, "An"), /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (!appState.soundsEnabled ? " active" : ""), onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { soundsEnabled: false })) }, "Aus")), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: -4 } }, "Gilt f\xFCr Erfolgs-/Jubel-/Klick-T\xF6ne. Der Wecker selbst klingelt immer, unabh\xE4ngig davon."), /* @__PURE__ */ import_react.default.createElement("label", { style: { marginTop: 6 } }, "Hintergrund"), /* @__PURE__ */ import_react.default.createElement("div", { className: "theme-row" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (appState.theme === "dark" ? " active" : ""), onClick: () => setTheme("dark") }, "Schwarz"), /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn light" + (appState.theme === "light" ? " active" : ""), onClick: () => setTheme("light") }, "Wei\xDF")), /* @__PURE__ */ import_react.default.createElement("div", { className: "theme-row", style: { flexWrap: "wrap", marginTop: 6 } }, (appState.theme === "light" ? [["creme", "Creme"], ["weiss", "Tiefwei\xDF"], ["hellgrau", "Hellgrau"], ["sand", "Sand"]] : [["schwarz", "Tiefschwarz"], ["warm", "Warmbraun"], ["grau", "Anthrazit"], ["marine", "Marine"], ["wald", "Waldgr\xFCn"]]).map(([id, label]) => /* @__PURE__ */ import_react.default.createElement("button", { key: id, className: "theme-btn" + ((appState.bgChoice || (appState.theme === "light" ? "creme" : "schwarz")) === id ? " active" : ""), onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { bgChoice: id })) }, label))), /* @__PURE__ */ import_react.default.createElement("label", { style: { marginTop: 6 } }, "Farbton"), /* @__PURE__ */ import_react.default.createElement("div", { className: "theme-row", style: { flexWrap: "wrap" } }, [["amber", "Amber"], ["blau", "Blau"], ["gruen", "Gr\xFCn"], ["lila", "Lila"], ["rot", "Rot"]].map(([id, label]) => /* @__PURE__ */ import_react.default.createElement("button", { key: id, className: "theme-btn" + ((appState.accentChoice || "amber") === id ? " active" : ""), onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { accentChoice: id })) }, label))), /* @__PURE__ */ import_react.default.createElement("label", { style: { marginTop: 6 } }, "Schriftart"), /* @__PURE__ */ import_react.default.createElement("div", { className: "theme-row", style: { flexWrap: "wrap" } }, [["elegant", "Elegant"], ["modern", "Modern"], ["rund", "Rund"], ["klassisch", "Klassisch"]].map(([id, label]) => /* @__PURE__ */ import_react.default.createElement("button", { key: id, className: "theme-btn" + ((appState.fontChoice || "elegant") === id ? " active" : ""), onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { fontChoice: id })) }, label))), /* @__PURE__ */ import_react.default.createElement("label", { style: { marginTop: 6 } }, "Darstellung"), /* @__PURE__ */ import_react.default.createElement("div", { className: "theme-row" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (!appState.plainMode ? " active" : ""), onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { plainMode: false })) }, "Gestaltet"), /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (appState.plainMode ? " active" : ""), onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { plainMode: true })) }, "Schlicht")), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: -4 } }, "Schlicht: normale Schrift, kaum Farbe, minimales Design \u2014 \xFCberschreibt Schriftart und Farbton."), /* @__PURE__ */ import_react.default.createElement("button", { className: "test-btn", onClick: () => {
       setShowSettings(false);
       setTourPaused(false);
       setActiveTab(TOUR_STEPS[0].tab);
       setTourStep(0);
-    }, style: { marginTop: 6 } }, "\u{1F9ED} Tour nochmal starten"), /* @__PURE__ */ import_react.default.createElement("button", { className: "test-btn", onClick: () => {
+    }, style: { marginTop: 6 } }, "\u{1F9ED} Tour nochmal starten"), /* @__PURE__ */ import_react.default.createElement("label", { style: { marginTop: 12 } }, "Tage des Jahres beim Monatsziel"), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: -2, marginBottom: 6 } }, "Die Punktereihe mit \u201eTag 210 von 365\u201c \xFCber dem Jahresziel."), /* @__PURE__ */ import_react.default.createElement("div", { className: "theme-row" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (appState.showYearStrip !== false ? " active" : ""), onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { showYearStrip: true })) }, "Anzeigen"), /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (appState.showYearStrip === false ? " active" : ""), onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { showYearStrip: false })) }, "Ausblenden")), /* @__PURE__ */ import_react.default.createElement("label", { style: { marginTop: 12 } }, "Daten sichern"), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: -2, marginBottom: 6 } }, "Speichert alles \u2014 Ziele, Termine, Habits, To-Dos, Notizen und Reflexionen \u2014 in eine Datei. Vor jedem Ger\xE4tewechsel oder neuer Installation zu empfehlen."), /* @__PURE__ */ import_react.default.createElement("button", { className: "test-btn", onClick: exportAllData }, "\u{1F4BE} Sicherung herunterladen"), /* @__PURE__ */ import_react.default.createElement("label", { className: "test-btn", style: { marginTop: 6, display: "block", textAlign: "center", cursor: "pointer" } }, "\u{1F4C2} Sicherung einspielen", /* @__PURE__ */ import_react.default.createElement("input", { type: "file", accept: "application/json,.json", onChange: importAllData, style: { display: "none" } })), /* @__PURE__ */ import_react.default.createElement("label", { style: { marginTop: 12 } }, "Beim \xD6ffnen springen zu"), /* @__PURE__ */ import_react.default.createElement("div", { className: "theme-row", style: { flexWrap: "wrap" } }, [["none", "Nichts"], ["monthGoal", "Monatsziel"], ["yearGoal", "Jahresziel"], ["weekGoal", "Wochenziel"], ["calendar", "Kalender"]].map(([id, label]) => /* @__PURE__ */ import_react.default.createElement("button", { key: id, className: "theme-btn" + ((appState.startSection || "none") === id ? " active" : ""), onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { startSection: id })) }, label))), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: -2 } }, "Bei \u201eNichts\u201c bleibt die App oben stehen, wo du sie verlassen hast."), /* @__PURE__ */ import_react.default.createElement("label", { style: { marginTop: 12 } }, "Mehrere Ziele je Zeitraum"), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: -2, marginBottom: 6 } }, "Normalerweise ein Ziel pro Jahr, Monat und Woche \u2014 das h\xE4lt den Fokus. Wer mehr braucht, schaltet es hier frei."), /* @__PURE__ */ import_react.default.createElement("div", { className: "theme-row" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (appState.multiGoals ? " active" : ""), onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { multiGoals: true })) }, "Erlauben"), /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (!appState.multiGoals ? " active" : ""), onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { multiGoals: false })) }, "Nur ein Ziel")), /* @__PURE__ */ import_react.default.createElement("label", { style: { marginTop: 12 } }, "Symbole in \xDCberschriften"), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: -2, marginBottom: 6 } }, "Tippe ein eigenes Emoji ein oder leere das Feld, wenn du keins willst."), /* @__PURE__ */ import_react.default.createElement("div", { className: "sec-icon-grid" }, [["month", "Monatsziel"], ["today", "Heute geplant"], ["todos", "To-Dos"], ["business", "Business"]].map(([key, label]) => /* @__PURE__ */ import_react.default.createElement("div", { key, className: "sec-icon-row" }, /* @__PURE__ */ import_react.default.createElement("input", { className: "sec-icon-input", maxLength: 2, value: (appState.sectionIcons || {})[key] || "", onChange: (e) => saveAppState(__spreadProps(__spreadValues({}, appState), { sectionIcons: __spreadProps(__spreadValues({}, appState.sectionIcons || {}), { [key]: e.target.value }) })), "aria-label": label }), /* @__PURE__ */ import_react.default.createElement("span", null, label)))), /* @__PURE__ */ import_react.default.createElement("label", { style: { marginTop: 12 } }, "Business-Bereich"), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: -2, marginBottom: 6 } }, "Umsatz, Kosten und Steuer-Orientierung \u2014 vor allem f\xFCr Selbstst\xE4ndige. Als eigener Reiter oben."), /* @__PURE__ */ import_react.default.createElement("div", { className: "theme-row" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (appState.showBusiness ? " active" : ""), onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { showBusiness: true })) }, "Anzeigen"), /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (!appState.showBusiness ? " active" : ""), onClick: () => {
+      if (activeTab === "business") setActiveTab("daily");
+      saveAppState(__spreadProps(__spreadValues({}, appState), { showBusiness: false }));
+    } }, "Ausblenden")), /* @__PURE__ */ import_react.default.createElement("button", { className: "test-btn", onClick: () => {
       setShowSettings(false);
       setResetConfirmOpen(true);
     }, style: { marginTop: 6 } }, "\u{1F5D1} App zur\xFCcksetzen"), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: 12, textAlign: "center", opacity: 0.7 } }, APP_BUILD))), (() => {
       const todaysPriorities = prioritiesFor(todayKey);
       const hasAny = todaysPriorities.some((p) => p.text.trim());
       if (!hasAny) return null;
-      return /* @__PURE__ */ import_react.default.createElement("div", { className: "section", style: { order: -998 } }, /* @__PURE__ */ import_react.default.createElement("div", { className: "section-move-row" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "section-title", style: { marginBottom: 0 } }, "\u{1F4CB} Heute geplant"), /* @__PURE__ */ import_react.default.createElement("button", { className: "tiny-archive-link", style: { marginTop: 0 }, onClick: () => {
+      return /* @__PURE__ */ import_react.default.createElement("div", { className: "section", style: { order: -998 } }, /* @__PURE__ */ import_react.default.createElement("div", { className: "section-move-row" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "section-title", style: { marginBottom: 0 } }, `${secIcon("today")}Heute geplant`), /* @__PURE__ */ import_react.default.createElement("button", { className: "tiny-archive-link", style: { marginTop: 0 }, onClick: () => {
         const days = __spreadValues({}, daysData);
         const existing = days[todayKey] || { checks: {} };
         const priorities = todaysPriorities.map((p) => __spreadProps(__spreadValues({}, p), { text: "" }));
@@ -16004,7 +16360,7 @@ try {
       } }, "Alle l\xF6schen")), todaysPriorities.map(
         (p, i) => p.text.trim() ? /* @__PURE__ */ import_react.default.createElement("div", { className: "goal-row", key: i, style: { marginBottom: 8 } }, /* @__PURE__ */ import_react.default.createElement("button", { className: "goal-toggle" + (p.done ? " done" : ""), onClick: () => togglePriorityDone(todayKey, i), "aria-label": `Priorit\xE4t ${i + 1} erledigt umschalten` }, p.done ? "\u2713" : ""), /* @__PURE__ */ import_react.default.createElement("span", { className: "priority-text" + (p.done ? " done" : "") }, p.text), /* @__PURE__ */ import_react.default.createElement("button", { className: "habit-remove", onClick: () => updatePriority(todayKey, i, ""), "aria-label": `Priorit\xE4t ${i + 1} l\xF6schen` }, "\xD7")) : null
       ));
-    })(), activeTab === "daily" && /* @__PURE__ */ import_react.default.createElement("div", { className: "reorder-block", style: { order: appState.sectionOrder.indexOf("monthGoal") } }, /* @__PURE__ */ import_react.default.createElement("div", { "data-tour": "monatsziel", className: "section month-hero" + (calView === "timeline" ? " merged-bottom" : "") }, /* @__PURE__ */ import_react.default.createElement("div", { className: "section-move-row" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "month-hero-title" }, "\u{1F3C6} Monatsziel"), /* @__PURE__ */ import_react.default.createElement("div", __spreadValues({ className: "move-btns drag-handle" + (draggingId === "monthGoal" ? " dragging" : "") }, makeDragHandlers("monthGoal", moveSection)), /* @__PURE__ */ import_react.default.createElement("span", { className: "drag-dots" }, "\u283F"))), /* @__PURE__ */ import_react.default.createElement("div", { className: "goal-row" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "goal-toggle big" + (monthGoalData && monthGoalData.monthDone ? " done" : ""), onClick: toggleMonthDone, "aria-label": "Monatsziel erledigt umschalten" }, monthGoalData && monthGoalData.monthDone ? "\u2713" : ""), /* @__PURE__ */ import_react.default.createElement(
+    })(), activeTab === "daily" && /* @__PURE__ */ import_react.default.createElement("div", { className: "reorder-block", style: { order: appState.sectionOrder.indexOf("monthGoal") } }, /* @__PURE__ */ import_react.default.createElement("div", { "data-tour": "monatsziel", className: "section month-hero" + (calView === "timeline" ? " merged-bottom" : "") }, /* @__PURE__ */ import_react.default.createElement("div", { className: "section-move-row" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "month-hero-title" }, `${secIcon("month")}Monatsziel`), /* @__PURE__ */ import_react.default.createElement("div", __spreadValues({ className: "move-btns drag-handle" + (draggingId === "monthGoal" ? " dragging" : "") }, makeDragHandlers("monthGoal", moveSection)), /* @__PURE__ */ import_react.default.createElement("span", { className: "drag-dots" }, "\u283F"))), /* @__PURE__ */ import_react.default.createElement("div", { className: "goal-row" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "goal-toggle big" + (monthGoalData && monthGoalData.monthDone ? " done" : ""), onClick: toggleMonthDone, "aria-label": "Monatsziel erledigt umschalten" }, monthGoalData && monthGoalData.monthDone ? "\u2713" : ""), /* @__PURE__ */ import_react.default.createElement(
       "textarea",
       {
         className: "month-hero-input" + (monthGoalData && monthGoalData.monthDone ? " done" : ""),
@@ -16014,7 +16370,21 @@ try {
         disabled: monthGoalLoading,
         rows: 2
       }
-    )), /* @__PURE__ */ import_react.default.createElement("div", { className: "goal-sub" }, MONTH_NAMES[selMonthIdx], " ", selYear), /* @__PURE__ */ import_react.default.createElement("div", { className: "goal-hierarchy" }, appState.showYearGoal && /* @__PURE__ */ import_react.default.createElement("div", { "data-tour": "jahresziel", className: "mini-goal-row hierarchy-row" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "mini-check" + (yearGoalData && yearGoalData.done ? " checked" : ""), onClick: toggleYearGoalDone, "aria-label": "Jahresziel erledigt umschalten" }, yearGoalData && yearGoalData.done ? "\u2713" : ""), /* @__PURE__ */ import_react.default.createElement("span", { className: "mini-label" }, "Jahr ", selYear, ":"), /* @__PURE__ */ import_react.default.createElement(
+    )), /* @__PURE__ */ import_react.default.createElement("div", { className: "goal-sub" }, MONTH_NAMES[selMonthIdx], " ", selYear), /* @__PURE__ */ import_react.default.createElement("div", { className: "goal-hierarchy" }, renderExtraGoals(monthGoalData, saveMonthGoal, "Weiteres Monatsziel", MONTH_CHEERS)), /* @__PURE__ */ import_react.default.createElement("div", { className: "goal-hierarchy" }, appState.showYearGoal && appState.showYearStrip !== false && (() => {
+      const d = appState.testDateOverride ? new Date(appState.testDateOverride) : /* @__PURE__ */ new Date();
+      const y = d.getFullYear();
+      const start = new Date(y, 0, 1);
+      const total = (y % 4 === 0 && y % 100 !== 0 || y % 400 === 0) ? 366 : 365;
+      const dayOfYear = Math.floor((d - start) / 864e5) + 1;
+      const dots = [];
+      for (let i = 1; i <= total; i++) {
+        dots.push(/* @__PURE__ */ import_react.default.createElement("span", {
+          key: i,
+          className: "year-dot" + (i < dayOfYear ? " past" : i === dayOfYear ? " today" : "")
+        }));
+      }
+      return /* @__PURE__ */ import_react.default.createElement("div", { className: "year-strip" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "year-strip-dots" }, dots), /* @__PURE__ */ import_react.default.createElement("div", { className: "year-strip-label" }, `Tag ${dayOfYear} von ${total} \u2014 noch ${total - dayOfYear} \xFCbrig`));
+    })(), /* @__PURE__ */ import_react.default.createElement("div", { "data-tour": "jahresziel", className: "mini-goal-row hierarchy-row" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "mini-check" + (yearGoalData && yearGoalData.done ? " checked" : ""), onClick: toggleYearGoalDone, "aria-label": "Jahresziel erledigt umschalten" }, yearGoalData && yearGoalData.done ? "\u2713" : ""), /* @__PURE__ */ import_react.default.createElement("span", { className: "mini-label" }, "Jahr ", selYear, ":"), /* @__PURE__ */ import_react.default.createElement(
       "input",
       {
         className: "mini-input" + (yearGoalData && yearGoalData.done ? " done" : ""),
@@ -16025,7 +16395,7 @@ try {
     ), /* @__PURE__ */ import_react.default.createElement("button", { className: "hierarchy-hide", onClick: () => {
       saveAppState(__spreadProps(__spreadValues({}, appState), { showYearGoal: false }));
       saveYearGoal({ goal: "", done: false });
-    }, "aria-label": "Jahresziel l\xF6schen" }, "\xD7")), !appState.showYearGoal && /* @__PURE__ */ import_react.default.createElement("button", { className: "hierarchy-add", onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { showYearGoal: true })), "aria-label": "Jahresziel hinzuf\xFCgen" }, "+ Jahresziel"), appState.showQuartalGoal && /* @__PURE__ */ import_react.default.createElement("div", { className: "mini-goal-row hierarchy-row" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "mini-check" + (quartalGoalData && quartalGoalData.done ? " checked" : ""), onClick: toggleQuartalGoalDone, "aria-label": "Quartalsziel erledigt umschalten" }, quartalGoalData && quartalGoalData.done ? "\u2713" : ""), /* @__PURE__ */ import_react.default.createElement("span", { className: "mini-label" }, "Q", Math.floor(selMonthIdx / 3) + 1, ":"), /* @__PURE__ */ import_react.default.createElement(
+    }, "aria-label": "Jahresziel l\xF6schen" }, "\xD7")), appState.showYearGoal && renderExtraGoals(yearGoalData, saveYearGoal, "Weiteres Jahresziel", YEAR_CHEERS), !appState.showYearGoal && /* @__PURE__ */ import_react.default.createElement("button", { className: "hierarchy-add", onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { showYearGoal: true })), "aria-label": "Jahresziel hinzuf\xFCgen" }, "+ Jahresziel"), appState.showQuartalGoal && /* @__PURE__ */ import_react.default.createElement("div", { className: "mini-goal-row hierarchy-row" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "mini-check" + (quartalGoalData && quartalGoalData.done ? " checked" : ""), onClick: toggleQuartalGoalDone, "aria-label": "Quartalsziel erledigt umschalten" }, quartalGoalData && quartalGoalData.done ? "\u2713" : ""), /* @__PURE__ */ import_react.default.createElement("span", { className: "mini-label" }, "Q", Math.floor(selMonthIdx / 3) + 1, ":"), /* @__PURE__ */ import_react.default.createElement(
       "input",
       {
         className: "mini-input" + (quartalGoalData && quartalGoalData.done ? " done" : ""),
@@ -16131,7 +16501,7 @@ try {
           onChange: (e) => setNotesSearch(e.target.value),
           placeholder: "\u{1F50D} Wort suchen \u2014 springt zur passenden Seite \u2026"
         }
-      ), query && /* @__PURE__ */ import_react.default.createElement("div", { className: "notes-search-results" }, matches.length === 0 && /* @__PURE__ */ import_react.default.createElement("div", { className: "habit-empty" }, "Nichts gefunden."), matches.map(({ i, p }) => /* @__PURE__ */ import_react.default.createElement(
+      ), query && /* @__PURE__ */ import_react.default.createElement("div", { className: "notes-search-results" }, matches.length === 0 && /* @__PURE__ */ import_react.default.createElement("div", { className: "habit-empty" }, "Kein Treffer \u2014 versuche ein anderes Wort."), matches.map(({ i, p }) => /* @__PURE__ */ import_react.default.createElement(
         "button",
         {
           key: p.id,
@@ -16174,7 +16544,7 @@ try {
             }
           }
         },
-        /* @__PURE__ */ import_react.default.createElement("div", { className: "notes-page-nav" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "nav-btn notes-flip-btn", onClick: () => setNotesPageIndex((i) => Math.max(0, i - 1)), disabled: notesPageIndex === 0 }, "\u2039"), /* @__PURE__ */ import_react.default.createElement("span", { className: "notes-page-label" }, currentPage.title, " \xB7 ", notesPageIndex + 1, " / ", notesPages.length), /* @__PURE__ */ import_react.default.createElement(
+        /* @__PURE__ */ import_react.default.createElement("div", { className: "notes-page-nav" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "nav-btn notes-flip-btn", onClick: () => setNotesPageIndex((i) => Math.max(0, i - 1)), disabled: notesPageIndex === 0 }, "\u2039"), /* @__PURE__ */ import_react.default.createElement("span", { className: "notes-page-label" }, `Seite ${notesPageIndex + 1} von ${notesPages.length}`), /* @__PURE__ */ import_react.default.createElement(
           "button",
           {
             className: "nav-btn notes-flip-btn",
@@ -16190,6 +16560,7 @@ try {
           {
             className: "notes-textarea",
             value: currentPage.content,
+            onFocus: () => stampNotePage(notesPageIndex),
             onChange: (e) => updateNotePage(notesPageIndex, e.target.value),
             placeholder: "Schreibe hier deine Notizen \u2026",
             rows: 16
@@ -16263,7 +16634,7 @@ try {
           }
         ), employment === "selbstaendig" && /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("label", null, "Wie viel verdienst du ungef\xE4hr im Jahr?"), /* @__PURE__ */ import_react.default.createElement("div", { className: "income-row", style: { marginBottom: 12 } }, /* @__PURE__ */ import_react.default.createElement("span", { className: "income-label" }, "Gesch\xE4tzter Jahresumsatz"), /* @__PURE__ */ import_react.default.createElement("input", { className: "income-input", type: "number", value: pvData ? pvData.estYearRevenue : "", onChange: (e) => updatePvField("estYearRevenue", e.target.value), placeholder: "z.B. 100000" }), /* @__PURE__ */ import_react.default.createElement("span", { className: "income-unit" }, "\u20AC"))), /* @__PURE__ */ import_react.default.createElement("button", { className: "onboard-next", style: { width: "100%" }, onClick: () => savePvData(__spreadProps(__spreadValues({}, pvData), { businessOnboardingDone: true })) }, "Weiter"), /* @__PURE__ */ import_react.default.createElement("button", { className: "onboard-skip", onClick: () => savePvData(__spreadProps(__spreadValues({}, pvData), { businessOnboardingDone: true })) }, "\xDCberspringen"));
       }
-      return /* @__PURE__ */ import_react.default.createElement("div", { className: "section slide-fade-in" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "section-title", style: { marginBottom: 10 } }, "\u{1F4BC} Business"), /* @__PURE__ */ import_react.default.createElement("div", { className: "employment-toggle" }, /* @__PURE__ */ import_react.default.createElement("button", { className: employment === "selbstaendig" ? "active" : "", onClick: () => updatePvField("employment", "selbstaendig") }, "Selbst\xE4ndig"), /* @__PURE__ */ import_react.default.createElement("button", { className: employment === "angestellt" ? "active" : "", onClick: () => updatePvField("employment", "angestellt") }, "Angestellt")), /* @__PURE__ */ import_react.default.createElement("div", { className: "income-row", style: { marginBottom: 14 } }, /* @__PURE__ */ import_react.default.createElement("span", { className: "income-label" }, "Beruf"), /* @__PURE__ */ import_react.default.createElement("input", { className: "income-input", style: { width: 140, textAlign: "left" }, value: pvData ? pvData.beruf : "", onChange: (e) => updatePvField("beruf", e.target.value), placeholder: "z.B. PV-Vertrieb" })), /* @__PURE__ */ import_react.default.createElement("div", { className: "reflect-label", style: { marginTop: 6 } }, "\u{1F501} Fixkosten (jeden Monat automatisch mitgerechnet)"), fixedCosts.map((x) => /* @__PURE__ */ import_react.default.createElement("div", { key: x.id, className: "biz-entry-row" }, /* @__PURE__ */ import_react.default.createElement("span", { className: "biz-entry-text" }, x.label || "Fixkosten", " \xB7 ", (parseFloat(x.amount) || 0).toFixed(0), " \u20AC/Monat"), /* @__PURE__ */ import_react.default.createElement("button", { className: "habit-remove", onClick: () => savePvData(__spreadProps(__spreadValues({}, pvData), { fixedCosts: fixedCosts.filter((y) => y.id !== x.id) })), "aria-label": "Fixkosten entfernen" }, "\xD7"))), showAddFixed ? /* @__PURE__ */ import_react.default.createElement("div", { className: "add-appt" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "add-appt-row" }, /* @__PURE__ */ import_react.default.createElement("input", { autoFocus: true, value: newFixedLabel, onChange: (e) => setNewFixedLabel(e.target.value), placeholder: "z.B. PKV, Miete, Vertrag" }), /* @__PURE__ */ import_react.default.createElement("input", { type: "number", style: { flex: "0 0 90px" }, value: newFixedAmount, onChange: (e) => setNewFixedAmount(e.target.value), placeholder: "\u20AC/Monat" })), /* @__PURE__ */ import_react.default.createElement("button", { onClick: () => {
+      return /* @__PURE__ */ import_react.default.createElement("div", { className: "section slide-fade-in" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "section-title", style: { marginBottom: 10 } }, `${secIcon("business")}Business`), /* @__PURE__ */ import_react.default.createElement("div", { className: "employment-toggle" }, /* @__PURE__ */ import_react.default.createElement("button", { className: employment === "selbstaendig" ? "active" : "", onClick: () => updatePvField("employment", "selbstaendig") }, "Selbst\xE4ndig"), /* @__PURE__ */ import_react.default.createElement("button", { className: employment === "angestellt" ? "active" : "", onClick: () => updatePvField("employment", "angestellt") }, "Angestellt")), /* @__PURE__ */ import_react.default.createElement("div", { className: "income-row", style: { marginBottom: 14 } }, /* @__PURE__ */ import_react.default.createElement("span", { className: "income-label" }, "Beruf"), /* @__PURE__ */ import_react.default.createElement("input", { className: "income-input", style: { width: 140, textAlign: "left" }, value: pvData ? pvData.beruf : "", onChange: (e) => updatePvField("beruf", e.target.value), placeholder: "z.B. PV-Vertrieb" })), /* @__PURE__ */ import_react.default.createElement("div", { className: "reflect-label", style: { marginTop: 6 } }, "\u{1F501} Fixkosten (jeden Monat automatisch mitgerechnet)"), fixedCosts.map((x) => /* @__PURE__ */ import_react.default.createElement("div", { key: x.id, className: "biz-entry-row" }, /* @__PURE__ */ import_react.default.createElement("span", { className: "biz-entry-text" }, x.label || "Fixkosten", " \xB7 ", (parseFloat(x.amount) || 0).toFixed(0), " \u20AC/Monat"), /* @__PURE__ */ import_react.default.createElement("button", { className: "habit-remove", onClick: () => savePvData(__spreadProps(__spreadValues({}, pvData), { fixedCosts: fixedCosts.filter((y) => y.id !== x.id) })), "aria-label": "Fixkosten entfernen" }, "\xD7"))), showAddFixed ? /* @__PURE__ */ import_react.default.createElement("div", { className: "add-appt" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "add-appt-row" }, /* @__PURE__ */ import_react.default.createElement("input", { autoFocus: true, value: newFixedLabel, onChange: (e) => setNewFixedLabel(e.target.value), placeholder: "z.B. PKV, Miete, Vertrag" }), /* @__PURE__ */ import_react.default.createElement("input", { type: "number", style: { flex: "0 0 90px" }, value: newFixedAmount, onChange: (e) => setNewFixedAmount(e.target.value), placeholder: "\u20AC/Monat" })), /* @__PURE__ */ import_react.default.createElement("button", { onClick: () => {
         if (parseFloat(newFixedAmount) > 0) {
           savePvData(__spreadProps(__spreadValues({}, pvData), { fixedCosts: [...fixedCosts, { id: `f${Date.now()}`, label: newFixedLabel.trim(), amount: newFixedAmount }] }));
           setNewFixedLabel("");
@@ -16320,16 +16691,19 @@ try {
         const reserved = !!reservedMonths[selMonthKey];
         return /* @__PURE__ */ import_react.default.createElement("div", { className: "biz-reserved-row", onClick: () => savePvData(__spreadProps(__spreadValues({}, pvData), { reservedMonths: __spreadProps(__spreadValues({}, reservedMonths), { [selMonthKey]: !reserved }) })) }, /* @__PURE__ */ import_react.default.createElement("span", { className: "habit-check" + (reserved ? " checked" : "") }, reserved ? "\u2713" : ""), /* @__PURE__ */ import_react.default.createElement("span", null, "F\xFCr ", MONTH_NAMES[selMonthIdx], " ", selYear, " zur\xFCckgelegt"));
       })(), employment === "angestellt" ? /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: 8 } }, "Als Angestellter zieht dein Arbeitgeber die Lohnsteuer schon direkt vom Gehalt ab \u2014 Umsatzsteuer, Einkommensteuer-R\xFCcklage und Gewerbesteuer betreffen dich hier nicht, deshalb ausgeblendet.") : /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: 8 } }, 'Steuerwerte sind grobe Orientierung \u2014 kein Steuerberater-Ersatz. USt kommt auf den Netto-Umsatz oben drauf. ESt nach echten Progressionszonen 2026 (\xA732a EStG) berechnet. Gewerbesteuer wird bis zum 4-fachen des Steuermessbetrags auf die ESt angerechnet (\xA735 EStG) \u2014 bei deinem Hebesatz hebt sich das ganz oder teilweise auf, deshalb ist "insgesamt zur\xFCcklegen" niedriger als USt + ESt + Gewerbesteuer einzeln zusammengez\xE4hlt.'));
-    })(), activeTab === "todos" && /* @__PURE__ */ import_react.default.createElement("div", { className: "reorder-block", style: { order: appState.sectionOrder.indexOf("todos") } }, /* @__PURE__ */ import_react.default.createElement("div", { className: "section slide-fade-in" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "section-move-row" }, /* @__PURE__ */ import_react.default.createElement("span", { className: "section-title" }, "\u2705 To-Dos"), /* @__PURE__ */ import_react.default.createElement("div", __spreadValues({ className: "move-btns drag-handle" + (draggingId === "todos" ? " dragging" : "") }, makeDragHandlers("todos", moveSection)), /* @__PURE__ */ import_react.default.createElement("span", { className: "drag-dots" }, "\u283F"))), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginBottom: 10 } }, "Hier kannst du alle To-Dos eintragen"), /* @__PURE__ */ import_react.default.createElement("div", { className: "todo-list-tabs" }, todoLists.map((l) => /* @__PURE__ */ import_react.default.createElement("button", { key: l.id, className: "todo-list-tab" + (activeTodoList === l.id ? " active" : ""), onClick: () => setActiveTodoList(l.id) }, l.name, l.id !== "default" && /* @__PURE__ */ import_react.default.createElement("span", { className: "todo-list-remove", onClick: (e) => {
+    })(), activeTab === "todos" && /* @__PURE__ */ import_react.default.createElement("div", { className: "reorder-block", style: { order: appState.sectionOrder.indexOf("todos") } }, /* @__PURE__ */ import_react.default.createElement("div", { className: "section slide-fade-in" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "section-move-row" }, /* @__PURE__ */ import_react.default.createElement("span", { className: "section-title" }, `${secIcon("todos")}To-Dos`), /* @__PURE__ */ import_react.default.createElement("div", __spreadValues({ className: "move-btns drag-handle" + (draggingId === "todos" ? " dragging" : "") }, makeDragHandlers("todos", moveSection)), /* @__PURE__ */ import_react.default.createElement("span", { className: "drag-dots" }, "\u283F"))), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginBottom: 10 } }, "Hier kannst du alle To-Dos eintragen"), /* @__PURE__ */ import_react.default.createElement("div", { className: "todo-list-tabs" }, todoLists.map((l) => /* @__PURE__ */ import_react.default.createElement("button", { key: l.id, className: "todo-list-tab" + (activeTodoList === l.id ? " active" : ""), onClick: () => setActiveTodoList(l.id) }, l.name, l.id !== "default" && /* @__PURE__ */ import_react.default.createElement("span", { className: "todo-list-remove", onClick: (e) => {
       e.stopPropagation();
       removeTodoList(l.id);
-    } }, "\xD7"))), /* @__PURE__ */ import_react.default.createElement("button", { className: "todo-list-tab add", onClick: () => setAddingTodoList(true) }, "+ Liste"), addingTodoList && /* @__PURE__ */ import_react.default.createElement("div", { className: "delete-confirm" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "appt-step-label" }, "Neue Liste"), /* @__PURE__ */ import_react.default.createElement("input", { className: "appt-name-big", autoFocus: true, value: newListName, onChange: (e) => setNewListName(e.target.value), placeholder: "z.B. Einkaufen oder Projekt Umzug", onKeyDown: (e) => e.key === "Enter" && addTodoList() }), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginBottom: 6 } }, "Planbare Liste? Dann lassen sich Aufgaben als Termin in den Kalender schieben."), /* @__PURE__ */ import_react.default.createElement("div", { className: "employment-toggle", style: { marginBottom: 10 } }, /* @__PURE__ */ import_react.default.createElement("button", { type: "button", className: newListSchedulable ? "active" : "", onClick: () => setNewListSchedulable(true) }, "Ja"), /* @__PURE__ */ import_react.default.createElement("button", { type: "button", className: !newListSchedulable ? "active" : "", onClick: () => setNewListSchedulable(false) }, "Nein")), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn", onClick: addTodoList }, "Anlegen"), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn cancel", onClick: () => {
+    } }, "\xD7"))), /* @__PURE__ */ import_react.default.createElement("button", { className: "todo-list-tab add", onClick: () => setAddingTodoList(true) }, "+ Liste"), movingTodo && /* @__PURE__ */ import_react.default.createElement("div", { className: "delete-confirm" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "appt-step-label" }, "In welche Liste?"), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginBottom: 10 } }, movingTodo.text), todoLists.filter((l) => l.id !== activeTodoList).map((l) => /* @__PURE__ */ import_react.default.createElement("button", { key: l.id, className: "nb-pick-btn", style: { width: "100%", marginBottom: 8 }, onClick: () => {
+      saveTodos(todos.map((x) => x.id === movingTodo.id ? __spreadProps(__spreadValues({}, x), { listId: l.id }) : x));
+      setMovingTodo(null);
+    } }, l.name)), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn cancel", onClick: () => setMovingTodo(null) }, "Abbrechen")), addingTodoList && /* @__PURE__ */ import_react.default.createElement("div", { className: "delete-confirm" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "appt-step-label" }, "Neue Liste"), /* @__PURE__ */ import_react.default.createElement("input", { className: "appt-name-big", autoFocus: true, value: newListName, onChange: (e) => setNewListName(e.target.value), placeholder: "z.B. Einkaufen oder Projekt Umzug", onKeyDown: (e) => e.key === "Enter" && addTodoList() }), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginBottom: 6 } }, "Planbare Liste? Dann lassen sich Aufgaben als Termin in den Kalender schieben."), /* @__PURE__ */ import_react.default.createElement("div", { className: "employment-toggle", style: { marginBottom: 10 } }, /* @__PURE__ */ import_react.default.createElement("button", { type: "button", className: newListSchedulable ? "active" : "", onClick: () => setNewListSchedulable(true) }, "Ja"), /* @__PURE__ */ import_react.default.createElement("button", { type: "button", className: !newListSchedulable ? "active" : "", onClick: () => setNewListSchedulable(false) }, "Nein")), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn", onClick: addTodoList }, "Anlegen"), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn cancel", onClick: () => {
       setAddingTodoList(false);
       setNewListName("");
     } }, "Abbrechen"))), (() => {
       const currentList = todoLists.find((l) => l.id === activeTodoList) || todoLists[0];
       const listTodos = todos.filter((t) => (t.listId || "default") === activeTodoList);
-      return /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, listTodos.length === 0 && /* @__PURE__ */ import_react.default.createElement("div", { className: "habit-empty" }, 'Keine Eintr\xE4ge in "', currentList.name, '".'), listTodos.slice().sort((a, b) => PRIORITY_ORDER[a.priority || "keine"] - PRIORITY_ORDER[b.priority || "keine"]).map((t) => /* @__PURE__ */ import_react.default.createElement("div", { key: t.id, className: "todo-block" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "todo-row" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "habit-check" + (t.done ? " checked" : ""), onClick: () => toggleTodoDone(t.id), "aria-label": "Erledigt umschalten" }, t.done ? "\u2713" : ""), /* @__PURE__ */ import_react.default.createElement("span", { className: "todo-priority", title: t.priority }, t.priority ? PRIORITY_ICON[t.priority] : ""), /* @__PURE__ */ import_react.default.createElement("span", { className: "todo-text" + (t.done ? " done" : "") }, t.text, t.duration ? /* @__PURE__ */ import_react.default.createElement("span", { className: "appt-duration" }, " (", t.duration, " Min)") : null), currentList.schedulable && /* @__PURE__ */ import_react.default.createElement("button", { className: "prompt-banner-btn todo-schedule-btn", onClick: () => startScheduleTodo(t) }, "\u{1F4C5} Einplanen"), /* @__PURE__ */ import_react.default.createElement("button", { className: "habit-remove", onClick: () => removeTodo(t.id), "aria-label": "Entfernen" }, "\xD7")), (t.category || t.location || t.deadline) && /* @__PURE__ */ import_react.default.createElement("div", { className: "todo-tags" }, t.category && /* @__PURE__ */ import_react.default.createElement("span", { className: "todo-tag" }, "\u{1F3F7} ", t.category), t.location && /* @__PURE__ */ import_react.default.createElement("span", { className: "todo-tag" }, "\u{1F4CD} ", t.location), t.deadline && /* @__PURE__ */ import_react.default.createElement("span", { className: "todo-tag" }, "\u23F3 ", t.deadline)))));
+      return /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, listTodos.length === 0 && /* @__PURE__ */ import_react.default.createElement("div", { className: "habit-empty" }, 'Keine Eintr\xE4ge in "', currentList.name, '".'), listTodos.slice().sort((a, b) => PRIORITY_ORDER[a.priority || "keine"] - PRIORITY_ORDER[b.priority || "keine"]).map((t) => /* @__PURE__ */ import_react.default.createElement("div", { key: t.id, className: "todo-block" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "todo-row" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "habit-check" + (t.done ? " checked" : ""), onClick: () => toggleTodoDone(t.id), "aria-label": "Erledigt umschalten" }, t.done ? "\u2713" : ""), /* @__PURE__ */ import_react.default.createElement("span", { className: "todo-priority", title: t.priority }, t.priority === "hoch" ? PRIORITY_ICON.hoch : ""), /* @__PURE__ */ import_react.default.createElement("span", { className: "todo-text" + (t.done ? " done" : "") }, t.text, t.duration ? /* @__PURE__ */ import_react.default.createElement("span", { className: "appt-duration" }, " (", t.duration, " Min)") : null), currentList.schedulable && /* @__PURE__ */ import_react.default.createElement("button", { className: "prompt-banner-btn todo-schedule-btn", onClick: () => startScheduleTodo(t) }, "\u{1F4C5} Einplanen"), todoLists.length > 1 && /* @__PURE__ */ import_react.default.createElement("button", { className: "todo-move-btn", onClick: () => setMovingTodo(t), "aria-label": "In andere Liste verschieben" }, "\u2192|"), /* @__PURE__ */ import_react.default.createElement("button", { className: "habit-remove", onClick: () => removeTodo(t.id), "aria-label": "Entfernen" }, "\xD7")), (t.category || t.location || t.deadline) && /* @__PURE__ */ import_react.default.createElement("div", { className: "todo-tags" }, t.category && /* @__PURE__ */ import_react.default.createElement("span", { className: "todo-tag" }, "\u{1F3F7} ", t.category), t.location && /* @__PURE__ */ import_react.default.createElement("span", { className: "todo-tag" }, "\u{1F4CD} ", t.location), t.deadline && /* @__PURE__ */ import_react.default.createElement("span", { className: "todo-tag" }, "\u23F3 ", t.deadline)))));
     })(), schedulingTodoId && /* @__PURE__ */ import_react.default.createElement("div", { className: "edit-confirm-text" }, /* @__PURE__ */ import_react.default.createElement("div", { style: { marginBottom: 8 } }, "Wann soll es stattfinden? Es wird als Termin in den Kalender eingetragen."), /* @__PURE__ */ import_react.default.createElement("div", { className: "schedule-mini-nav" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "nav-btn", onClick: () => setScheduleDay((d) => shiftMonthKey(d, -1)) }, "\u2039"), /* @__PURE__ */ import_react.default.createElement("span", { className: "nav-label" }, MONTH_NAMES[Number(scheduleDay.split("-")[1]) - 1], " ", scheduleDay.split("-")[0]), /* @__PURE__ */ import_react.default.createElement("button", { className: "nav-btn", onClick: () => setScheduleDay((d) => shiftMonthKey(d, 1)) }, "\u203A")), /* @__PURE__ */ import_react.default.createElement("div", { className: "schedule-mini-grid" }, WEEKDAY_SHORT.map((wd) => /* @__PURE__ */ import_react.default.createElement("span", { key: wd, className: "schedule-mini-dow" }, wd)), getMonthDates(Number(scheduleDay.split("-")[0]), Number(scheduleDay.split("-")[1]) - 1).map((d, i) => {
       const pad0 = i === 0 ? (d.date.getDay() + 6) % 7 : 0;
       const n = apptsFor(d.key).length;
@@ -16342,7 +16716,7 @@ try {
         d.date.getDate(),
         n > 0 && /* @__PURE__ */ import_react.default.createElement("span", { className: "schedule-mini-dot" }, n)
       ));
-    })), /* @__PURE__ */ import_react.default.createElement("div", { className: "add-appt-row", style: { marginTop: 10, marginBottom: 8 } }, /* @__PURE__ */ import_react.default.createElement("span", { className: "nav-label" }, formatLongDate(scheduleDay)), /* @__PURE__ */ import_react.default.createElement("input", { type: "time", value: scheduleTime, onChange: (e) => setScheduleTime(e.target.value) })), /* @__PURE__ */ import_react.default.createElement("div", { className: "reflect-label", style: { marginBottom: 6 } }, "Schon belegt an dem Tag:"), apptsFor(scheduleDay).length === 0 && /* @__PURE__ */ import_react.default.createElement("div", { className: "habit-empty", style: { padding: "4px 0" } }, "Noch nichts eingetragen \u2014 der ganze Tag ist frei."), apptsFor(scheduleDay).map((a) => /* @__PURE__ */ import_react.default.createElement("div", { key: a.id, className: "busy-row" }, /* @__PURE__ */ import_react.default.createElement("span", { className: "appt-time" }, a.isBirthday ? "\u{1F382}" : a.allDay ? "ganzt\xE4gig" : a.time), /* @__PURE__ */ import_react.default.createElement("span", null, a.title, a.duration ? ` (${a.duration} Min)` : ""))), /* @__PURE__ */ import_react.default.createElement("button", { className: "prompt-banner-btn", onClick: confirmScheduleTodo, style: { marginRight: 8, marginTop: 8 } }, "Einplanen"), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn cancel", onClick: () => setSchedulingTodoId(null) }, "Abbrechen")), showAddTodo ? /* @__PURE__ */ import_react.default.createElement("div", { className: "add-appt" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "add-appt-row" }, /* @__PURE__ */ import_react.default.createElement("input", { autoFocus: true, value: newTodoText, onChange: (e) => setNewTodoText(e.target.value), placeholder: "Was ist zu tun?", onKeyDown: (e) => e.key === "Enter" && addTodo() }), (todoLists.find((l) => l.id === activeTodoList) || todoLists[0]).schedulable && /* @__PURE__ */ import_react.default.createElement("button", { className: "todo-more-btn", onClick: () => setTodoExtras((v) => !v), "aria-label": "Weitere Angaben" }, todoExtras ? "\u2212" : "+")), todoExtras && (todoLists.find((l) => l.id === activeTodoList) || todoLists[0]).schedulable && /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("div", { className: "add-appt-row" }, /* @__PURE__ */ import_react.default.createElement("select", { className: "recur-select", value: newTodoPriority, onChange: (e) => setNewTodoPriority(e.target.value) }, /* @__PURE__ */ import_react.default.createElement("option", { value: "" }, "Ohne Priorit\xE4t"), /* @__PURE__ */ import_react.default.createElement("option", { value: "hoch" }, "\u{1F534} Wichtig"), /* @__PURE__ */ import_react.default.createElement("option", { value: "mittel" }, "\u{1F7E1} Mittel"), /* @__PURE__ */ import_react.default.createElement("option", { value: "niedrig" }, "\u26AA Unwichtig")), /* @__PURE__ */ import_react.default.createElement("select", { className: "recur-select", value: newTodoDuration, onChange: (e) => setNewTodoDuration(e.target.value) }, /* @__PURE__ */ import_react.default.createElement("option", { value: "" }, "Dauer"), /* @__PURE__ */ import_react.default.createElement("option", { value: "15" }, "15 Min"), /* @__PURE__ */ import_react.default.createElement("option", { value: "30" }, "30 Min"), /* @__PURE__ */ import_react.default.createElement("option", { value: "60" }, "1 Std"), /* @__PURE__ */ import_react.default.createElement("option", { value: "120" }, "2 Std"))), /* @__PURE__ */ import_react.default.createElement("div", { className: "add-appt-row" }, /* @__PURE__ */ import_react.default.createElement("input", { value: newTodoCategory, onChange: (e) => setNewTodoCategory(e.target.value), placeholder: "Kategorie (z.B. Arbeit)" }), /* @__PURE__ */ import_react.default.createElement("input", { value: newTodoLocation, onChange: (e) => setNewTodoLocation(e.target.value), placeholder: "Ort (optional)" })), /* @__PURE__ */ import_react.default.createElement("div", { className: "add-appt-row" }, /* @__PURE__ */ import_react.default.createElement("input", { type: "date", value: newTodoDeadline, onChange: (e) => setNewTodoDeadline(e.target.value), title: "Deadline (optional)" }))), /* @__PURE__ */ import_react.default.createElement("button", { onClick: () => {
+    })), /* @__PURE__ */ import_react.default.createElement("div", { className: "add-appt-row", style: { marginTop: 10, marginBottom: 8 } }, /* @__PURE__ */ import_react.default.createElement("span", { className: "nav-label" }, formatLongDate(scheduleDay)), /* @__PURE__ */ import_react.default.createElement("input", { type: "time", value: scheduleTime, onChange: (e) => setScheduleTime(e.target.value) })), /* @__PURE__ */ import_react.default.createElement("div", { className: "reflect-label", style: { marginBottom: 6 } }, "Schon belegt an dem Tag:"), apptsFor(scheduleDay).length === 0 && /* @__PURE__ */ import_react.default.createElement("div", { className: "habit-empty", style: { padding: "4px 0" } }, "Noch nichts eingetragen \u2014 der ganze Tag ist frei."), apptsFor(scheduleDay).map((a) => /* @__PURE__ */ import_react.default.createElement("div", { key: a.id, className: "busy-row" }, /* @__PURE__ */ import_react.default.createElement("span", { className: "appt-time" }, a.isBirthday ? "\u{1F382}" : a.allDay ? "ganzt\xE4gig" : a.time), /* @__PURE__ */ import_react.default.createElement("span", null, a.title, a.duration ? ` (${a.duration} Min)` : ""))), /* @__PURE__ */ import_react.default.createElement("button", { className: "prompt-banner-btn", onClick: confirmScheduleTodo, style: { marginRight: 8, marginTop: 8 } }, "Einplanen"), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn cancel", onClick: () => setSchedulingTodoId(null) }, "Abbrechen")), showAddTodo ? /* @__PURE__ */ import_react.default.createElement("div", { className: "add-appt" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "add-appt-row" }, /* @__PURE__ */ import_react.default.createElement("input", { autoFocus: true, value: newTodoText, onChange: (e) => setNewTodoText(e.target.value), placeholder: "Was ist zu tun?", onKeyDown: (e) => e.key === "Enter" && addTodo() }), /* @__PURE__ */ import_react.default.createElement("button", { className: "todo-more-btn", onClick: () => setTodoExtras((v) => !v), "aria-label": "Weitere Angaben" }, todoExtras ? "\u2212" : "+")), todoExtras && /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("div", { className: "add-appt-row" }, /* @__PURE__ */ import_react.default.createElement("select", { className: "recur-select", value: newTodoPriority, onChange: (e) => setNewTodoPriority(e.target.value) }, /* @__PURE__ */ import_react.default.createElement("option", { value: "" }, "Ohne Priorit\xE4t"), /* @__PURE__ */ import_react.default.createElement("option", { value: "hoch" }, "\u{1F534} Wichtig"), /* @__PURE__ */ import_react.default.createElement("option", { value: "mittel" }, "\u{1F7E1} Mittel"), /* @__PURE__ */ import_react.default.createElement("option", { value: "niedrig" }, "\u26AA Unwichtig")), /* @__PURE__ */ import_react.default.createElement("select", { className: "recur-select", value: newTodoDuration, onChange: (e) => setNewTodoDuration(e.target.value) }, /* @__PURE__ */ import_react.default.createElement("option", { value: "" }, "Dauer"), /* @__PURE__ */ import_react.default.createElement("option", { value: "15" }, "15 Min"), /* @__PURE__ */ import_react.default.createElement("option", { value: "30" }, "30 Min"), /* @__PURE__ */ import_react.default.createElement("option", { value: "60" }, "1 Std"), /* @__PURE__ */ import_react.default.createElement("option", { value: "120" }, "2 Std"))), /* @__PURE__ */ import_react.default.createElement("div", { className: "add-appt-row" }, /* @__PURE__ */ import_react.default.createElement("input", { value: newTodoCategory, onChange: (e) => setNewTodoCategory(e.target.value), placeholder: "Kategorie (z.B. Arbeit)" }), /* @__PURE__ */ import_react.default.createElement("input", { value: newTodoLocation, onChange: (e) => setNewTodoLocation(e.target.value), placeholder: "Ort (optional)" })), /* @__PURE__ */ import_react.default.createElement("div", { className: "add-appt-row" }, /* @__PURE__ */ import_react.default.createElement("input", { type: "date", value: newTodoDeadline, onChange: (e) => setNewTodoDeadline(e.target.value), title: "Deadline (optional)" }))), /* @__PURE__ */ import_react.default.createElement("button", { onClick: () => {
       addTodo();
       setShowAddTodo(false);
       setTodoExtras(false);
@@ -16365,11 +16739,18 @@ try {
           touchStartXRef.current = null;
           touchStartYRef.current = null;
           if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+            playPageSound();
             setSelectedDay((cur) => shiftDays(cur, dx < 0 ? 1 : -1));
           }
         }
       },
-      /* @__PURE__ */ import_react.default.createElement("div", { className: "section" + (calView === "timeline" ? " merged-top merged-bottom" : "") }, /* @__PURE__ */ import_react.default.createElement("div", { className: "section-move-row" }, /* @__PURE__ */ import_react.default.createElement("span", { className: "nav-label" }, "Kalender ", /* @__PURE__ */ import_react.default.createElement("span", { className: "swipe-hint" }, "(wischen f\xFCr den n\xE4chsten oder vorherigen Tag)")), /* @__PURE__ */ import_react.default.createElement("div", __spreadValues({ className: "move-btns drag-handle" + (draggingId === "calendar" ? " dragging" : "") }, makeDragHandlers("calendar", moveSection)), /* @__PURE__ */ import_react.default.createElement("span", { className: "drag-dots" }, "\u283F"))), /* @__PURE__ */ import_react.default.createElement("div", { className: "nav-row view-select-row" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "nav-btn" + (calView === "timeline" ? " view-active" : ""), onClick: () => setCalView("timeline") }, "\u{1F550} Zeitleiste"), /* @__PURE__ */ import_react.default.createElement("button", { className: "nav-btn" + (calView === "month" ? " view-active" : ""), onClick: () => setCalView("month") }, "\u{1F4C6} Monat"), /* @__PURE__ */ import_react.default.createElement("button", { className: "nav-btn" + (calView === "table" ? " view-active" : ""), onClick: () => setCalView("table") }, "\u{1F4CB} Tabelle")), calView === "timeline" ? /* @__PURE__ */ import_react.default.createElement("div", { className: "timeline-wrap slide-fade-in", key: selectedDay }, /* @__PURE__ */ import_react.default.createElement("div", { className: "timeline-day-nav" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "nav-btn", onClick: () => setSelectedDay((d) => shiftDays(d, timelineNavMode === "monat" ? -30 : -7)), "aria-label": "Zur\xFCck" }, "\u2039"), /* @__PURE__ */ import_react.default.createElement("div", { className: "timeline-nav-mode" }, /* @__PURE__ */ import_react.default.createElement("button", { className: timelineNavMode === "woche" ? "active" : "", onClick: () => setTimelineNavMode("woche") }, "Woche"), /* @__PURE__ */ import_react.default.createElement("button", { className: timelineNavMode === "monat" ? "active" : "", onClick: () => setTimelineNavMode("monat") }, "Monat")), /* @__PURE__ */ import_react.default.createElement("button", { className: "nav-btn", onClick: () => setSelectedDay((d) => shiftDays(d, timelineNavMode === "monat" ? 30 : 7)), "aria-label": "Weiter" }, "\u203A")), timelineNavMode === "woche" ? /* @__PURE__ */ import_react.default.createElement("div", { className: "week-strip" }, getWeekDates(selectedDay).map((d) => /* @__PURE__ */ import_react.default.createElement(
+      /* @__PURE__ */ import_react.default.createElement("div", { className: "section" + (calView === "timeline" ? " merged-top merged-bottom" : "") }, /* @__PURE__ */ import_react.default.createElement("div", { className: "section-move-row" }, /* @__PURE__ */ import_react.default.createElement("span", { className: "nav-label" }, "Kalender ", /* @__PURE__ */ import_react.default.createElement("span", { className: "swipe-hint" }, "(wischen f\xFCr den n\xE4chsten oder vorherigen Tag)")), /* @__PURE__ */ import_react.default.createElement("div", __spreadValues({ className: "move-btns drag-handle" + (draggingId === "calendar" ? " dragging" : "") }, makeDragHandlers("calendar", moveSection)), /* @__PURE__ */ import_react.default.createElement("span", { className: "drag-dots" }, "\u283F"))), /* @__PURE__ */ import_react.default.createElement("div", { className: "nav-row view-select-row" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "nav-btn" + (calView === "timeline" ? " view-active" : ""), onClick: () => setCalView("timeline") }, "\u{1F550} Zeitleiste"), /* @__PURE__ */ import_react.default.createElement("button", { className: "nav-btn" + (calView === "month" ? " view-active" : ""), onClick: () => setCalView("month") }, "\u{1F4C6} Monat"), /* @__PURE__ */ import_react.default.createElement("button", { className: "nav-btn" + (calView === "table" ? " view-active" : ""), onClick: () => setCalView("table") }, "\u{1F4CB} Tabelle")), calView === "timeline" ? /* @__PURE__ */ import_react.default.createElement("div", { className: "timeline-wrap slide-fade-in", key: selectedDay }, /* @__PURE__ */ import_react.default.createElement("div", { className: "timeline-day-nav" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "nav-btn", onClick: () => {
+        playPageSound();
+        setSelectedDay((d) => shiftDays(d, timelineNavMode === "monat" ? -30 : -7));
+      }, "aria-label": "Zur\xFCck" }, "\u2039"), /* @__PURE__ */ import_react.default.createElement("div", { className: "timeline-nav-mode" }, /* @__PURE__ */ import_react.default.createElement("button", { className: timelineNavMode === "woche" ? "active" : "", onClick: () => setTimelineNavMode("woche") }, "Woche"), /* @__PURE__ */ import_react.default.createElement("button", { className: timelineNavMode === "monat" ? "active" : "", onClick: () => setTimelineNavMode("monat") }, "Monat")), /* @__PURE__ */ import_react.default.createElement("button", { className: "nav-btn", onClick: () => {
+        playPageSound();
+        setSelectedDay((d) => shiftDays(d, timelineNavMode === "monat" ? 30 : 7));
+      }, "aria-label": "Weiter" }, "\u203A")), timelineNavMode === "woche" ? /* @__PURE__ */ import_react.default.createElement("div", { className: "week-strip" }, getWeekDates(selectedDay).map((d) => /* @__PURE__ */ import_react.default.createElement(
         "button",
         {
           key: d.key,
@@ -16406,7 +16787,7 @@ try {
           placeholder: "Wochenziel z.B. Wohnung streichen",
           disabled: weekLoading
         }
-      ))), /* @__PURE__ */ import_react.default.createElement("div", { "data-tour": "habits", className: "timeline-habits-list" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "timeline-list-label" }, "Habits / KPIs"), appState.habitTemplate.map((h) => {
+      ), renderExtraGoals(weekData, saveWeek, "Weiteres Wochenziel", WEEK_CHEERS))), /* @__PURE__ */ import_react.default.createElement("div", { "data-tour": "habits", className: "timeline-habits-list" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "timeline-list-label" }, "Habits / KPIs"), appState.habitTemplate.map((h) => {
         const checks = daysData[selectedDay] && daysData[selectedDay].checks || {};
         const checked = !!checks[h.id];
         if (editingHabitId === h.id) {
@@ -16527,6 +16908,10 @@ try {
         const hour = i + 6;
         const hourLabel = `${pad(hour)}:00`;
         return /* @__PURE__ */ import_react.default.createElement("div", { key: hour, className: "timeline-row" }, /* @__PURE__ */ import_react.default.createElement("span", { className: "timeline-hour" }, hourLabel), /* @__PURE__ */ import_react.default.createElement("div", { className: "timeline-lane", onClick: (e) => {
+          if (tappedHour === hour) {
+            closeApptForm();
+            return;
+          }
           if (tappedHour !== hour) {
             setTappedMinute(0);
             setTourFlags((f) => __spreadProps(__spreadValues({}, f), { appt: true }));
@@ -16536,67 +16921,8 @@ try {
             setTimelineApptRecurrence("none");
             setApptStep(1);
           }
-        } }, tappedHour === hour && /* @__PURE__ */ import_react.default.createElement("div", { className: "timeline-add-form", onClick: (e) => e.stopPropagation() }, /* @__PURE__ */ import_react.default.createElement("button", { className: "pop-close", onClick: closeApptForm, "aria-label": "Schlie\xDFen" }, "\xD7"), /* @__PURE__ */ import_react.default.createElement("div", { className: "appt-step-label" }, apptStep === 1 ? "Wann geht es los?" : apptStep === 2 ? "Wie hei\xDFt der Termin?" : apptStep === 3 ? "Bis wann geht er?" : "Wiederholt er sich?"), apptStep === 1 && /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("input", {
-          type: "time",
-          className: "appt-time-big",
-          step: 300,
-          autoFocus: true,
-          ref: (el) => {
-            if (el && !el.dataset.opened) {
-              el.dataset.opened = "1";
-              setTimeout(() => {
-                try {
-                  if (el.showPicker) el.showPicker();
-                } catch (err) {
-                }
-              }, 250);
-            }
-          },
-          value: `${pad(hour)}:${pad(tappedMinute)}`,
-          onChange: (e) => {
-            const v = e.target.value;
-            if (!v) return;
-            const [hh, mm] = v.split(":").map(Number);
-            setTappedHour(hh);
-            setTappedMinute(mm);
-          }
-        }), /* @__PURE__ */ import_react.default.createElement("button", { className: "timeline-add-confirm", onClick: () => setApptStep(2) }, "Weiter")), apptStep === 2 && /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement(
-          "input",
-          {
-            autoFocus: true,
-            className: "appt-name-big",
-            value: timelineApptTitle,
-            onChange: (e) => setTimelineApptTitle(e.target.value),
-            onKeyDown: (e) => {
-              if (e.key === "Enter" && timelineApptTitle.trim()) setApptStep(3);
-            },
-            placeholder: "Name des Termins \u2026"
-          }
-        ), /* @__PURE__ */ import_react.default.createElement("button", { className: "timeline-add-confirm", disabled: !timelineApptTitle.trim(), onClick: () => timelineApptTitle.trim() && setApptStep(3) }, "Weiter"), /* @__PURE__ */ import_react.default.createElement("button", { className: "cancel-add-btn", onClick: () => setApptStep(1) }, "Zur\xFCck")), apptStep === 3 && /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("input", {
-          type: "time",
-          className: "appt-time-big",
-          step: 300,
-          value: timelineApptEndTime || `${pad((hour + 1) % 24)}:${pad(tappedMinute)}`,
-          ref: (el) => {
-            if (el && !el.dataset.opened) {
-              el.dataset.opened = "1";
-              setTimeout(() => {
-                try {
-                  if (el.showPicker) el.showPicker();
-                } catch (err) {
-                }
-              }, 250);
-            }
-          },
-          onChange: (e) => setTimelineApptEndTime(e.target.value)
-        }), /* @__PURE__ */ import_react.default.createElement("button", { className: "timeline-add-confirm", onClick: () => {
-          if (!timelineApptEndTime) {
-            const t = (hour + 1) % 24;
-            setTimelineApptEndTime(`${pad(t)}:${pad(tappedMinute)}`);
-          }
-          setApptStep(4);
-        } }, "Weiter"), /* @__PURE__ */ import_react.default.createElement("button", { className: "cancel-add-btn", onClick: () => setApptStep(2) }, "Zur\xFCck")), apptStep === 4 && /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, [["none", "Einmalig"], ["daily", "T\xE4glich"], ["weekly", "W\xF6chentlich"], ["monthly", "Monatlich"], ["yearly", "J\xE4hrlich"]].map(([val, label]) => /* @__PURE__ */ import_react.default.createElement("button", { key: val, className: "appt-recur-btn", onClick: () => saveTimelineAppt(hour, tappedMinute, val) }, label)), /* @__PURE__ */ import_react.default.createElement("button", { className: "cancel-add-btn", onClick: () => setApptStep(3) }, "Zur\xFCck")))));
-      }), apptsFor(selectedDay).filter((a) => !a.allDay && !a.isBirthday).map((a) => {
+        } }, false));
+      }), apptsFor(selectedDay).filter((a) => !a.allDay && !a.isBirthday && (a.title || "").trim()).map((a) => {
         const startHour = parseInt(a.time.split(":")[0], 10);
         const startMin = parseInt(a.time.split(":")[1], 10);
         const durMin = parseInt(a.duration, 10) || 60;
@@ -16605,7 +16931,20 @@ try {
         const checks = daysData[selectedDay] && daysData[selectedDay].checks || {};
         const apptDone = !!checks[a.id];
         if (editingApptId === a.id) {
-          return /* @__PURE__ */ import_react.default.createElement("div", { key: a.id, className: "timeline-edit-row timeline-appt-overlay", style: { top, minHeight: height, zIndex: 3 }, onClick: (e) => e.stopPropagation() }, editConfirmFor === a.id && /* @__PURE__ */ import_react.default.createElement("div", { className: "edit-confirm-text" }, 'Du wolltest "', a.title, '" um ', a.time, " \u2014 sicher, dass du das \xE4nderst?"), /* @__PURE__ */ import_react.default.createElement("input", { type: "time", value: editApptTime, onChange: (e) => setEditApptTime(e.target.value) }), /* @__PURE__ */ import_react.default.createElement("input", { value: editApptTitle, onChange: (e) => setEditApptTitle(e.target.value), onKeyDown: (e) => e.key === "Enter" && saveEditAppt(selectedDay, a), autoFocus: true }), /* @__PURE__ */ import_react.default.createElement("button", { onClick: () => saveEditAppt(selectedDay, a) }, "OK"), /* @__PURE__ */ import_react.default.createElement("button", { className: "cancel-add-btn", onClick: () => setEditingApptId(null) }, "Abbrechen"), /* @__PURE__ */ import_react.default.createElement("button", { className: "habit-remove", onClick: () => requestRemoveAppointment(selectedDay, a) }, "\xD7"));
+          return /* @__PURE__ */ import_react.default.createElement("div", { key: a.id, className: "timeline-edit-row timeline-appt-overlay", style: { top, minHeight: height, zIndex: 3 }, onClick: (e) => e.stopPropagation() }, editConfirmFor === a.id && /* @__PURE__ */ import_react.default.createElement("div", { className: "edit-confirm-text" }, 'Du wolltest "', a.title, '" um ', a.time, " \u2014 sicher, dass du das \xE4nderst?"), /* @__PURE__ */ import_react.default.createElement("input", { type: "time", value: editApptTime, onChange: (e) => setEditApptTime(e.target.value) }), /* @__PURE__ */ import_react.default.createElement("input", { value: editApptTitle, onChange: (e) => setEditApptTitle(e.target.value), onKeyDown: (e) => e.key === "Enter" && saveEditAppt(selectedDay, a), autoFocus: true }), /* @__PURE__ */ import_react.default.createElement("button", { onClick: () => saveEditAppt(selectedDay, a) }, "OK"), /* @__PURE__ */ import_react.default.createElement("button", { className: "cancel-add-btn", onClick: () => {
+          try {
+            const p2 = (v) => String(v).padStart(2, "0");
+            const [yy, mm, dd] = selectedDay.split("-").map(Number);
+            const [sh, sm] = (a.allDay ? "00:00" : a.time).split(":").map(Number);
+            const dur = parseInt(a.duration, 10) || 60;
+            const sD = new Date(yy, mm - 1, dd, sh, sm);
+            const eD = new Date(sD.getTime() + dur * 6e4);
+            const f = (d) => `${d.getFullYear()}${p2(d.getMonth() + 1)}${p2(d.getDate())}T${p2(d.getHours())}${p2(d.getMinutes())}00`;
+            const dates = a.allDay ? `${yy}${p2(mm)}${p2(dd)}/${yy}${p2(mm)}${p2(dd)}` : `${f(sD)}/${f(eD)}`;
+            window.open(`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(a.title)}&dates=${dates}`, "_blank");
+          } catch (e) {
+          }
+        } }, "\u{1F4C5} Google"), /* @__PURE__ */ import_react.default.createElement("button", { className: "cancel-add-btn", onClick: () => setEditingApptId(null) }, "Abbrechen"), /* @__PURE__ */ import_react.default.createElement("button", { className: "habit-remove", onClick: () => requestRemoveAppointment(selectedDay, a) }, "\xD7"));
         }
         return /* @__PURE__ */ import_react.default.createElement(
           "div",
@@ -16667,13 +17006,20 @@ try {
             e.stopPropagation();
             toggleHabit(selectedDay, a.id);
           }, "aria-label": "Termin erledigt" }, apptDone ? "\u2713" : ""),
-          /* @__PURE__ */ import_react.default.createElement("span", { className: "timeline-block-text" }, a.time, " ", a.title, a.duration ? ` (${a.duration} Min)` : "", a.recurring ? ` \u{1F501} ${RECURRENCE_LABEL[a.recurrence]}` : ""),
+          /* @__PURE__ */ import_react.default.createElement("span", { className: "timeline-block-text" }, (() => {
+            if (a.allDay) return "Ganzt\xE4gig";
+            const dm = parseInt(a.duration, 10);
+            if (!dm) return a.time;
+            const [sh, sm] = a.time.split(":").map(Number);
+            const t = sh * 60 + sm + dm;
+            return `${a.time}\u2013${pad(Math.floor(t / 60) % 24)}:${pad(t % 60)}`;
+          })(), " ", a.title, a.recurring ? ` \u{1F501} ${RECURRENCE_LABEL[a.recurrence]}` : ""),
           /* @__PURE__ */ import_react.default.createElement("button", { className: "timeline-block-delete", onClick: (e) => {
             e.stopPropagation();
             requestRemoveAppointment(selectedDay, a);
           }, "aria-label": `${a.title} l\xF6schen` }, "\xD7")
         );
-      })), apptsFor(selectedDay).filter((a) => a.allDay || a.isBirthday).map((a) => /* @__PURE__ */ import_react.default.createElement("div", { key: a.id, className: "timeline-allday", onClick: () => startEditAppt(a) }, a.isBirthday ? "\u{1F382}" : "\u{1F4CC}", " ", a.title))) : calView === "month" ? /* @__PURE__ */ import_react.default.createElement("div", { className: "month-grid-wrap slide-fade-in", key: selMonthKey }, /* @__PURE__ */ import_react.default.createElement("div", { className: "month-grid" }, WEEKDAY_SHORT.map((wd) => /* @__PURE__ */ import_react.default.createElement("span", { key: wd, className: "month-grid-dow" }, wd)), (() => {
+      })), apptsFor(selectedDay).filter((a) => (a.allDay || a.isBirthday) && (a.title || "").trim()).map((a) => /* @__PURE__ */ import_react.default.createElement("div", { key: a.id, className: "timeline-allday", onClick: () => startEditAppt(a) }, a.isBirthday ? "\u{1F382}" : "\u{1F4CC}", " ", a.title))) : calView === "month" ? /* @__PURE__ */ import_react.default.createElement("div", { className: "month-grid-wrap slide-fade-in", key: selMonthKey }, /* @__PURE__ */ import_react.default.createElement("div", { className: "month-grid" }, WEEKDAY_SHORT.map((wd) => /* @__PURE__ */ import_react.default.createElement("span", { key: wd, className: "month-grid-dow" }, wd)), (() => {
         const dates = getMonthDates(selYear, selMonthIdx);
         const pad0 = (dates[0].date.getDay() + 6) % 7;
         return /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, Array.from({ length: pad0 }).map((_, j) => /* @__PURE__ */ import_react.default.createElement("span", { key: "pad" + j })), dates.map((d) => {
@@ -16767,7 +17113,75 @@ try {
         onChange: (e) => updatePriority(shiftDays(todayKey, 1), i, e.target.value),
         placeholder: `Priorit\xE4t ${i + 1} \u2026`
       }
-    ))))), celebration && /* @__PURE__ */ import_react.default.createElement("div", { className: "celebrate-toast", onClick: () => setCelebration(null) }, /* @__PURE__ */ import_react.default.createElement("div", { className: "celebrate-icon" }, celebration.icon), /* @__PURE__ */ import_react.default.createElement("div", { className: "celebrate-title" }, celebration.title), /* @__PURE__ */ import_react.default.createElement("div", { className: "celebrate-text" }, celebration.text)), tourStep >= 0 && tourStep < TOUR_STEPS.length && (tourPaused ? (() => {
+    ))))), activeTab === "daily" && selectedDay !== (appState.testDateOverride || todayStr()) && /* @__PURE__ */ import_react.default.createElement("button", { className: "today-pill", onClick: () => {
+      playPageSound();
+      setSelectedDay(appState.testDateOverride || todayStr());
+    } }, "\u21A9 Zur\xFCck zu heute"), tappedHour !== null && /* @__PURE__ */ import_react.default.createElement("div", { className: "timeline-add-form", onClick: (e) => e.stopPropagation() }, /* @__PURE__ */ import_react.default.createElement("button", { className: "pop-close", onClick: closeApptForm, "aria-label": "Schlie\xDFen" }, "\xD7"), /* @__PURE__ */ import_react.default.createElement("div", { className: "appt-step-label" }, apptStep === 1 ? "Wann geht es los?" : apptStep === 2 ? apptAllDay ? "Wie hei\xDFt der ganzt\xE4gige Termin?" : "Wie hei\xDFt der Termin?" : apptStep === 3 ? "Bis wann geht er?" : "Wiederholt er sich?"), apptStep === 1 && /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("input", {
+          type: "time",
+          className: "appt-time-big",
+          step: 300,
+          autoFocus: true,
+          ref: (el) => {
+            if (el && !el.dataset.opened) {
+              el.dataset.opened = "1";
+              setTimeout(() => {
+                try {
+                  if (el.showPicker) el.showPicker();
+                } catch (err) {
+                }
+              }, 250);
+            }
+          },
+          value: `${pad(tappedHour)}:${pad(tappedMinute)}`,
+          onChange: (e) => {
+            const v = e.target.value;
+            if (!v) return;
+            const [hh, mm] = v.split(":").map(Number);
+            setTappedHour(hh);
+            setTappedMinute(mm);
+          }
+        }), /* @__PURE__ */ import_react.default.createElement("button", { className: "timeline-add-confirm", onClick: () => {
+          setApptAllDay(false);
+          setApptStep(2);
+        } }, "Weiter"), /* @__PURE__ */ import_react.default.createElement("button", { className: "cancel-add-btn", onClick: () => {
+          setApptAllDay(true);
+          setApptStep(2);
+        } }, "Ganzt\xE4giger Termin")), apptStep === 2 && /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement(
+          "input",
+          {
+            autoFocus: true,
+            className: "appt-name-big",
+            value: timelineApptTitle,
+            onChange: (e) => setTimelineApptTitle(e.target.value),
+            onKeyDown: (e) => {
+              if (e.key === "Enter" && timelineApptTitle.trim()) setApptStep(apptAllDay ? 4 : 3);
+            },
+            placeholder: "Name des Termins \u2026"
+          }
+        ), /* @__PURE__ */ import_react.default.createElement("button", { className: "timeline-add-confirm", disabled: !timelineApptTitle.trim(), onClick: () => timelineApptTitle.trim() && setApptStep(apptAllDay ? 4 : 3) }, "Weiter"), /* @__PURE__ */ import_react.default.createElement("button", { className: "cancel-add-btn", onClick: () => setApptStep(1) }, "Zur\xFCck")), apptStep === 3 && /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("input", {
+          type: "time",
+          className: "appt-time-big",
+          step: 300,
+          value: timelineApptEndTime || `${pad((tappedHour + 1) % 24)}:${pad(tappedMinute)}`,
+          ref: (el) => {
+            if (el && !el.dataset.opened) {
+              el.dataset.opened = "1";
+              setTimeout(() => {
+                try {
+                  if (el.showPicker) el.showPicker();
+                } catch (err) {
+                }
+              }, 250);
+            }
+          },
+          onChange: (e) => setTimelineApptEndTime(e.target.value)
+        }), /* @__PURE__ */ import_react.default.createElement("button", { className: "timeline-add-confirm", onClick: () => {
+          if (!timelineApptEndTime) {
+            const t = (tappedHour + 1) % 24;
+            setTimelineApptEndTime(`${pad(t)}:${pad(tappedMinute)}`);
+          }
+          setApptStep(4);
+        } }, "Weiter"), /* @__PURE__ */ import_react.default.createElement("button", { className: "cancel-add-btn", onClick: () => setApptStep(2) }, "Zur\xFCck")), apptStep === 4 && /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, [["none", "Einmalig"], ["daily", "T\xE4glich"], ["weekly", "W\xF6chentlich"], ["monthly", "Monatlich"], ["yearly", "J\xE4hrlich"]].map(([val, label]) => /* @__PURE__ */ import_react.default.createElement("button", { key: val, className: "appt-recur-btn", onClick: () => saveTimelineAppt(tappedHour, tappedMinute, val) }, label)), /* @__PURE__ */ import_react.default.createElement("button", { className: "cancel-add-btn", onClick: () => setApptStep(3) }, "Zur\xFCck"))), celebration && /* @__PURE__ */ import_react.default.createElement("div", { className: "celebrate-toast", onClick: () => setCelebration(null) }, /* @__PURE__ */ import_react.default.createElement("div", { className: "celebrate-icon" }, celebration.icon), /* @__PURE__ */ import_react.default.createElement("div", { className: "celebrate-title" }, celebration.title), /* @__PURE__ */ import_react.default.createElement("div", { className: "celebrate-text" }, celebration.text)), tourStep >= 0 && tourStep < TOUR_STEPS.length && (tourPaused ? (() => {
       const st = TOUR_STEPS[tourStep];
       let done = true;
       if (st.check === "anfangs") done = !!(reflections && reflections.anfangs.completed);
@@ -16832,6 +17246,10 @@ try {
               books: notebooks.length
             });
             if (TOUR_STEPS[tourStep].openAnfangs) openAnfangsReflexion();
+            if (TOUR_STEPS[tourStep].openDesign) {
+              setShowAlarmSettings(false);
+              setShowSettings(true);
+            }
             if (TOUR_STEPS[tourStep].openSettings) {
               setShowSettings(false);
               setShowAlarmSettings(true);
