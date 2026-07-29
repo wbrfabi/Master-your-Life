@@ -8,10 +8,33 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#FAF7F1">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Master Life">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <style>html, body { margin: 0; padding: 0; background: #FAF7F1; }</style>
 </head>
 <body>
 <div id="root"></div>
+
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' })
+        .then(function (reg) {
+          reg.update();
+          setInterval(function () { reg.update(); }, 60 * 60 * 1000);
+        })
+        .catch(function () {});
+      var reloading = false;
+      navigator.serviceWorker.addEventListener('controllerchange', function () {
+        if (reloading) return;
+        reloading = true;
+        window.location.reload();
+      });
+    });
+  }
+</script>
 
 <script>
   function showError(title, msg, stack) {
@@ -12828,6 +12851,7 @@ try {
   function ymKey(year, monthIdx0) {
     return `${year}-${pad(monthIdx0 + 1)}`;
   }
+  var APP_BUILD = "Aufbau 34 \u2014 29.07.2026";
   var ALARM_CATCHUP_MINUTES = 5;
   function hhmm(d = /* @__PURE__ */ new Date()) {
     return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
@@ -13120,22 +13144,33 @@ try {
     const [tourPaused, setTourPaused] = (0, import_react.useState)(false);
     const [tourTargetVisible, setTourTargetVisible] = (0, import_react.useState)(true);
     const TOUR_STEPS = [
-      { tab: "daily", intro: true, icon: "\u{1F44B}", title: "Wir richten die App zusammen ein", body: "Ich zeige dir Schritt f\u00fcr Schritt, wo du was findest \u2014 und du kannst alles sofort selbst ausf\u00fcllen. Am Ende steht die App fertig da." },
-      { tab: "daily", icon: "\u{1F3AF}", title: "Dein Monatsziel", body: "Ganz oben steht dein Monatsziel \u2014 das gr\u00f6\u00dfte Ziel f\u00fcr diesen Monat. Hier kannst du eintragen, was am Ende des Monats geschafft sein soll.", action: "Monatsziel eintragen", target: "monatsziel", back: "Zur\u00fcck zum Monatsziel" },
-      { tab: "daily", icon: "\u{1F5D3}\uFE0F", title: "Dein Jahresziel", body: "Direkt unter dem Monatsziel findest du das Jahresziel \u2014 das gro\u00dfe Ziel f\u00fcr dieses Jahr. Dein Monatsziel ist ein St\u00fcck davon: Wenn du jeden Monat ein St\u00fcck schaffst, stehst du am Jahresende da, wo du hinwolltest. Ein Satz gen\u00fcgt.", action: "Jahresziel eintragen", target: "jahresziel", back: "Zur\u00fcck zum Jahresziel" },
-      { tab: "daily", icon: "\u{1F4C6}", title: "Dein Wochenziel", body: "In der Zeitleiste steht dein Wochenziel \u2014 eine Sache f\u00fcr diese Woche. Es muss nichts Gro\u00dfes sein, \u201eWohnung streichen\u201c z\u00e4hlt genauso wie ein Trainingsziel.", action: "Wochenziel eintragen", target: "wochenziel", view: "timeline", back: "Zur\u00fcck zum Wochenziel" },
-      { tab: "daily", icon: "\u2705", title: "Deine erste Habit", body: "\u00dcber \u201e+ Habit\u201c kannst du eine neue Gewohnheit anlegen \u2014 mit Namen, einem Warum und einem Ziel. Das Warum tr\u00e4gt dich an den Tagen, an denen du keine Lust hast.", action: "Habit anlegen", target: "habits", view: "timeline", back: "Zur\u00fcck zu den Habits" },
-      { tab: "daily", icon: "\u{1F551}", title: "Dein erster Termin", body: "Ein Tipp auf eine Uhrzeit in der Zeitleiste gen\u00fcgt, dann kannst du Titel und Dauer eintragen. Wiederkehrende Termine erkennst du sp\u00e4ter am Wiederhol-Symbol.", action: "Termin eintragen", target: "termine", view: "timeline", back: "Zur\u00fcck zur Zeitleiste" },
-      { tab: "daily", icon: "\u23F0", title: "Der Wecker", body: "Ich \u00f6ffne dir die Einstellungen. Dort kannst du Zeit, Sound und Modus festlegen. Der Text zum Ausschalten kann alles sein \u2014 deine Ziele, Affirmationen oder ein Leitsatz. So liest du morgens das Wichtigste, bevor der Tag beginnt.", action: "Wecker stellen", openSettings: true },
+      { tab: "daily", intro: true, icon: "\u{1F44B}", title: "Wir richten die App zusammen ein", body: "Ich zeige dir Schritt f\u00fcr Schritt, wo du was findest \u2014 und du kannst alles sofort selbst ausf\u00fcllen. Weiter geht es jeweils erst, wenn du den Schritt erledigt hast." },
+      { tab: "daily", icon: "\u270D\uFE0F", title: "Deine Anfangsreflexion", body: "Bevor es losgeht, h\u00e4ltst du einmal fest, wo du gerade stehst: wie zufrieden du in den einzelnen Lebensbereichen bist und was du erreichen willst. Diese Standortbestimmung bleibt das ganze Jahr \u00fcber stehen \u2014 am Jahresende vergleichst du sie mit der Abschlussreflexion. Wenn du jetzt keine Lust darauf hast, kannst du den Schritt \u00fcberspringen und sie sp\u00e4ter ausf\u00fcllen.", action: "Anfangsreflexion ausf\u00fcllen", target: "anfangs", openAnfangs: true, back: "Zur\u00fcck zur Reflexion", check: "anfangs", skipText: "Ich will sie jetzt noch nicht machen" },
+      { tab: "daily", icon: "\u{1F3AF}", title: "Dein Monatsziel", body: "Ganz oben steht dein Monatsziel \u2014 das gr\u00f6\u00dfte Ziel f\u00fcr diesen Monat. Hier kannst du eintragen, was am Ende des Monats geschafft sein soll.", action: "Monatsziel eintragen", target: "monatsziel", back: "Zur\u00fcck zum Monatsziel", check: "monthGoal" },
+      { tab: "daily", icon: "\u{1F5D3}\uFE0F", title: "Dein Jahresziel", body: "Direkt unter dem Monatsziel findest du das Jahresziel \u2014 das gro\u00dfe Ziel f\u00fcr dieses Jahr. Dein Monatsziel ist ein St\u00fcck davon: Wenn du jeden Monat ein St\u00fcck schaffst, stehst du am Jahresende da, wo du hinwolltest. Ein Satz gen\u00fcgt.", action: "Jahresziel eintragen", target: "jahresziel", back: "Zur\u00fcck zum Jahresziel", check: "yearGoal" },
+      { tab: "daily", icon: "\u{1F4C6}", title: "Dein Wochenziel", body: "In der Zeitleiste steht dein Wochenziel \u2014 eine Sache f\u00fcr diese Woche. Es muss nichts Gro\u00dfes sein, \u201eWohnung streichen\u201c z\u00e4hlt genauso wie ein Trainingsziel.", action: "Wochenziel eintragen", target: "wochenziel", view: "timeline", back: "Zur\u00fcck zum Wochenziel", check: "weekGoal" },
+      { tab: "daily", icon: "\u2705", title: "Deine erste Habit", body: "\u00dcber \u201e+ Habit\u201c kannst du eine neue Gewohnheit anlegen \u2014 mit Namen, einem Warum und einem Ziel. Das Warum tr\u00e4gt dich an den Tagen, an denen du keine Lust hast.", action: "Habit anlegen", target: "habits", view: "timeline", back: "Zur\u00fcck zu den Habits", check: "habit" },
+      { tab: "daily", icon: "\u{1F551}", title: "Dein erster Termin", body: "Ein Tipp auf eine Uhrzeit in der Zeitleiste gen\u00fcgt, dann f\u00fchrt dich die App durch Start, Name, Ende und Wiederholung. Du kannst auch nur hineinschauen und wieder abbrechen \u2014 das reicht f\u00fcr diesen Schritt.", action: "Termin eintragen", target: "termine", view: "timeline", back: "Zur\u00fcck zur Zeitleiste", check: "appt" },
+      { tab: "daily", icon: "\u23F0", title: "Der Wecker", body: "Ich \u00f6ffne dir das Wecker-Fenster. Dort kannst du Zeit, Sound und Modus festlegen. Der Text, den du zum Ausschalten abschreibst, kann alles sein \u2014 deine Ziele, Affirmationen oder ein Leitsatz. Wenn du gar keinen Wecker willst, w\u00e4hle \u201eKein Wecker\u201c und best\u00e4tige \u2014 das z\u00e4hlt genauso.", action: "Wecker stellen", openSettings: true, check: "alarm" },
       { tab: "todos", intro: true, icon: "\u2705", title: "N\u00e4chste Seite: To-Dos", body: "Hier landet alles, was erledigt werden muss \u2014 auf Wunsch in mehreren Listen." },
-      { tab: "todos", icon: "\u270F\uFE0F", title: "Dein erstes To-Do", body: "Ein To-Do ist einfach eine Aufgabe: Du schreibst hin, was zu tun ist. Wie wichtig sie ist, wie lange sie dauert und bis wann sie fertig sein soll, kannst du dazuschreiben \u2014 musst du aber nicht. Mit \u201eEinplanen\u201c wandert die Aufgabe als Termin in deinen Kalender, und die App zeigt dir dabei, was an dem Tag schon belegt ist. Bei einer Liste wie \u201eEinkaufen\u201c braucht man das nicht, dort fehlt der Knopf.", action: "To-Do anlegen" },
+      { tab: "todos", icon: "\u270F\uFE0F", title: "Dein erstes To-Do", body: "Ein To-Do ist einfach eine Aufgabe: Du schreibst hin, was zu tun ist. Wie wichtig sie ist, wie lange sie dauert und bis wann sie fertig sein soll, kannst du dazuschreiben \u2014 musst du aber nicht. Mit \u201eEinplanen\u201c wandert die Aufgabe als Termin in deinen Kalender.", action: "To-Do anlegen", check: "todo" },
       { tab: "business", intro: true, icon: "\u{1F4BC}", title: "N\u00e4chste Seite: Business", body: "Umsatz, Kosten und was am Ende \u00fcbrig bleibt. Das ist vor allem f\u00fcr Selbstst\u00e4ndige gedacht \u2014 wenn dich das nicht betrifft, kannst du diesen Teil einfach \u00fcberspringen.", skipLabel: "Business \u00fcberspringen" },
       { tab: "business", icon: "\u{1F4B0}", title: "Dein Umsatzziel", body: "Sobald hier ein Umsatzziel steht und du Verk\u00e4ufe eintr\u00e4gst, zeigt dir die App, wie viele Abschl\u00fcsse noch fehlen \u2014 und was du f\u00fcr Steuern zur\u00fccklegen solltest.", action: "Umsatzziel eintragen", target: "umsatzziel", back: "Zur\u00fcck zum Umsatzziel" },
-      { tab: "notizen", intro: true, icon: "\u{1F4DD}", title: "Letzte Seite: Notizen", body: "Platz f\u00fcr Gedanken, Ideen und alles zum Nachlesen. Du kannst mehrere Notizb\u00fccher anlegen, jedes mit eigenen Seiten." },
-      { tab: "notizen", icon: "\u{1F4D3}", title: "Deine erste Notiz", body: "Hier kannst du alles hineinschreiben, was dir wichtig ist. Zwischen den Seiten kannst du wie in einem echten Buch nach links und rechts wischen, oder die Pfeile darunter nehmen. \u00dcber die Suche oben findest du sp\u00e4ter jedes Wort wieder.", action: "Notiz schreiben", target: "notizen", back: "Zur\u00fcck zum Notizbuch" },
-      { tab: "daily", icon: "\u{1F3A8}", title: "Das Aussehen geh\u00f6rt dir", body: "Falls dir das Design nicht zusagt: Im Zahnrad-Men\u00fc lassen sich Farbton, Schriftart und Helligkeit \u00e4ndern, und es gibt eine schlichte Variante ganz ohne Schn\u00f6rkel. Du kannst das jederzeit umstellen, so oft du magst." },
+      { tab: "notizen", intro: true, icon: "\u{1F4DD}", title: "Letzte Seite: Notizen", body: "Platz f\u00fcr Gedanken, Ideen und alles zum Nachlesen. Oben siehst du das Cover deines Buches, darunter die Seite zum Schreiben." },
+      { tab: "notizen", icon: "\u{1F4D3}", title: "Deine erste Notiz", body: "Schreibe etwas auf die Seite \u2014 ganz gleich, was. \u00dcber die Suche oben findest du sp\u00e4ter jedes Wort wieder.", action: "Notiz schreiben", target: "notizen", back: "Zur\u00fcck zum Notizbuch", check: "note" },
+      { tab: "notizen", icon: "\u{1F449}", title: "Seiten bl\u00e4ttern", body: "Wische unten auf der beschriebenen Seite nach links \u2014 so bl\u00e4tterst du zur n\u00e4chsten Seite, wie in einem echten Buch. Nach rechts geht es zur\u00fcck. Bist du auf der letzten Seite, bringt dich derselbe Wisch ins n\u00e4chste Buch. F\u00fcr diesen Schritt z\u00e4hlt nur das Wischen, nicht die Pfeile.", action: "Bl\u00e4ttern ausprobieren", target: "notizen", back: "Zur\u00fcck zum Notizbuch", check: "flip" },
+      { tab: "notizen", icon: "\u{1F4DA}", title: "Buch wechseln", body: "Ganz oben steht das Cover. Wische dar\u00fcber nach links oder rechts, um zum n\u00e4chsten Buch zu kommen \u2014 oder tippe es an und w\u00e4hle aus. \u00dcber \u201e+ Neues Buch\u201c legst du eines an, etwa ein Tagebuch.", action: "Buch wechseln", back: "Zur\u00fcck zum Cover", check: "book" },
+      { tab: "daily", icon: "\u{1F3A8}", title: "Das Aussehen geh\u00f6rt dir", body: "Falls dir das Design nicht zusagt: Im Zahnrad-Men\u00fc lassen sich Hintergrund, Farbton und Schriftart \u00e4ndern, und es gibt eine schlichte Variante ganz ohne Schn\u00f6rkel. Du kannst das jederzeit umstellen, so oft du magst." },
       { tab: "daily", icon: "\u{1F680}", title: "Fertig", body: "Die App ist eingerichtet. Alles Weitere ergibt sich im Alltag: Der Wecker meldet sich morgens, die Habits warten in der Zeitleiste, und deine Ziele stehen immer ganz oben." }
     ];
+    (0, import_react.useEffect)(() => {
+      if (tourStep < 0 || tourPaused) return;
+      const step = TOUR_STEPS[tourStep];
+      if (step && step.openSettings) {
+        setShowSettings(false);
+        setShowAlarmSettings(true);
+      }
+    }, [tourStep, tourPaused]);
     (0, import_react.useEffect)(() => {
       if (!tourPaused) return;
       const step = TOUR_STEPS[tourStep];
@@ -13175,6 +13210,13 @@ try {
     const [activeNotebookId, setActiveNotebookId] = (0, import_react.useState)("default");
     const [addingNotebook, setAddingNotebook] = (0, import_react.useState)(false);
     const [newNotebookName, setNewNotebookName] = (0, import_react.useState)("");
+    const [newNotebookIcon, setNewNotebookIcon] = (0, import_react.useState)("");
+    const [editingNotebookId, setEditingNotebookId] = (0, import_react.useState)(null);
+    const [bookPickerOpen, setBookPickerOpen] = (0, import_react.useState)(false);
+    const [tourBase, setTourBase] = (0, import_react.useState)({});
+    const [tourFlags, setTourFlags] = (0, import_react.useState)({});
+    const [editNotebookName, setEditNotebookName] = (0, import_react.useState)("");
+    const [editNotebookIcon, setEditNotebookIcon] = (0, import_react.useState)("");
     const [notesSearch, setNotesSearch] = (0, import_react.useState)("");
     const [newListName, setNewListName] = (0, import_react.useState)("");
     const [newListSchedulable, setNewListSchedulable] = (0, import_react.useState)(true);
@@ -13193,7 +13235,8 @@ try {
     const [activeTab, setActiveTab] = (0, import_react.useState)("daily");
     const [newTodoText, setNewTodoText] = (0, import_react.useState)("");
     const [newTodoDuration, setNewTodoDuration] = (0, import_react.useState)("");
-    const [newTodoPriority, setNewTodoPriority] = (0, import_react.useState)("mittel");
+    const [newTodoPriority, setNewTodoPriority] = (0, import_react.useState)("");
+    const [todoExtras, setTodoExtras] = (0, import_react.useState)(false);
     const [newTodoCategory, setNewTodoCategory] = (0, import_react.useState)("");
     const [newTodoEnergy, setNewTodoEnergy] = (0, import_react.useState)("mittel");
     const [newTodoLocation, setNewTodoLocation] = (0, import_react.useState)("");
@@ -13215,6 +13258,8 @@ try {
     const touchStartYRef = (0, import_react.useRef)(null);
     const dragRef = (0, import_react.useRef)({ timer: null, activeId: null, refY: 0, startY: 0 });
     const notesTouchXRef = (0, import_react.useRef)(null);
+    const nbTabsXRef = (0, import_react.useRef)(null);
+    const nbTabsYRef = (0, import_react.useRef)(null);
     const notesTouchYRef = (0, import_react.useRef)(null);
     const [draggingId, setDraggingId] = (0, import_react.useState)(null);
     const todayKey = appState.testDateOverride || todayStr();
@@ -13236,7 +13281,7 @@ try {
             (parsed.kpiTemplate || []).forEach((k) => {
               if (!mergedHabits.some((h) => h.id === k.id)) mergedHabits.push(k);
             });
-            setAppState(__spreadProps(__spreadValues(__spreadValues({}, DEFAULT_APP_STATE), parsed), { sectionOrder: mergedOrder, habitTemplate: mergedHabits, kpiTemplate: [] }));
+            setAppState(__spreadProps(__spreadValues(__spreadValues({}, DEFAULT_APP_STATE), parsed), { sectionOrder: mergedOrder, habitTemplate: mergedHabits, kpiTemplate: [], testDateOverride: "" }));
             setAlarmTimeDraft(parsed.alarmTime || "07:00");
             setSentencesDraft(parsed.mandatorySentences || DEFAULT_SENTENCES);
             const t = /* @__PURE__ */ new Date();
@@ -13486,16 +13531,29 @@ try {
     }), []);
     function addNotebook() {
       if (!newNotebookName.trim()) return;
-      const nb = { id: `nb${Date.now()}${randInt(10, 99)}`, name: newNotebookName.trim() };
+      const nb = { id: `nb${Date.now()}${randInt(10, 99)}`, name: newNotebookName.trim(), icon: newNotebookIcon };
       saveNotebooks([...notebooks, nb]);
       setActiveNotebookId(nb.id);
       setNewNotebookName("");
+      setNewNotebookIcon("");
       setAddingNotebook(false);
     }
     function removeNotebook(id) {
-      if (id === "default" || notebooks.length <= 1) return;
-      saveNotebooks(notebooks.filter((n) => n.id !== id));
-      setActiveNotebookId("default");
+      if (notebooks.length <= 1) return;
+      const rest = notebooks.filter((n) => n.id !== id);
+      saveNotebooks(rest);
+      setActiveNotebookId(rest[0].id);
+      setEditingNotebookId(null);
+    }
+    function startEditNotebook(nb) {
+      setEditingNotebookId(nb.id);
+      setEditNotebookName(nb.name);
+      setEditNotebookIcon(nb.icon || "");
+    }
+    function saveEditNotebook() {
+      if (!editNotebookName.trim()) return;
+      saveNotebooks(notebooks.map((n) => n.id === editingNotebookId ? __spreadProps(__spreadValues({}, n), { name: editNotebookName.trim(), icon: editNotebookIcon }) : n));
+      setEditingNotebookId(null);
     }
     (0, import_react.useEffect)(() => {
       if (!ready) return;
@@ -13851,6 +13909,68 @@ try {
         saveAppState(__spreadProps(__spreadValues({}, appState), { lastNewYearGreeted: y }));
       }
     }, [ready, appState.testDateOverride, appState.lastNewYearGreeted]);
+    (0, import_react.useEffect)(() => {
+      if (!showSettings && !showAlarmSettings && tappedHour === null) return;
+      const onOutside = (e) => {
+        try {
+          const t = e.target;
+          if (!t || !t.closest) return;
+          if (!t.closest(".settings-pop") && !t.closest(".gear")) {
+            setShowSettings(false);
+            setShowAlarmSettings(false);
+          }
+          if (!t.closest(".timeline-add-form") && !t.closest(".timeline-lane")) {
+            closeApptForm();
+          }
+        } catch (err) {
+        }
+      };
+      document.addEventListener("click", onOutside);
+      return () => document.removeEventListener("click", onOutside);
+    }, [showSettings, showAlarmSettings, tappedHour]);
+    (0, import_react.useEffect)(() => {
+      if (phase !== "locked" || appState.blockExit === false) return;
+      const onLeave = (e) => {
+        e.preventDefault();
+        e.returnValue = "";
+        return "";
+      };
+      window.addEventListener("beforeunload", onLeave);
+      return () => window.removeEventListener("beforeunload", onLeave);
+    }, [phase, appState.blockExit]);
+    const [apptStep, setApptStep] = (0, import_react.useState)(1);
+    const [tappedMinute, setTappedMinute] = (0, import_react.useState)(0);
+    const [movingAppt, setMovingAppt] = (0, import_react.useState)(null);
+    const apptDragRef = (0, import_react.useRef)(null);
+    const justDraggedRef = (0, import_react.useRef)(0);
+    const closeApptForm = (0, import_react.useCallback)(() => {
+      setTappedHour(null);
+      setTimelineApptTitle("");
+      setTimelineApptEndTime("");
+      setTimelineApptRecurrence("none");
+      setApptStep(1);
+    }, []);
+    const saveTimelineAppt = (0, import_react.useCallback)((hour, minute, recurrence) => {
+      if (!timelineApptTitle.trim()) return;
+      const startTime = `${pad(hour)}:${pad(minute)}`;
+      let durationMin = "";
+      if (timelineApptEndTime) {
+        const [sh, sm] = startTime.split(":").map(Number);
+        const [eh, em] = timelineApptEndTime.split(":").map(Number);
+        const diff = eh * 60 + em - (sh * 60 + sm);
+        if (diff > 0) durationMin = String(diff);
+      }
+      addAppointment(selectedDay, startTime, timelineApptTitle, recurrence, { context: activeTab, duration: durationMin });
+      playApptDoneSound();
+      closeApptForm();
+    }, [timelineApptTitle, timelineApptEndTime, selectedDay, activeTab, closeApptForm]);
+    const [savedFlash, setSavedFlash] = (0, import_react.useState)(null);
+    const savedFlashRef = (0, import_react.useRef)(null);
+    const flashSaved = (0, import_react.useCallback)((id) => {
+      setSavedFlash(id);
+      if (savedFlashRef.current) clearTimeout(savedFlashRef.current);
+      savedFlashRef.current = setTimeout(() => setSavedFlash(null), 2200);
+    }, []);
     const lastClickToneRef = (0, import_react.useRef)(0);
     (0, import_react.useEffect)(() => {
       const onAnyClick = (e) => {
@@ -13863,7 +13983,8 @@ try {
           if (!el) return;
           if (el.disabled) return;
           lastClickToneRef.current = t;
-          playTapSound();
+          if (el.closest(".timeline-add-form")) playSoftBlip();
+          else playTapSound();
         } catch (err) {
         }
       };
@@ -14067,9 +14188,8 @@ try {
     }
     function playDismissSound() {
       try {
-        const Ctx = window.AudioContext || window.webkitAudioContext;
-        if (!Ctx) return;
-        const ctx = new Ctx();
+        const ctx = getSharedAudioCtx();
+        if (!ctx) return;
         const duration = 1.7;
         const bufferSize = Math.floor(ctx.sampleRate * duration);
         const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
@@ -14106,12 +14226,96 @@ try {
       } catch (e) {
       }
     }
+    function getSharedAudioCtx() {
+      try {
+        const Ctx = window.AudioContext || window.webkitAudioContext;
+        if (!Ctx) return null;
+        if (!window.__mymAudioCtx || window.__mymAudioCtx.state === "closed") {
+          window.__mymAudioCtx = new Ctx();
+        }
+        if (window.__mymAudioCtx.state === "suspended") {
+          window.__mymAudioCtx.resume().catch(() => {});
+        }
+        return window.__mymAudioCtx;
+      } catch (e) {
+        return null;
+      }
+    }
+    function playPageSound() {
+      if (!appState.soundsEnabled) return;
+      try {
+        const ctx = getSharedAudioCtx();
+        if (!ctx) return;
+        const now = ctx.currentTime;
+        const dur = 0.16;
+        const len = Math.max(1, Math.ceil(ctx.sampleRate * dur));
+        const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+        const data = buf.getChannelData(0);
+        for (let i = 0; i < len; i++) {
+          const p = i / len;
+          data[i] = (Math.random() * 2 - 1) * Math.sin(Math.PI * p) * 0.8;
+        }
+        const src = ctx.createBufferSource();
+        src.buffer = buf;
+        const filt = ctx.createBiquadFilter();
+        filt.type = "bandpass";
+        filt.frequency.setValueAtTime(900, now);
+        filt.frequency.exponentialRampToValueAtTime(3200, now + dur);
+        filt.Q.value = 0.7;
+        const gain = ctx.createGain();
+        gain.gain.value = 0.12;
+        src.connect(filt).connect(gain).connect(ctx.destination);
+        src.start(now);
+      } catch (e) {
+      }
+    }
+    function playSoftBlip() {
+      if (!appState.soundsEnabled) return;
+      try {
+        const ctx = getSharedAudioCtx();
+        if (!ctx) return;
+        const now = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(523.25, now);
+        osc.frequency.exponentialRampToValueAtTime(659.25, now + 0.07);
+        gain.gain.setValueAtTime(1e-4, now);
+        gain.gain.linearRampToValueAtTime(0.09, now + 0.02);
+        gain.gain.exponentialRampToValueAtTime(1e-4, now + 0.17);
+        osc.connect(gain).connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.18);
+      } catch (e) {
+      }
+    }
+    function playApptDoneSound() {
+      if (!appState.soundsEnabled) return;
+      try {
+        const ctx = getSharedAudioCtx();
+        if (!ctx) return;
+        const now = ctx.currentTime;
+        [[587.33, 0], [880, 0.11]].forEach(([freq, delay]) => {
+          const t0 = now + delay;
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = "triangle";
+          osc.frequency.value = freq;
+          gain.gain.setValueAtTime(1e-4, t0);
+          gain.gain.linearRampToValueAtTime(0.14, t0 + 0.02);
+          gain.gain.exponentialRampToValueAtTime(1e-4, t0 + 0.42);
+          osc.connect(gain).connect(ctx.destination);
+          osc.start(t0);
+          osc.stop(t0 + 0.44);
+        });
+      } catch (e) {
+      }
+    }
     function playTapSound() {
       if (!appState.soundsEnabled) return;
       try {
-        const Ctx = window.AudioContext || window.webkitAudioContext;
-        if (!Ctx) return;
-        const ctx = new Ctx();
+        const ctx = getSharedAudioCtx();
+        if (!ctx) return;
         const dur = 0.03;
         const len = Math.max(1, Math.ceil(ctx.sampleRate * dur));
         const buf = ctx.createBuffer(1, len, ctx.sampleRate);
@@ -14129,21 +14333,14 @@ try {
         gain.gain.value = 0.14;
         src.connect(filt).connect(gain).connect(ctx.destination);
         src.start();
-        setTimeout(() => {
-          try {
-            ctx.close();
-          } catch (e) {
-          }
-        }, 200);
       } catch (e) {
       }
     }
     function playClickSound() {
       if (!appState.soundsEnabled) return;
       try {
-        const Ctx = window.AudioContext || window.webkitAudioContext;
-        if (!Ctx) return;
-        const ctx = new Ctx();
+        const ctx = getSharedAudioCtx();
+        if (!ctx) return;
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         osc.type = "sine";
@@ -14155,21 +14352,14 @@ try {
         osc.connect(gain).connect(ctx.destination);
         osc.start();
         osc.stop(ctx.currentTime + 0.14);
-        setTimeout(() => {
-          try {
-            ctx.close();
-          } catch (e) {
-          }
-        }, 200);
       } catch (e) {
       }
     }
     function playCelebrationSound() {
       if (!appState.soundsEnabled) return;
       try {
-        const Ctx = window.AudioContext || window.webkitAudioContext;
-        if (!Ctx) return;
-        const ctx = new Ctx();
+        const ctx = getSharedAudioCtx();
+        if (!ctx) return;
         const now = ctx.currentTime;
         const notes = [523.25, 659.25, 783.99, 1046.5];
         notes.forEach((freq, i) => {
@@ -14199,12 +14389,6 @@ try {
           osc.stop(chordT + 0.95);
         });
         if (navigator.vibrate) navigator.vibrate([80, 40, 80, 40, 160]);
-        setTimeout(() => {
-          try {
-            ctx.close();
-          } catch (e) {
-          }
-        }, 1600);
       } catch (e) {
       }
     }
@@ -14812,7 +14996,7 @@ try {
     }
     .lock-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--amber); animation: pulse 1.2s infinite ease-in-out; }
     @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.25; } }
-    @keyframes slideFade { from { opacity: 0.3; } to { opacity: 1; } }
+    @keyframes slideFade { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: translateX(0); } }
     .slide-fade-in { animation: slideFade 0.22s ease-out; }
     .lock-clock { font-family: 'Playfair Display', serif; font-style: italic; font-weight: 800; font-size: clamp(68px, 15vw, 150px); line-height: 1; color: var(--paper); letter-spacing: 0.01em; }
     .lock-sub { color: var(--fog); margin-top: 4px; font-size: 15px; text-align: center; }
@@ -14879,16 +15063,113 @@ try {
     .topbar-gears { display: flex; gap: 8px; }
     .gear:hover { color: var(--paper); }
     .settings-pop {
-      position: absolute; right: 0; top: 44px; background: var(--panel); border: 1px solid var(--hairline);
-      border-radius: 12px; padding: 18px; width: 280px; z-index: 10; text-align: left; box-shadow: 0 12px 30px rgba(0,0,0,0.4);
-      max-height: 80vh; overflow-y: auto;
+      position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%);
+      background: var(--panel); border: 1px solid var(--amber-dim);
+      border-radius: 16px; padding: 20px; width: min(380px, calc(100vw - 28px));
+      z-index: 940; text-align: left;
+      box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.72), 0 18px 50px rgba(0, 0, 0, 0.55);
+      max-height: 84vh; overflow-y: auto;
+      animation: modalPop 0.22s cubic-bezier(0.16, 1, 0.3, 1);
     }
+    .timeline-block.moving {
+      z-index: 20; touch-action: none;
+      box-shadow: 0 10px 26px rgba(0, 0, 0, 0.55);
+      border-color: var(--amber);
+      opacity: 0.94; transform: scale(1.03);
+    }
+    .delete-confirm {
+      position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%);
+      z-index: 960; width: min(340px, calc(100vw - 28px));
+      display: flex; flex-direction: column; gap: 8px;
+      background: var(--panel); border: 1px solid var(--amber-dim);
+      border-radius: 16px; padding: 20px; text-align: center;
+      box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.72), 0 18px 50px rgba(0, 0, 0, 0.55);
+      animation: modalPop 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .delete-confirm .delete-confirm-text { font-size: 15px; margin-bottom: 6px; }
+    .delete-confirm .delete-confirm-btn { flex: none; width: 100%; padding: 12px; font-size: 13px; }
+    .delete-confirm .delete-confirm-btn.danger { background: var(--signal-red, #7a2b2b); color: #fff; }
+    .delete-confirm .delete-confirm-btn.cancel { background: none; border: 1px solid var(--hairline); color: var(--fog); }
+    .md-root[data-theme="dark"][data-bg="schwarz"] { --ink-950: #000000; --ink-900: #0A0A0A; --panel: #131313; --panel-2: #1D1D1D; --hairline: rgba(255,255,255,0.13); --paper: #F2F2F2; --fog: #9A9A9A; }
+    .md-root[data-theme="dark"][data-bg="warm"] { --ink-950: #1C1610; --ink-900: #241C13; --panel: #2E2418; --panel-2: #3A2E1E; --hairline: rgba(255,255,255,0.09); --paper: #F8F0E1; --fog: #BFAE8C; }
+    .md-root[data-theme="dark"][data-bg="grau"] { --ink-950: #14161A; --ink-900: #1A1D22; --panel: #23272E; --panel-2: #2E333B; --hairline: rgba(255,255,255,0.12); --paper: #EDEFF2; --fog: #99A0AA; }
+    .md-root[data-theme="dark"][data-bg="marine"] { --ink-950: #080F1C; --ink-900: #0E1728; --panel: #152136; --panel-2: #1D2C47; --hairline: rgba(255,255,255,0.12); --paper: #E6EDF8; --fog: #8D9CB5; }
+    .md-root[data-theme="dark"][data-bg="wald"] { --ink-950: #08140E; --ink-900: #0D1D15; --panel: #13291D; --panel-2: #1B3728; --hairline: rgba(255,255,255,0.12); --paper: #E6F2EA; --fog: #8FAD9B; }
+    .md-root[data-theme="light"][data-bg="creme"] { --ink-950: #FAF7F1; --ink-900: #F1ECE1; --panel: #FFFFFF; --panel-2: #F1ECE1; --paper: #241C13; --fog: #6B6255; }
+    .md-root[data-theme="light"][data-bg="weiss"] { --ink-950: #FFFFFF; --ink-900: #FFFFFF; --panel: #FFFFFF; --panel-2: #FAFAFA; --hairline: rgba(0,0,0,0.14); --paper: #000000; --fog: #5A5F66; }
+    .md-root[data-theme="light"][data-bg="hellgrau"] { --ink-950: #ECEEF1; --ink-900: #E3E6EA; --panel: #FFFFFF; --panel-2: #F2F4F7; --hairline: rgba(0,0,0,0.12); --paper: #1B1E23; --fog: #62686F; }
+    .md-root[data-theme="light"][data-bg="sand"] { --ink-950: #F3EADA; --ink-900: #EADFCB; --panel: #FFFBF3; --panel-2: #EFE5D3; --hairline: rgba(0,0,0,0.1); --paper: #2A2114; --fog: #7A6B52; }
+    .todo-more-btn { flex: 0 0 40px; background: none; border: 1px dashed var(--hairline); color: var(--fog); border-radius: 8px; font-size: 18px; opacity: 0.6; }
+    .nb-pick-row { display: flex; gap: 8px; margin-bottom: 8px; }
+    .nb-pick-btn {
+      flex: 1; background: var(--ink-900); border: 1px solid var(--hairline); color: var(--paper);
+      border-radius: 11px; padding: 16px 12px; font-size: 17px; text-align: left;
+    }
+    .nb-pick-btn.active { border-color: var(--amber); color: var(--amber); font-weight: 700; }
+    .nb-pick-edit {
+      flex: 0 0 48px; background: none; border: 1px solid var(--hairline);
+      border-radius: 11px; color: var(--fog); font-size: 17px;
+    }
+    .nb-cover-row { display: flex; align-items: stretch; gap: 10px; margin-bottom: 12px; }
+    .nb-cover {
+      flex: 1; position: relative; overflow: hidden; cursor: pointer;
+      background: linear-gradient(135deg, var(--panel-2) 0%, var(--panel) 100%);
+      border: 1px solid var(--amber-dim); border-radius: 6px 14px 14px 6px;
+      padding: 18px 16px 16px 26px; text-align: center;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04), 0 6px 18px rgba(0,0,0,0.28);
+    }
+    .nb-cover-spine {
+      position: absolute; left: 0; top: 0; bottom: 0; width: 12px;
+      background: var(--amber-dim);
+      box-shadow: inset -2px 0 4px rgba(0,0,0,0.35);
+    }
+    .nb-cover-inner { position: relative; }
+    .nb-cover-icon { font-size: 26px; margin-bottom: 4px; }
+    .nb-cover-name { font-family: 'Playfair Display', serif; font-style: italic; font-weight: 800; font-size: 19px; color: var(--amber); }
+    .nb-cover-count { font-size: 10px; color: var(--fog); margin-top: 6px; letter-spacing: 0.04em; }
+    .nb-cover-add {
+      flex: 0 0 52px; background: none; color: var(--amber);
+      border: 1px dashed var(--amber-dim); border-radius: 14px;
+      font-size: 26px; line-height: 1;
+    }
+    .nb-icon-input {
+      width: 74px; height: 56px; text-align: center; font-size: 28px;
+      background: var(--ink-900); border: 1px solid var(--amber-dim); color: var(--paper);
+      border-radius: 12px; margin: 0 auto 10px; display: block;
+    }
+    .appt-name-big {
+      width: 100%; box-sizing: border-box;
+      background: var(--ink-900); border: 1px solid var(--amber-dim); color: var(--paper);
+      border-radius: 12px; padding: 16px 14px; margin-bottom: 10px;
+      font-size: 20px; line-height: 1.3;
+    }
+    .appt-quick-btn.active { border-color: var(--amber); color: var(--amber); font-weight: 700; }
+    .appt-time-big {
+      width: 100%; box-sizing: border-box; text-align: center;
+      background: var(--ink-900); border: 1px solid var(--amber-dim); color: var(--paper);
+      border-radius: 12px; padding: 14px 8px; margin-bottom: 10px;
+      font-size: 34px; font-weight: 700; letter-spacing: 0.02em;
+    }
+    .appt-step-label { font-family: 'Playfair Display', serif; font-style: italic; font-weight: 700; font-size: 16px; color: var(--amber); margin: 2px 0 10px; padding-right: 28px; }
+    .appt-quick-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 4px; }
+    .appt-quick-btn { flex: 1 1 60px; background: var(--ink-900); border: 1px solid var(--hairline); color: var(--paper); border-radius: 8px; padding: 9px 6px; font-size: 12px; }
+    .appt-recur-btn { width: 100%; background: var(--ink-900); border: 1px solid var(--hairline); color: var(--paper); border-radius: 9px; padding: 11px; font-size: 13px; margin-bottom: 6px; }
+    .appt-recur-btn:hover { border-color: var(--amber-dim); color: var(--amber); }
+    .timeline-add-confirm[disabled] { opacity: 0.45; }
+    .pop-close {
+      position: absolute; top: 8px; right: 10px;
+      background: none; border: none; color: var(--fog);
+      font-size: 24px; line-height: 1; padding: 4px 8px; cursor: pointer;
+    }
+    .settings-pop, .timeline-add-form { position: fixed; }
     .settings-pop label { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--fog); margin-bottom: 6px; }
     .settings-pop input[type=time] {
       width: 100%; background: var(--ink-900); border: 1px solid var(--hairline); color: var(--paper);
       padding: 8px; border-radius: 7px; font-size: 15px; margin-bottom: 12px;
     }
-    .settings-pop .save-btn { width: 100%; background: var(--signal); color: #06231A; border: none; font-weight: 700; padding: 9px; border-radius: 7px; font-size: 13px; margin-bottom: 8px; }
+    .settings-pop .save-btn { width: 100%; background: var(--signal); color: #06231A; border: none; font-weight: 700; padding: 9px; border-radius: 7px; font-size: 13px; margin-bottom: 8px; transition: box-shadow 0.2s ease, transform 0.2s ease; }
+    .settings-pop .save-btn.saved { box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.18), 0 0 18px var(--signal); transform: scale(1.02); }
+    .settings-textarea.saved { border-color: var(--signal); box-shadow: 0 0 0 2px var(--signal); }
     .settings-textarea {
       width: 100%; background: var(--ink-900); border: 1px solid var(--hairline); color: var(--paper);
       padding: 8px; border-radius: 7px; font-size: 12px; line-height: 1.5; margin-bottom: 8px; resize: vertical;
@@ -15019,14 +15300,41 @@ try {
     }
 
     /* ---------- Farbton-Auswahl (wird von Schlicht-Modus \xFCberschrieben) ---------- */
-    .md-root[data-theme="dark"][data-accent="blau"]:not([data-plain="true"]) { --amber: #6E93D6; --amber-dim: #2C3A5E; --highlight: #2C3A5E; }
-    .md-root[data-theme="light"][data-accent="blau"]:not([data-plain="true"]) { --amber: #3A5FB5; --amber-dim: #CBD8F0; --highlight: #CBD8F0; }
-    .md-root[data-theme="dark"][data-accent="gruen"]:not([data-plain="true"]) { --amber: #7FB86A; --amber-dim: #33502A; --highlight: #33502A; }
-    .md-root[data-theme="light"][data-accent="gruen"]:not([data-plain="true"]) { --amber: #3E7A2C; --amber-dim: #CCE6C2; --highlight: #CCE6C2; }
-    .md-root[data-theme="dark"][data-accent="lila"]:not([data-plain="true"]) { --amber: #B08AD6; --amber-dim: #4A3861; --highlight: #4A3861; }
-    .md-root[data-theme="light"][data-accent="lila"]:not([data-plain="true"]) { --amber: #7B4FAE; --amber-dim: #E4D4F3; --highlight: #E4D4F3; }
-    .md-root[data-theme="dark"][data-accent="rot"]:not([data-plain="true"]) { --amber: #D67A6E; --amber-dim: #5E2E28; --highlight: #5E2E28; }
-    .md-root[data-theme="light"][data-accent="rot"]:not([data-plain="true"]) { --amber: #B5432F; --amber-dim: #F0CFC8; --highlight: #F0CFC8; }
+    .md-root[data-theme="dark"][data-accent="blau"] { --amber: #6E93D6; --amber-dim: #2C3A5E; --highlight: #2C3A5E; }
+    .md-root[data-theme="light"][data-accent="blau"] { --amber: #3A5FB5; --amber-dim: #CBD8F0; --highlight: #CBD8F0; }
+    .md-root[data-theme="dark"][data-accent="gruen"] { --amber: #7FB86A; --amber-dim: #33502A; --highlight: #33502A; }
+    .md-root[data-theme="light"][data-accent="gruen"] { --amber: #3E7A2C; --amber-dim: #CCE6C2; --highlight: #CCE6C2; }
+    .md-root[data-theme="dark"][data-accent="lila"] { --amber: #B08AD6; --amber-dim: #4A3861; --highlight: #4A3861; }
+    .md-root[data-theme="light"][data-accent="lila"] { --amber: #7B4FAE; --amber-dim: #E4D4F3; --highlight: #E4D4F3; }
+    .md-root[data-theme="dark"][data-accent="rot"] { --amber: #D67A6E; --amber-dim: #5E2E28; --highlight: #5E2E28; }
+    .md-root[data-theme="light"][data-accent="rot"] { --amber: #B5432F; --amber-dim: #F0CFC8; --highlight: #F0CFC8; }
+
+    .md-root[data-theme="dark"][data-plain="true"][data-accent="amber"] { --amber: #E3B45A; --amber-dim: #4A3A1C; --highlight: #4A3A1C; }
+    .md-root[data-theme="light"][data-plain="true"][data-accent="amber"] { --amber: #9A6A22; --amber-dim: #E8DCC4; --highlight: #E8DCC4; }
+
+    /* ---------- Schlicht-Modus: lesbare Schrift auf farbigen Fl\xE4chen ---------- */
+    .md-root[data-plain="true"] .add-appt button:not(.cancel-add-btn),
+    .md-root[data-plain="true"] .add-habit-inline-wrap button:not(.cancel-add-btn),
+    .md-root[data-plain="true"] .appt-edit-row button:not(.cancel-add-btn),
+    .md-root[data-plain="true"] .employment-toggle button.active,
+    .md-root[data-plain="true"] .goal-toggle.done,
+    .md-root[data-plain="true"] .habit-check.checked,
+    .md-root[data-plain="true"] .lock-btn,
+    .md-root[data-plain="true"] .mini-check.checked,
+    .md-root[data-plain="true"] .prompt-banner-btn,
+    .md-root[data-plain="true"] .reflect-complete-btn,
+    .md-root[data-plain="true"] .schedule-mini-day.selected,
+    .md-root[data-plain="true"] .settings-pop .save-btn,
+    .md-root[data-plain="true"] .timeline-habit-edit-stack button:not(.cancel-add-btn),
+    .md-root[data-plain="true"] .timeline-nav-mode button.active,
+    .md-root[data-plain="true"] .todo-list-add-form button:not(.cancel-add-btn),
+    .md-root[data-plain="true"] .todo-list-tab.active,
+    .md-root[data-plain="true"] .top-tab.active,
+    .md-root[data-plain="true"] .week-strip-day.selected,
+    .md-root[data-plain="true"] .yn-btn.active,
+    .md-root[data-plain="true"] .tour-bar-btn,
+    .md-root[data-plain="true"] .timeline-add-confirm,
+    .md-root[data-plain="true"] .onboard-next { color: var(--ink-950) !important; }
 
     /* ---------- Schriftart-Auswahl (wird von Schlicht-Modus \xFCberschrieben) ---------- */
     .md-root[data-font="modern"]:not([data-plain="true"]),
@@ -15345,7 +15653,16 @@ try {
     .timeline-appt-overlay { position: absolute; left: 58px; right: 0; z-index: 2; }
     .timeline-hour { font-family: 'IBM Plex Mono'; font-size: 12px; color: var(--fog-dim); width: 46px; flex-shrink: 0; padding-top: 4px; }
     .timeline-lane { flex: 1; display: flex; flex-direction: column; gap: 3px; cursor: pointer; min-height: 22px; }
-    .timeline-habit-add-form { display: flex; flex-direction: column; gap: 5px; margin-top: 4px; }
+    .timeline-habit-add-form {
+      position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%);
+      display: flex; flex-direction: column; gap: 9px;
+      background: var(--panel); border: 1px solid var(--amber-dim);
+      border-radius: 16px; padding: 20px; width: min(360px, calc(100vw - 28px));
+      z-index: 940; max-height: 84vh; overflow-y: auto;
+      box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.72), 0 18px 50px rgba(0, 0, 0, 0.55);
+      animation: modalPop 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .timeline-habit-add-form .timeline-habit-add-input { padding: 12px; font-size: 15px; }
     .timeline-habit-add-input { background: var(--ink-900); border: 1px solid var(--hairline); color: var(--paper); border-radius: 7px; padding: 7px 10px; font-size: 13px; width: 100%; }
     .timeline-block { background: var(--amber-dim); border-left: 4px solid var(--amber); color: var(--paper); font-size: 14px; padding: 9px 12px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 6px; overflow: hidden; box-sizing: border-box; }
     .timeline-block.continued { background: rgba(245,166,35,0.12); border-left: 3px dashed var(--amber-dim); min-height: 18px; }
@@ -15366,7 +15683,15 @@ try {
     .bar-track { width: 100%; height: 10px; background: var(--panel-2); border-radius: 999px; overflow: hidden; }
     .bar-fill { height: 100%; background: var(--amber); border-radius: 999px; }
     .bar-fill.done { background: var(--signal); }
-    .timeline-add-form { display: flex; flex-direction: column; gap: 5px; background: var(--panel-2); border: 1px solid var(--amber-dim); border-radius: 6px; padding: 6px; }
+    .timeline-add-form {
+      position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%);
+      display: flex; flex-direction: column; gap: 8px;
+      background: var(--panel); border: 1px solid var(--amber-dim);
+      border-radius: 16px; padding: 18px; width: min(360px, calc(100vw - 28px));
+      z-index: 940; max-height: 84vh; overflow-y: auto;
+      box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.72), 0 18px 50px rgba(0, 0, 0, 0.55);
+      animation: modalPop 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    }
     .timeline-add-row2 { display: flex; align-items: center; gap: 5px; }
     .timeline-add-until-label { font-size: 10px; color: var(--fog-dim); flex-shrink: 0; }
     .timeline-add-time { background: var(--ink-900); border: 1px solid var(--hairline); color: var(--paper); padding: 4px 5px; border-radius: 5px; font-size: 11px; width: 70px; flex-shrink: 0; }
@@ -15467,6 +15792,8 @@ try {
       animation: modalPop 0.22s cubic-bezier(0.16, 1, 0.3, 1);
     }
     .tour-bar-text { flex: 1 1 120px; min-width: 0; font-size: 12px; line-height: 1.4; color: var(--paper); }
+    .tour-bar-skip { flex: 0 0 auto; background: none; border: none; color: var(--fog); font-size: 12px; text-decoration: underline; padding: 8px 4px; }
+    .tour-bar-btn[disabled] { opacity: 0.4; }
     .tour-bar-back {
       flex: 0 0 auto; background: transparent; color: var(--amber);
       border: 1px solid var(--amber-dim); border-radius: 10px;
@@ -15522,16 +15849,16 @@ try {
     }
   `;
     if (!ready) {
-      return /* @__PURE__ */ import_react.default.createElement("div", { className: "md-root", "data-theme": appState.theme, "data-plain": appState.plainMode ? "true" : "false", "data-font": appState.fontChoice || "elegant", "data-accent": appState.accentChoice || "amber", style: { display: "flex", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ import_react.default.createElement("style", null, styles), /* @__PURE__ */ import_react.default.createElement("span", { className: "md-mono", style: { color: "#A79E8C", fontSize: 13 } }, "L\xE4dt \u2026"));
+      return /* @__PURE__ */ import_react.default.createElement("div", { className: "md-root", "data-theme": appState.theme, "data-bg": appState.bgChoice || (appState.theme === "light" ? "creme" : "schwarz"), "data-plain": appState.plainMode ? "true" : "false", "data-font": appState.fontChoice || "elegant", "data-accent": appState.accentChoice || "amber", style: { display: "flex", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ import_react.default.createElement("style", null, styles), /* @__PURE__ */ import_react.default.createElement("span", { className: "md-mono", style: { color: "#A79E8C", fontSize: 13 } }, "L\xE4dt \u2026"));
     }
     if (phase === "locked") {
       if (appState.alarmMode === "notext") {
-        return /* @__PURE__ */ import_react.default.createElement("div", { className: "md-root", "data-theme": appState.theme, "data-plain": appState.plainMode ? "true" : "false", "data-font": appState.fontChoice || "elegant", "data-accent": appState.accentChoice || "amber" }, /* @__PURE__ */ import_react.default.createElement("style", null, styles), /* @__PURE__ */ import_react.default.createElement("div", { className: "lock-wrap" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "lock-eyebrow" }, /* @__PURE__ */ import_react.default.createElement("span", { className: "lock-dot" }), " Wecker l\xE4uft"), /* @__PURE__ */ import_react.default.createElement("div", { className: "lock-clock" }, clock), /* @__PURE__ */ import_react.default.createElement("div", { className: "lock-sub" }, "Zeit aufzustehen."), /* @__PURE__ */ import_react.default.createElement("button", { className: "lock-btn", style: { marginTop: 30 }, onClick: dismissAlarmSimple }, "Wecker ausschalten")));
+        return /* @__PURE__ */ import_react.default.createElement("div", { className: "md-root", "data-theme": appState.theme, "data-bg": appState.bgChoice || (appState.theme === "light" ? "creme" : "schwarz"), "data-plain": appState.plainMode ? "true" : "false", "data-font": appState.fontChoice || "elegant", "data-accent": appState.accentChoice || "amber" }, /* @__PURE__ */ import_react.default.createElement("style", null, styles), /* @__PURE__ */ import_react.default.createElement("div", { className: "lock-wrap" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "lock-eyebrow" }, /* @__PURE__ */ import_react.default.createElement("span", { className: "lock-dot" }), " Wecker l\xE4uft"), /* @__PURE__ */ import_react.default.createElement("div", { className: "lock-clock" }, clock), /* @__PURE__ */ import_react.default.createElement("div", { className: "lock-sub" }, "Zeit aufzustehen."), /* @__PURE__ */ import_react.default.createElement("button", { className: "lock-btn", style: { marginTop: 30 }, onClick: dismissAlarmSimple }, "Wecker ausschalten")));
       }
       const mismatchIdx = firstMismatchIndex(copyText, appState.mandatorySentences);
       const hasLiveError = mismatchIdx !== -1;
       const isMatch = copyText.trim() === appState.mandatorySentences.trim();
-      return /* @__PURE__ */ import_react.default.createElement("div", { className: "md-root", "data-theme": appState.theme, "data-plain": appState.plainMode ? "true" : "false", "data-font": appState.fontChoice || "elegant", "data-accent": appState.accentChoice || "amber" }, /* @__PURE__ */ import_react.default.createElement("style", null, styles), /* @__PURE__ */ import_react.default.createElement("div", { className: "lock-wrap" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "lock-eyebrow" }, /* @__PURE__ */ import_react.default.createElement("span", { className: "lock-dot" }), " Wecker l\xE4uft"), /* @__PURE__ */ import_react.default.createElement("div", { className: "lock-clock" }, clock), /* @__PURE__ */ import_react.default.createElement("div", { className: "lock-sub" }, missionStarted ? "Der Wecker ist jetzt still \u2014 schreibe in Ruhe zu Ende." : "Der Wecker geht aus, sobald der Text unten Wort f\xFCr Wort abgeschrieben ist. Am besten liest du ihn dabei bewusst \u2014 daf\xFCr steht er da."), /* @__PURE__ */ import_react.default.createElement("div", { className: "lock-card" }, /* @__PURE__ */ import_react.default.createElement("p", null, "Wortlaut zum Abschreiben \u2014 direkt \xFCber den Text schreiben"), /* @__PURE__ */ import_react.default.createElement("div", { className: "overlay-wrap" + (hasLiveError ? " error" : "") }, /* @__PURE__ */ import_react.default.createElement("div", { className: "ghost-text" + (hasLiveError ? " error" : ""), ref: ghostRef }, appState.mandatorySentences), /* @__PURE__ */ import_react.default.createElement(
+      return /* @__PURE__ */ import_react.default.createElement("div", { className: "md-root", "data-theme": appState.theme, "data-bg": appState.bgChoice || (appState.theme === "light" ? "creme" : "schwarz"), "data-plain": appState.plainMode ? "true" : "false", "data-font": appState.fontChoice || "elegant", "data-accent": appState.accentChoice || "amber" }, /* @__PURE__ */ import_react.default.createElement("style", null, styles), /* @__PURE__ */ import_react.default.createElement("div", { className: "lock-wrap" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "lock-eyebrow" }, /* @__PURE__ */ import_react.default.createElement("span", { className: "lock-dot" }), " Wecker l\xE4uft"), /* @__PURE__ */ import_react.default.createElement("div", { className: "lock-clock" }, clock), /* @__PURE__ */ import_react.default.createElement("div", { className: "lock-sub" }, missionStarted ? "Der Wecker ist jetzt still \u2014 schreibe in Ruhe zu Ende." : "Der Wecker geht aus, sobald der Text unten Wort f\xFCr Wort abgeschrieben ist. Am besten liest du ihn dabei bewusst \u2014 daf\xFCr steht er da."), /* @__PURE__ */ import_react.default.createElement("div", { className: "lock-card" }, /* @__PURE__ */ import_react.default.createElement("p", null, "Wortlaut zum Abschreiben \u2014 direkt \xFCber den Text schreiben"), /* @__PURE__ */ import_react.default.createElement("div", { className: "overlay-wrap" + (hasLiveError ? " error" : "") }, /* @__PURE__ */ import_react.default.createElement("div", { className: "ghost-text" + (hasLiveError ? " error" : ""), ref: ghostRef }, appState.mandatorySentences), /* @__PURE__ */ import_react.default.createElement(
         "textarea",
         {
           ref: copyTextareaRef,
@@ -15549,13 +15876,13 @@ try {
     if (!appState.onboardingDone) {
       const step = ONBOARDING_STEPS[onboardingStep];
       const isLast = onboardingStep === ONBOARDING_STEPS.length - 1;
-      return /* @__PURE__ */ import_react.default.createElement("div", { className: "md-root", "data-theme": appState.theme, "data-plain": appState.plainMode ? "true" : "false", "data-font": appState.fontChoice || "elegant", "data-accent": appState.accentChoice || "amber" }, /* @__PURE__ */ import_react.default.createElement("style", null, styles), /* @__PURE__ */ import_react.default.createElement("div", { className: "onboard-wrap" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "onboard-card" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "onboard-icon" }, step.icon), /* @__PURE__ */ import_react.default.createElement("div", { className: "onboard-title" }, step.title), /* @__PURE__ */ import_react.default.createElement("div", { className: "onboard-body" }, step.body), /* @__PURE__ */ import_react.default.createElement("div", { className: "onboard-dots" }, ONBOARDING_STEPS.map((_, i) => /* @__PURE__ */ import_react.default.createElement("span", { key: i, className: "onboard-dot" + (i === onboardingStep ? " active" : "") }))), /* @__PURE__ */ import_react.default.createElement("div", { className: "onboard-nav" }, onboardingStep > 0 && /* @__PURE__ */ import_react.default.createElement("button", { className: "onboard-back", onClick: () => setOnboardingStep((s) => s - 1) }, "Zur\xFCck"), isLast ? /* @__PURE__ */ import_react.default.createElement("button", { className: "onboard-next", onClick: completeOnboarding }, "Los geht's") : /* @__PURE__ */ import_react.default.createElement("button", { className: "onboard-next", onClick: () => {
+      return /* @__PURE__ */ import_react.default.createElement("div", { className: "md-root", "data-theme": appState.theme, "data-bg": appState.bgChoice || (appState.theme === "light" ? "creme" : "schwarz"), "data-plain": appState.plainMode ? "true" : "false", "data-font": appState.fontChoice || "elegant", "data-accent": appState.accentChoice || "amber" }, /* @__PURE__ */ import_react.default.createElement("style", null, styles), /* @__PURE__ */ import_react.default.createElement("div", { className: "onboard-wrap" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "onboard-card" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "onboard-icon" }, step.icon), /* @__PURE__ */ import_react.default.createElement("div", { className: "onboard-title" }, step.title), /* @__PURE__ */ import_react.default.createElement("div", { className: "onboard-body" }, step.body), /* @__PURE__ */ import_react.default.createElement("div", { className: "onboard-dots" }, ONBOARDING_STEPS.map((_, i) => /* @__PURE__ */ import_react.default.createElement("span", { key: i, className: "onboard-dot" + (i === onboardingStep ? " active" : "") }))), /* @__PURE__ */ import_react.default.createElement("div", { className: "onboard-nav" }, onboardingStep > 0 && /* @__PURE__ */ import_react.default.createElement("button", { className: "onboard-back", onClick: () => setOnboardingStep((s) => s - 1) }, "Zur\xFCck"), isLast ? /* @__PURE__ */ import_react.default.createElement("button", { className: "onboard-next", onClick: completeOnboarding }, "Los geht's") : /* @__PURE__ */ import_react.default.createElement("button", { className: "onboard-next", onClick: () => {
         playClickSound();
         setOnboardingStep((s) => s + 1);
       } }, "Weiter")), /* @__PURE__ */ import_react.default.createElement("button", { className: "onboard-skip", onClick: completeOnboarding }, "\xDCberspringen"))));
     }
     if (reflections && !reflections.anfangs.completed && !appState.anfangsPromptDismissed && !showAnfangsReflexion) {
-      return /* @__PURE__ */ import_react.default.createElement("div", { className: "md-root", "data-theme": appState.theme, "data-plain": appState.plainMode ? "true" : "false", "data-font": appState.fontChoice || "elegant", "data-accent": appState.accentChoice || "amber" }, /* @__PURE__ */ import_react.default.createElement("style", null, styles), /* @__PURE__ */ import_react.default.createElement("div", { className: "onboard-wrap" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "onboard-card" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "onboard-icon" }, "\u270D\uFE0F"), /* @__PURE__ */ import_react.default.createElement("div", { className: "onboard-title" }, "Deine Anfangsreflexion fehlt noch"), /* @__PURE__ */ import_react.default.createElement("div", { className: "onboard-body" }, "Bevor du beginnst, kannst du einmal festhalten, wo du gerade stehst und was du erreichen willst. Diese Standortbestimmung bleibt den ganzen Zyklus \xFCber stehen \u2014 am Ende des Jahres vergleichst du sie mit der Abschlussreflexion und siehst schwarz auf wei\xDF, was sich ver\xE4ndert hat."), /* @__PURE__ */ import_react.default.createElement(
+      return /* @__PURE__ */ import_react.default.createElement("div", { className: "md-root", "data-theme": appState.theme, "data-bg": appState.bgChoice || (appState.theme === "light" ? "creme" : "schwarz"), "data-plain": appState.plainMode ? "true" : "false", "data-font": appState.fontChoice || "elegant", "data-accent": appState.accentChoice || "amber" }, /* @__PURE__ */ import_react.default.createElement("style", null, styles), /* @__PURE__ */ import_react.default.createElement("div", { className: "onboard-wrap" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "onboard-card" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "onboard-icon" }, "\u270D\uFE0F"), /* @__PURE__ */ import_react.default.createElement("div", { className: "onboard-title" }, "Deine Anfangsreflexion fehlt noch"), /* @__PURE__ */ import_react.default.createElement("div", { className: "onboard-body" }, "Bevor du beginnst, kannst du einmal festhalten, wo du gerade stehst und was du erreichen willst. Diese Standortbestimmung bleibt den ganzen Zyklus \xFCber stehen \u2014 am Ende des Jahres vergleichst du sie mit der Abschlussreflexion und siehst schwarz auf wei\xDF, was sich ver\xE4ndert hat."), /* @__PURE__ */ import_react.default.createElement(
         "button",
         {
           className: "onboard-next",
@@ -15577,7 +15904,7 @@ try {
     const abschlussOffen = nowForLock.getFullYear() > (reflections ? reflections.cycleYear : nowForLock.getFullYear());
     const cycleOverdue = reflections && nowForLock.getFullYear() > reflections.cycleYear;
     if (reflections && (isDecemberLock && reflections.anfangs.completed || cycleOverdue) && !reflections.abschluss.completed && !abschlussUnlocked) {
-      return /* @__PURE__ */ import_react.default.createElement("div", { className: "md-root", "data-theme": appState.theme, "data-plain": appState.plainMode ? "true" : "false", "data-font": appState.fontChoice || "elegant", "data-accent": appState.accentChoice || "amber" }, /* @__PURE__ */ import_react.default.createElement("style", null, styles), /* @__PURE__ */ import_react.default.createElement("div", { className: "onboard-wrap" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "onboard-card" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "onboard-icon" }, "\u{1F56F}"), /* @__PURE__ */ import_react.default.createElement("div", { className: "onboard-title" }, "Zeit f\xFCr die Abschlussreflexion"), /* @__PURE__ */ import_react.default.createElement("div", { className: "onboard-body" }, "Das Jahr ist fast vorbei. Bevor der n\xE4chste Zyklus beginnt, kannst du zur\xFCckschauen: Hast du deine Ziele erreicht, und was hast du daraus gelernt? Dieser R\xFCckblick ist der Grund, warum das Ganze jedes Jahr von vorn beginnt \u2014 du startest nicht bei null, sondern mit dem, was du gelernt hast. Erst wenn die Abschlussreflexion ausgef\xFCllt ist, geht es weiter."), /* @__PURE__ */ import_react.default.createElement(
+      return /* @__PURE__ */ import_react.default.createElement("div", { className: "md-root", "data-theme": appState.theme, "data-bg": appState.bgChoice || (appState.theme === "light" ? "creme" : "schwarz"), "data-plain": appState.plainMode ? "true" : "false", "data-font": appState.fontChoice || "elegant", "data-accent": appState.accentChoice || "amber" }, /* @__PURE__ */ import_react.default.createElement("style", null, styles), /* @__PURE__ */ import_react.default.createElement("div", { className: "onboard-wrap" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "onboard-card" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "onboard-icon" }, "\u{1F56F}"), /* @__PURE__ */ import_react.default.createElement("div", { className: "onboard-title" }, "Zeit f\xFCr die Abschlussreflexion"), /* @__PURE__ */ import_react.default.createElement("div", { className: "onboard-body" }, "Das Jahr ist fast vorbei. Bevor der n\xE4chste Zyklus beginnt, kannst du zur\xFCckschauen: Hast du deine Ziele erreicht, und was hast du daraus gelernt? Dieser R\xFCckblick ist der Grund, warum das Ganze jedes Jahr von vorn beginnt \u2014 du startest nicht bei null, sondern mit dem, was du gelernt hast. Erst wenn die Abschlussreflexion ausgef\xFCllt ist, geht es weiter."), /* @__PURE__ */ import_react.default.createElement(
         "button",
         {
           className: "onboard-next",
@@ -15606,7 +15933,7 @@ try {
     const showMissedHabitBanner = usedAppYesterday && appState.habitTemplate.length > 0 && missedYesterday.length > 0 && appState.lastMissedBannerDate !== todayKey;
     const RECURRENCE_LABEL = { daily: "t\xE4glich", weekly: "w\xF6chentlich", monthly: "monatlich", yearly: "j\xE4hrlich" };
     const PRIORITY_ICON = { hoch: "\u{1F534}", mittel: "\u{1F7E1}", niedrig: "\u26AA" };
-    const PRIORITY_ORDER = { hoch: 0, mittel: 1, niedrig: 2 };
+    const PRIORITY_ORDER = { hoch: 0, mittel: 1, keine: 2, niedrig: 3 };
     const ENERGY_ICON = { niedrig: "\u{1F50B}", mittel: "\u{1F50B}\u{1F50B}", hoch: "\u{1F50B}\u{1F50B}\u{1F50B}" };
     const renderApptRow = (a, dayKey) => {
       if (editingApptId === a.id) {
@@ -15622,7 +15949,7 @@ try {
       }
       return /* @__PURE__ */ import_react.default.createElement("div", { className: "appt-row", key: a.id }, /* @__PURE__ */ import_react.default.createElement("span", { className: "appt-time" }, a.isBirthday ? "\u{1F382}" : a.allDay ? "ganzt\xE4gig" : a.time), a.recurring && /* @__PURE__ */ import_react.default.createElement("span", { className: "appt-recur", title: a.recurrence }, "\u{1F501} ", RECURRENCE_LABEL[a.recurrence]), /* @__PURE__ */ import_react.default.createElement("span", { className: "appt-title", onClick: () => startEditAppt(a) }, a.title, a.duration ? /* @__PURE__ */ import_react.default.createElement("span", { className: "appt-duration" }, "(", a.duration, " Min)") : null), /* @__PURE__ */ import_react.default.createElement("button", { className: "appt-edit-btn", onClick: () => startEditAppt(a), "aria-label": `${a.title} bearbeiten` }, "\u270E"), /* @__PURE__ */ import_react.default.createElement("button", { className: "habit-remove", onClick: () => requestRemoveAppointment(dayKey, a), "aria-label": `${a.title} entfernen` }, "\xD7"));
     };
-    return /* @__PURE__ */ import_react.default.createElement("div", { className: "md-root", "data-theme": appState.theme, "data-plain": appState.plainMode ? "true" : "false", "data-font": appState.fontChoice || "elegant", "data-accent": appState.accentChoice || "amber" }, /* @__PURE__ */ import_react.default.createElement("style", null, styles), /* @__PURE__ */ import_react.default.createElement("div", { className: "app-col" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "top-tabs", style: { order: -1001 } }, /* @__PURE__ */ import_react.default.createElement("button", { className: "top-tab" + (activeTab === "daily" ? " active" : ""), onClick: () => setActiveTab("daily") }, "\u2600\uFE0F Daily"), /* @__PURE__ */ import_react.default.createElement("button", { className: "top-tab" + (activeTab === "todos" ? " active" : ""), onClick: () => setActiveTab("todos") }, "\u2705 To-Dos"), /* @__PURE__ */ import_react.default.createElement("button", { className: "top-tab" + (activeTab === "business" ? " active" : ""), onClick: () => setActiveTab("business") }, "\u{1F4BC} Business"), /* @__PURE__ */ import_react.default.createElement("button", { className: "top-tab" + (activeTab === "notizen" ? " active" : ""), onClick: () => setActiveTab("notizen") }, "\u{1F4DD} Notizen")), /* @__PURE__ */ import_react.default.createElement("div", { style: { order: -999 } }, storageWarning && /* @__PURE__ */ import_react.default.createElement("div", { className: "warn-banner" }, "Das Speichern hat gerade nicht funktioniert \u2014 versuche es gleich noch einmal."), activeTab !== "business" && showYearEndBanner && /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-title" }, "\u{1F56F} Jahresende \u2014 Zeit f\xFCr die Abschlussreflexion"), /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-text" }, "Ein Jahr ist fast vorbei. Ein guter Moment zur\xFCckzuschauen, bevor der n\xE4chste Zyklus beginnt \u2014 was hat funktioniert, was nicht?"), /* @__PURE__ */ import_react.default.createElement("button", { className: "prompt-banner-btn", onClick: () => {
+    return /* @__PURE__ */ import_react.default.createElement("div", { className: "md-root", "data-theme": appState.theme, "data-bg": appState.bgChoice || (appState.theme === "light" ? "creme" : "schwarz"), "data-plain": appState.plainMode ? "true" : "false", "data-font": appState.fontChoice || "elegant", "data-accent": appState.accentChoice || "amber" }, /* @__PURE__ */ import_react.default.createElement("style", null, styles), /* @__PURE__ */ import_react.default.createElement("div", { className: "app-col" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "top-tabs", style: { order: -1001 } }, /* @__PURE__ */ import_react.default.createElement("button", { className: "top-tab" + (activeTab === "daily" ? " active" : ""), onClick: () => setActiveTab("daily") }, "\u2600\uFE0F Daily"), /* @__PURE__ */ import_react.default.createElement("button", { className: "top-tab" + (activeTab === "todos" ? " active" : ""), onClick: () => setActiveTab("todos") }, "\u2705 To-Dos"), /* @__PURE__ */ import_react.default.createElement("button", { className: "top-tab" + (activeTab === "business" ? " active" : ""), onClick: () => setActiveTab("business") }, "\u{1F4BC} Business"), /* @__PURE__ */ import_react.default.createElement("button", { className: "top-tab" + (activeTab === "notizen" ? " active" : ""), onClick: () => setActiveTab("notizen") }, "\u{1F4DD} Notizen")), /* @__PURE__ */ import_react.default.createElement("div", { style: { order: -999 } }, storageWarning && /* @__PURE__ */ import_react.default.createElement("div", { className: "warn-banner" }, "Das Speichern hat gerade nicht funktioniert \u2014 versuche es gleich noch einmal."), activeTab !== "business" && showYearEndBanner && /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-title" }, "\u{1F56F} Jahresende \u2014 Zeit f\xFCr die Abschlussreflexion"), /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-text" }, "Ein Jahr ist fast vorbei. Ein guter Moment zur\xFCckzuschauen, bevor der n\xE4chste Zyklus beginnt \u2014 was hat funktioniert, was nicht?"), /* @__PURE__ */ import_react.default.createElement("button", { className: "prompt-banner-btn", onClick: () => {
       setActiveTab("daily");
       setShowAbschlussReflexion(true);
     } }, "Jetzt ausf\xFCllen")), showMonthlyGoalBanner && /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-title" }, "\u{1F3AF} Neuer Monat \u2014 neue Ziele"), /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-text" }, "Hier kannst du dein Monatsziel setzen f\xFCr ", MONTH_NAMES[todayDate.getMonth()], " und die Wochenziele f\xFCr die n\xE4chsten 4 Wochen."), /* @__PURE__ */ import_react.default.createElement("button", { className: "prompt-banner-btn", onClick: openMonthlyPlan }, "Jetzt planen")), monthlyPlanOpen && monthlyPlanWeeks && /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-title" }, "\u{1F4C5} Wochenziele f\xFCr die n\xE4chsten 4 Wochen"), monthlyPlanWeeks.map((w, i) => /* @__PURE__ */ import_react.default.createElement("div", { key: w.monday, className: "monthly-plan-row" }, /* @__PURE__ */ import_react.default.createElement("span", { className: "monthly-plan-label" }, w.rangeLabel), /* @__PURE__ */ import_react.default.createElement(
@@ -15636,27 +15963,35 @@ try {
     ))), /* @__PURE__ */ import_react.default.createElement("div", { className: "monthly-plan-actions" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "prompt-banner-btn", onClick: saveMonthlyPlan }, "Speichern"), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn cancel", onClick: () => setMonthlyPlanOpen(false) }, "Abbrechen"))), activeTab !== "business" && showAnfangsPromptBanner && !showYearEndBanner && /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-title" }, "\u270D\uFE0F Deine Anfangsreflexion fehlt noch"), /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-text" }, "Sie ist dein Ausgangspunkt f\xFCr dieses Jahr und wird nur einmal pro Zyklus ausgef\xFCllt."), /* @__PURE__ */ import_react.default.createElement("button", { className: "prompt-banner-btn", onClick: openAnfangsReflexion }, "Jetzt ausf\xFCllen"), /* @__PURE__ */ import_react.default.createElement("button", { className: "banner-dismiss-link", onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { anfangsNeverRemind: true })) }, "Nie mehr erinnern")), activeTab === "daily" && !appState.alarmPromptSeen && /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-title" }, "\u23F0 Deinen Wecker einrichten"), /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-text" }, 'Der Wecker ist das Herzst\xFCck dieser App: Er soll dich wirklich zum Aufstehen bringen und nicht nur piepsen. Der Text zum Abschreiben kann alles sein \u2014 deine Ziele, Affirmationen oder ein Leitsatz f\xFCr den Tag. Du kannst w\xE4hlen zwischen "Mit Text" (Text exakt abschreiben, um ihn auszuschalten \u2014 am wirkungsvollsten), "Ohne Text" (einfacher Knopf) oder "Kein Wecker", falls du ihn gar nicht willst. Zeit, Sound und Modus stellst du oben beim \u23F0-Symbol ein.'), /* @__PURE__ */ import_react.default.createElement("button", { className: "prompt-banner-btn", onClick: () => {
       setShowAlarmSettings(true);
       saveAppState(__spreadProps(__spreadValues({}, appState), { alarmPromptSeen: true }));
-    } }, "Jetzt einrichten"), /* @__PURE__ */ import_react.default.createElement("button", { className: "banner-dismiss-link", onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { alarmPromptSeen: true })) }, "Sp\xE4ter")), activeTab === "daily" && showMissedHabitBanner && /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner accountability" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-title" }, appState.userName ? `${appState.userName}, ` : "", "wenn du deine Habits nicht erf\xFCllst, erreichst du deine Ziele nicht."), /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-text" }, "Diese Habits hast du nicht gemacht:"), /* @__PURE__ */ import_react.default.createElement("ul", { className: "missed-goals-list" }, missedYesterday.map((h) => /* @__PURE__ */ import_react.default.createElement("li", { key: h.id }, h.name))), /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-text" }, "Deine Ziele waren doch:"), /* @__PURE__ */ import_react.default.createElement("ul", { className: "missed-goals-list" }, missedYesterday.filter((h) => h.ziel).map((h) => /* @__PURE__ */ import_react.default.createElement("li", { key: h.id }, h.ziel)), monthGoalData && monthGoalData.monthGoal && /* @__PURE__ */ import_react.default.createElement("li", null, monthGoalData.monthGoal), weekData && weekData.goal && /* @__PURE__ */ import_react.default.createElement("li", null, weekData.goal)), /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-text" }, "Mach es. Wieso h\xE4ltst du dich nicht an das, was du dir vorgenommen hast? Fange an durchzuhalten \u2014 ob es dir Spa\xDF macht oder nicht."), /* @__PURE__ */ import_react.default.createElement("button", { className: "prompt-banner-btn", onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { lastMissedBannerDate: todayKey })) }, "Verstanden")), activeTab === "daily" && showWeekRolloverBanner && /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-title" }, "\u{1F4C5} Neue Woche \u2014 neues Wochenziel"), /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-text" }, pendingWeekRollover ? /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, 'Hast du dein Wochenziel erreicht: "', pendingWeekRollover.goal, '"?') : "Was ist dein Fokus diese Woche?"), pendingWeekRollover ? /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("button", { className: "prompt-banner-btn", onClick: () => archiveAndStartNewWeekGoal(true), style: { marginRight: 8 } }, "Ja, erreicht"), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn cancel", onClick: () => archiveAndStartNewWeekGoal(false) }, "Nein")) : /* @__PURE__ */ import_react.default.createElement("button", { className: "prompt-banner-btn", onClick: () => archiveAndStartNewWeekGoal(false) }, "Neues Wochenziel eintragen")), activeTab === "daily" && showMonthRolloverBanner && /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-title" }, "\u{1F3C6} Neuer Monat \u2014 neues Monatsziel"), /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-text" }, pendingMonthRollover ? /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, 'Hast du dein Monatsziel erreicht: "', pendingMonthRollover.goal, '"?') : "Was willst du diesen Monat erreichen?"), pendingMonthRollover ? /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("button", { className: "prompt-banner-btn", onClick: () => archiveAndStartNewMonthGoal(true), style: { marginRight: 8 } }, "Ja, erreicht"), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn cancel", onClick: () => archiveAndStartNewMonthGoal(false) }, "Nein")) : /* @__PURE__ */ import_react.default.createElement("button", { className: "prompt-banner-btn", onClick: () => archiveAndStartNewMonthGoal(false) }, "Neues Monatsziel eintragen"))), /* @__PURE__ */ import_react.default.createElement("div", { className: "topbar", style: { order: -1e3 } }, /* @__PURE__ */ import_react.default.createElement("div", null, /* @__PURE__ */ import_react.default.createElement("div", { className: "eyebrow" }, "Master Your Life"), /* @__PURE__ */ import_react.default.createElement("div", { className: "clock-mini" }, "Aktuelle Zeit ", clock, " \xB7 ", /* @__PURE__ */ import_react.default.createElement("span", { className: "wecker-click", onClick: () => setShowAlarmSettings(true) }, "Wecker ", appState.alarmMode === "none" ? "aus" : `${appState.alarmTime} Uhr`))), /* @__PURE__ */ import_react.default.createElement("div", { className: "topbar-gears" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "gear", onClick: () => setShowAlarmSettings((s) => !s), "aria-label": "Wecker-Einstellungen" }, "\u23F0"), /* @__PURE__ */ import_react.default.createElement("button", { className: "gear", onClick: () => setShowSettings((s) => !s), "aria-label": "Einstellungen" }, "\u2699")), showAlarmSettings && /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-pop" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: -4, marginBottom: 8 } }, "Der Wecker ist das Herzst\xFCck der App. Am besten stellst du ihn so ein, dass er dich wirklich zum Aufstehen bringt, statt dass du ihn im Halbschlaf wegtippst."), /* @__PURE__ */ import_react.default.createElement("label", null, "Wecker-Art"), /* @__PURE__ */ import_react.default.createElement("div", { className: "theme-row", style: { flexWrap: "wrap" } }, /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (alarmModeDraft === "text" ? " active" : ""), onClick: () => setAlarmModeDraft("text") }, "Mit Text"), /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (alarmModeDraft === "notext" ? " active" : ""), onClick: () => setAlarmModeDraft("notext") }, "Ohne Text"), /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (alarmModeDraft === "none" ? " active" : ""), onClick: () => setAlarmModeDraft("none") }, "Kein Wecker")), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: -4 } }, alarmModeDraft === "text" && "Der Wecker geht erst aus, wenn ein Text exakt abgeschrieben ist. Dort hinein kannst du deine Ziele, Affirmationen oder einen Satz schreiben, der dich morgens in die richtige Richtung schiebt \u2014 so liest du das Wichtigste, bevor der Tag beginnt.", alarmModeDraft === "notext" && 'Ein Knopf schaltet den Wecker aus \u2014 einfacher, aber leichter zu "snoozen".', alarmModeDraft === "none" && "Der Wecker ist komplett deaktiviert \u2014 die App weckt dich nicht."), alarmModeDraft !== "none" && /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("label", { style: { marginTop: 10 } }, "Weckzeit"), /* @__PURE__ */ import_react.default.createElement("input", { type: "time", value: alarmTimeDraft, onChange: (e) => setAlarmTimeDraft(e.target.value) })), /* @__PURE__ */ import_react.default.createElement(
+    } }, "Jetzt einrichten"), /* @__PURE__ */ import_react.default.createElement("button", { className: "banner-dismiss-link", onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { alarmPromptSeen: true })) }, "Sp\xE4ter")), activeTab === "daily" && showMissedHabitBanner && /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner accountability" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-title" }, appState.userName ? `${appState.userName}, ` : "", "wenn du deine Habits nicht erf\xFCllst, erreichst du deine Ziele nicht."), /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-text" }, "Diese Habits hast du nicht gemacht:"), /* @__PURE__ */ import_react.default.createElement("ul", { className: "missed-goals-list" }, missedYesterday.map((h) => /* @__PURE__ */ import_react.default.createElement("li", { key: h.id }, h.name))), /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-text" }, "Deine Ziele waren doch:"), /* @__PURE__ */ import_react.default.createElement("ul", { className: "missed-goals-list" }, missedYesterday.filter((h) => h.ziel).map((h) => /* @__PURE__ */ import_react.default.createElement("li", { key: h.id }, h.ziel)), monthGoalData && monthGoalData.monthGoal && /* @__PURE__ */ import_react.default.createElement("li", null, monthGoalData.monthGoal), weekData && weekData.goal && /* @__PURE__ */ import_react.default.createElement("li", null, weekData.goal)), /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-text" }, "Mach es. Wieso h\xE4ltst du dich nicht an das, was du dir vorgenommen hast? Fange an durchzuhalten \u2014 ob es dir Spa\xDF macht oder nicht."), /* @__PURE__ */ import_react.default.createElement("button", { className: "prompt-banner-btn", onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { lastMissedBannerDate: todayKey })) }, "Verstanden")), activeTab === "daily" && showWeekRolloverBanner && /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-title" }, "\u{1F4C5} Neue Woche \u2014 neues Wochenziel"), /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-text" }, pendingWeekRollover ? /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, 'Hast du dein Wochenziel erreicht: "', pendingWeekRollover.goal, '"?') : "Was ist dein Fokus diese Woche?"), pendingWeekRollover ? /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("button", { className: "prompt-banner-btn", onClick: () => archiveAndStartNewWeekGoal(true), style: { marginRight: 8 } }, "Ja, erreicht"), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn cancel", onClick: () => archiveAndStartNewWeekGoal(false) }, "Nein")) : /* @__PURE__ */ import_react.default.createElement("button", { className: "prompt-banner-btn", onClick: () => archiveAndStartNewWeekGoal(false) }, "Neues Wochenziel eintragen")), activeTab === "daily" && showMonthRolloverBanner && /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-title" }, "\u{1F3C6} Neuer Monat \u2014 neues Monatsziel"), /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-text" }, pendingMonthRollover ? /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, 'Hast du dein Monatsziel erreicht: "', pendingMonthRollover.goal, '"?') : "Was willst du diesen Monat erreichen?"), pendingMonthRollover ? /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("button", { className: "prompt-banner-btn", onClick: () => archiveAndStartNewMonthGoal(true), style: { marginRight: 8 } }, "Ja, erreicht"), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn cancel", onClick: () => archiveAndStartNewMonthGoal(false) }, "Nein")) : /* @__PURE__ */ import_react.default.createElement("button", { className: "prompt-banner-btn", onClick: () => archiveAndStartNewMonthGoal(false) }, "Neues Monatsziel eintragen"))), /* @__PURE__ */ import_react.default.createElement("div", { className: "topbar", style: { order: -1e3 } }, /* @__PURE__ */ import_react.default.createElement("div", null, /* @__PURE__ */ import_react.default.createElement("div", { className: "eyebrow" }, "Master Your Life"), /* @__PURE__ */ import_react.default.createElement("div", { className: "clock-mini" }, "Aktuelle Zeit ", clock, " \xB7 ", /* @__PURE__ */ import_react.default.createElement("span", { className: "wecker-click", onClick: () => setShowAlarmSettings(true) }, "Wecker ", appState.alarmMode === "none" ? "aus" : `${appState.alarmTime} Uhr`))), /* @__PURE__ */ import_react.default.createElement("div", { className: "topbar-gears" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "gear", onClick: () => setShowAlarmSettings((s) => !s), "aria-label": "Wecker-Einstellungen" }, "\u23F0"), /* @__PURE__ */ import_react.default.createElement("button", { className: "gear", onClick: () => setShowSettings((s) => !s), "aria-label": "Einstellungen" }, "\u2699")), showAlarmSettings && /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-pop" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "pop-close", onClick: () => setShowAlarmSettings(false), "aria-label": "Schlie\xDFen" }, "\xD7"), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: -4, marginBottom: 8 } }, "Der Wecker ist das Herzst\xFCck der App. Am besten stellst du ihn so ein, dass er dich wirklich zum Aufstehen bringt, statt dass du ihn im Halbschlaf wegtippst."), /* @__PURE__ */ import_react.default.createElement("label", null, "Wecker-Art"), /* @__PURE__ */ import_react.default.createElement("div", { className: "theme-row", style: { flexWrap: "wrap" } }, /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (alarmModeDraft === "text" ? " active" : ""), onClick: () => setAlarmModeDraft("text") }, "Mit Text"), /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (alarmModeDraft === "notext" ? " active" : ""), onClick: () => setAlarmModeDraft("notext") }, "Ohne Text"), /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (alarmModeDraft === "none" ? " active" : ""), onClick: () => setAlarmModeDraft("none") }, "Kein Wecker")), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: -4 } }, alarmModeDraft === "text" && "Der Wecker geht erst aus, wenn ein Text exakt abgeschrieben ist. Dort hinein kannst du deine Ziele, Affirmationen oder einen Satz schreiben, der dich morgens in die richtige Richtung schiebt \u2014 so liest du das Wichtigste, bevor der Tag beginnt.", alarmModeDraft === "notext" && 'Ein Knopf schaltet den Wecker aus \u2014 einfacher, aber leichter zu "snoozen".', alarmModeDraft === "none" && "Der Wecker ist komplett deaktiviert \u2014 die App weckt dich nicht."), alarmModeDraft !== "none" && /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("label", { style: { marginTop: 10 } }, "Weckzeit"), /* @__PURE__ */ import_react.default.createElement("input", { type: "time", value: alarmTimeDraft, onChange: (e) => setAlarmTimeDraft(e.target.value) })), /* @__PURE__ */ import_react.default.createElement(
       "button",
       {
-        className: "save-btn",
+        className: "save-btn" + (savedFlash === "alarm" ? " saved" : ""),
         style: { marginTop: 10 },
-        onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { alarmMode: alarmModeDraft, alarmTime: alarmModeDraft !== "none" ? alarmTimeDraft : appState.alarmTime }))
+        onClick: () => {
+          saveAppState(__spreadProps(__spreadValues({}, appState), { alarmMode: alarmModeDraft, alarmTime: alarmModeDraft !== "none" ? alarmTimeDraft : appState.alarmTime }));
+          setTourFlags((f) => __spreadProps(__spreadValues({}, f), { alarm: true }));
+          flashSaved("alarm");
+        }
       },
-      alarmModeDraft === "none" ? "Wecker deaktivieren" : "Wecker aktivieren"
-    ), appState.alarmMode !== alarmModeDraft || alarmModeDraft !== "none" && appState.alarmTime !== alarmTimeDraft ? /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: -2, color: "var(--amber)" } }, "Noch nicht \xFCbernommen \u2014 erst mit dem Knopf oben wird die \xC4nderung aktiv.") : appState.alarmMode !== "none" && /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: -2, color: "var(--signal)" } }, "\u2713 Aktiv: ", appState.alarmMode === "text" ? "Mit Text" : "Ohne Text", " um ", appState.alarmTime, " Uhr"), alarmModeDraft === "text" && /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("label", { style: { marginTop: 6 } }, "Pflichttext zum Abschreiben (Ziele, Affirmationen, ein Leitsatz)"), /* @__PURE__ */ import_react.default.createElement("textarea", { className: "settings-textarea", value: sentencesDraft, onChange: (e) => setSentencesDraft(e.target.value), rows: 5 }), /* @__PURE__ */ import_react.default.createElement("button", { className: "save-btn", onClick: updateSentences }, "Text speichern")), alarmModeDraft !== "none" && /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("label", { style: { marginTop: 6 } }, "Eigener Wecker-Sound"), customAudioName ? /* @__PURE__ */ import_react.default.createElement("div", { className: "audio-current" }, "\u2713 ", customAudioName) : /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note" }, "Standard: eigens komponiertes motivierendes Wecker-Riff (in der App erzeugt). Eigene MP3 hochladen \u2014 bleibt nur bis zum Schlie\xDFen des Tabs gespeichert (zu gro\xDF f\xFCr dauerhaften Speicher). Spotify-Songs lassen sich technisch nicht einbinden, daf\xFCr br\xE4uchte es einen echten Server + Spotify-Premium-Login."), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note" }, "Eigener Sound (Musik von deinem Ger\xE4t):")), /* @__PURE__ */ import_react.default.createElement("div", { className: "audio-file-row" }, /* @__PURE__ */ import_react.default.createElement("input", { type: "file", accept: "audio/*", onChange: handleCustomAudioSelect }), customAudioName && /* @__PURE__ */ import_react.default.createElement("button", { className: "audio-clear-btn", onClick: clearCustomAudio }, "Entfernen")), /* @__PURE__ */ import_react.default.createElement("button", { className: "test-btn", onClick: triggerTestAlarm, style: { marginTop: 8 } }, "Wecker jetzt testen"))), showSettings && /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-pop" }, /* @__PURE__ */ import_react.default.createElement("label", null, "Sounds"), /* @__PURE__ */ import_react.default.createElement("div", { className: "theme-row" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (appState.soundsEnabled ? " active" : ""), onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { soundsEnabled: true })) }, "An"), /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (!appState.soundsEnabled ? " active" : ""), onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { soundsEnabled: false })) }, "Aus")), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: -4 } }, "Gilt f\xFCr Erfolgs-/Jubel-/Klick-T\xF6ne. Der Wecker selbst klingelt immer, unabh\xE4ngig davon."), /* @__PURE__ */ import_react.default.createElement("label", { style: { marginTop: 6 } }, "Hintergrund"), /* @__PURE__ */ import_react.default.createElement("div", { className: "theme-row" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (appState.theme === "dark" ? " active" : ""), onClick: () => setTheme("dark") }, "Schwarz"), /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn light" + (appState.theme === "light" ? " active" : ""), onClick: () => setTheme("light") }, "Wei\xDF")), /* @__PURE__ */ import_react.default.createElement("label", { style: { marginTop: 6 } }, "Farbton"), /* @__PURE__ */ import_react.default.createElement("div", { className: "theme-row", style: { flexWrap: "wrap" } }, [["amber", "Amber"], ["blau", "Blau"], ["gruen", "Gr\xFCn"], ["lila", "Lila"], ["rot", "Rot"]].map(([id, label]) => /* @__PURE__ */ import_react.default.createElement("button", { key: id, className: "theme-btn" + ((appState.accentChoice || "amber") === id ? " active" : ""), onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { accentChoice: id })) }, label))), /* @__PURE__ */ import_react.default.createElement("label", { style: { marginTop: 6 } }, "Schriftart"), /* @__PURE__ */ import_react.default.createElement("div", { className: "theme-row", style: { flexWrap: "wrap" } }, [["elegant", "Elegant"], ["modern", "Modern"], ["rund", "Rund"], ["klassisch", "Klassisch"]].map(([id, label]) => /* @__PURE__ */ import_react.default.createElement("button", { key: id, className: "theme-btn" + ((appState.fontChoice || "elegant") === id ? " active" : ""), onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { fontChoice: id })) }, label))), /* @__PURE__ */ import_react.default.createElement("label", { style: { marginTop: 6 } }, "Darstellung"), /* @__PURE__ */ import_react.default.createElement("div", { className: "theme-row" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (!appState.plainMode ? " active" : ""), onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { plainMode: false })) }, "Gestaltet"), /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (appState.plainMode ? " active" : ""), onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { plainMode: true })) }, "Schlicht")), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: -4 } }, "Schlicht: normale Schrift, kaum Farbe, minimales Design \u2014 \xFCberschreibt Schriftart und Farbton."), /* @__PURE__ */ import_react.default.createElement("label", { style: { marginTop: 10 } }, '\u{1F9EA} Test-Datum (simuliert "heute" \u2014 f\xFCr Planung, Jahresende, verpasste Habits)'), /* @__PURE__ */ import_react.default.createElement("div", { className: "add-appt-row", style: { marginBottom: 6 } }, /* @__PURE__ */ import_react.default.createElement(
-      "input",
-      {
-        type: "date",
-        value: appState.testDateOverride || "",
-        onChange: (e) => saveAppState(__spreadProps(__spreadValues({}, appState), { testDateOverride: e.target.value }))
-      }
-    ), appState.testDateOverride && /* @__PURE__ */ import_react.default.createElement("button", { className: "test-btn", style: { flex: "0 0 auto" }, onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { testDateOverride: "" })) }, "Echtes Datum")), appState.testDateOverride && /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: -2, color: "var(--amber)" } }, "\u26A0 Test-Modus aktiv \u2014 die App denkt, heute ist der ", appState.testDateOverride, '. Vergiss nicht, "Echtes Datum" wieder zu klicken.'), /* @__PURE__ */ import_react.default.createElement("button", { className: "test-btn", onClick: () => {
+      savedFlash === "alarm" ? alarmModeDraft === "none" ? "\u2713 Wecker deaktiviert" : "\u2713 Wecker aktiviert" : alarmModeDraft === "none" ? "Wecker deaktivieren" : "Wecker aktivieren"
+    ), appState.alarmMode !== alarmModeDraft || alarmModeDraft !== "none" && appState.alarmTime !== alarmTimeDraft ? /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: -2, color: "var(--amber)" } }, "Noch nicht \xFCbernommen \u2014 erst mit dem Knopf oben wird die \xC4nderung aktiv.") : appState.alarmMode !== "none" && /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: -2, color: "var(--signal)" } }, "\u2713 Aktiv: ", appState.alarmMode === "text" ? "Mit Text" : "Ohne Text", " um ", appState.alarmTime, " Uhr"), appState.alarmMode !== "none" && /* @__PURE__ */ import_react.default.createElement("button", { className: "test-btn", style: { marginTop: 2 }, onClick: () => {
+      setAlarmModeDraft("none");
+      saveAppState(__spreadProps(__spreadValues({}, appState), { alarmMode: "none" }));
+      setTourFlags((f) => __spreadProps(__spreadValues({}, f), { alarm: true }));
+      flashSaved("off");
+    } }, savedFlash === "off" ? "\u2713 Wecker ausgeschaltet" : "Wecker jetzt ausschalten"), /* @__PURE__ */ import_react.default.createElement("label", { style: { marginTop: 10 } }, "Verlassen der App beim Wecker erschweren"), /* @__PURE__ */ import_react.default.createElement("div", { className: "theme-row" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (appState.blockExit !== false ? " active" : ""), onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { blockExit: true })) }, "An"), /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (appState.blockExit === false ? " active" : ""), onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { blockExit: false })) }, "Aus")), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: -2 } }, "Bei \u201eAn\u201c fragt der Browser nach, wenn du die Seite w\xE4hrend des Weckers schlie\xDFen willst, und der Wecker klingelt beim Zur\xFCckkommen sofort weiter. Ein echtes Sperren des Handys kann eine Website technisch nicht \u2014 der Startbildschirm-Knopf bleibt immer erreichbar."), alarmModeDraft === "text" && /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("label", { style: { marginTop: 6 } }, "Pflichttext zum Abschreiben (Ziele, Affirmationen, ein Leitsatz)"), /* @__PURE__ */ import_react.default.createElement("textarea", { className: "settings-textarea" + (savedFlash === "text" ? " saved" : ""), value: sentencesDraft, onChange: (e) => setSentencesDraft(e.target.value), rows: 5 }), /* @__PURE__ */ import_react.default.createElement("button", { className: "save-btn" + (savedFlash === "text" ? " saved" : ""), onClick: () => {
+        updateSentences();
+        flashSaved("text");
+      } }, savedFlash === "text" ? "\u2713 Text gespeichert" : "Text speichern")), alarmModeDraft !== "none" && /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("label", { style: { marginTop: 6 } }, "Eigener Wecker-Sound"), customAudioName ? /* @__PURE__ */ import_react.default.createElement("div", { className: "audio-current" }, "\u2713 ", customAudioName) : /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note" }, "Standard: eigens komponiertes motivierendes Wecker-Riff (in der App erzeugt). Eigene MP3 hochladen \u2014 bleibt nur bis zum Schlie\xDFen des Tabs gespeichert (zu gro\xDF f\xFCr dauerhaften Speicher). Spotify-Songs lassen sich technisch nicht einbinden, daf\xFCr br\xE4uchte es einen echten Server + Spotify-Premium-Login."), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note" }, "Eigener Sound (Musik von deinem Ger\xE4t):")), /* @__PURE__ */ import_react.default.createElement("div", { className: "audio-file-row" }, /* @__PURE__ */ import_react.default.createElement("input", { type: "file", accept: "audio/*", onChange: handleCustomAudioSelect }), customAudioName && /* @__PURE__ */ import_react.default.createElement("button", { className: "audio-clear-btn", onClick: clearCustomAudio }, "Entfernen")), /* @__PURE__ */ import_react.default.createElement("button", { className: "test-btn", onClick: triggerTestAlarm, style: { marginTop: 8 } }, "Wecker jetzt testen"))), showSettings && /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-pop" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "pop-close", onClick: () => setShowSettings(false), "aria-label": "Schlie\xDFen" }, "\xD7"), /* @__PURE__ */ import_react.default.createElement("label", null, "Sounds"), /* @__PURE__ */ import_react.default.createElement("div", { className: "theme-row" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (appState.soundsEnabled ? " active" : ""), onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { soundsEnabled: true })) }, "An"), /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (!appState.soundsEnabled ? " active" : ""), onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { soundsEnabled: false })) }, "Aus")), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: -4 } }, "Gilt f\xFCr Erfolgs-/Jubel-/Klick-T\xF6ne. Der Wecker selbst klingelt immer, unabh\xE4ngig davon."), /* @__PURE__ */ import_react.default.createElement("label", { style: { marginTop: 6 } }, "Hintergrund"), /* @__PURE__ */ import_react.default.createElement("div", { className: "theme-row" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (appState.theme === "dark" ? " active" : ""), onClick: () => setTheme("dark") }, "Schwarz"), /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn light" + (appState.theme === "light" ? " active" : ""), onClick: () => setTheme("light") }, "Wei\xDF")), /* @__PURE__ */ import_react.default.createElement("div", { className: "theme-row", style: { flexWrap: "wrap", marginTop: 6 } }, (appState.theme === "light" ? [["creme", "Creme"], ["weiss", "Tiefwei\xDF"], ["hellgrau", "Hellgrau"], ["sand", "Sand"]] : [["schwarz", "Tiefschwarz"], ["warm", "Warmbraun"], ["grau", "Anthrazit"], ["marine", "Marine"], ["wald", "Waldgr\xFCn"]]).map(([id, label]) => /* @__PURE__ */ import_react.default.createElement("button", { key: id, className: "theme-btn" + ((appState.bgChoice || (appState.theme === "light" ? "creme" : "schwarz")) === id ? " active" : ""), onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { bgChoice: id })) }, label))), /* @__PURE__ */ import_react.default.createElement("label", { style: { marginTop: 6 } }, "Farbton"), /* @__PURE__ */ import_react.default.createElement("div", { className: "theme-row", style: { flexWrap: "wrap" } }, [["amber", "Amber"], ["blau", "Blau"], ["gruen", "Gr\xFCn"], ["lila", "Lila"], ["rot", "Rot"]].map(([id, label]) => /* @__PURE__ */ import_react.default.createElement("button", { key: id, className: "theme-btn" + ((appState.accentChoice || "amber") === id ? " active" : ""), onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { accentChoice: id })) }, label))), /* @__PURE__ */ import_react.default.createElement("label", { style: { marginTop: 6 } }, "Schriftart"), /* @__PURE__ */ import_react.default.createElement("div", { className: "theme-row", style: { flexWrap: "wrap" } }, [["elegant", "Elegant"], ["modern", "Modern"], ["rund", "Rund"], ["klassisch", "Klassisch"]].map(([id, label]) => /* @__PURE__ */ import_react.default.createElement("button", { key: id, className: "theme-btn" + ((appState.fontChoice || "elegant") === id ? " active" : ""), onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { fontChoice: id })) }, label))), /* @__PURE__ */ import_react.default.createElement("label", { style: { marginTop: 6 } }, "Darstellung"), /* @__PURE__ */ import_react.default.createElement("div", { className: "theme-row" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (!appState.plainMode ? " active" : ""), onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { plainMode: false })) }, "Gestaltet"), /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (appState.plainMode ? " active" : ""), onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { plainMode: true })) }, "Schlicht")), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: -4 } }, "Schlicht: normale Schrift, kaum Farbe, minimales Design \u2014 \xFCberschreibt Schriftart und Farbton."), /* @__PURE__ */ import_react.default.createElement("button", { className: "test-btn", onClick: () => {
       setShowSettings(false);
       setTourPaused(false);
       setActiveTab(TOUR_STEPS[0].tab);
       setTourStep(0);
-    }, style: { marginTop: 6 } }, "\u{1F9ED} Tour nochmal starten"), /* @__PURE__ */ import_react.default.createElement("button", { className: "test-btn", onClick: () => setResetConfirmOpen(true), style: { marginTop: 6 } }, "\u{1F504} Testphase \u2014 alles zur\xFCcksetzen"))), (() => {
+    }, style: { marginTop: 6 } }, "\u{1F9ED} Tour nochmal starten"), /* @__PURE__ */ import_react.default.createElement("button", { className: "test-btn", onClick: () => {
+      setShowSettings(false);
+      setResetConfirmOpen(true);
+    }, style: { marginTop: 6 } }, "\u{1F5D1} App zur\xFCcksetzen"), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: 12, textAlign: "center", opacity: 0.7 } }, APP_BUILD))), (() => {
       const todaysPriorities = prioritiesFor(todayKey);
       const hasAny = todaysPriorities.some((p) => p.text.trim());
       if (!hasAny) return null;
@@ -15701,7 +16036,7 @@ try {
     ), /* @__PURE__ */ import_react.default.createElement("button", { className: "hierarchy-hide", onClick: () => {
       saveAppState(__spreadProps(__spreadValues({}, appState), { showQuartalGoal: false }));
       saveQuartalGoal({ goal: "", done: false });
-    }, "aria-label": "Quartalsziel l\xF6schen" }, "\xD7")), !appState.showQuartalGoal && /* @__PURE__ */ import_react.default.createElement("button", { className: "hierarchy-add", onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { showQuartalGoal: true })), "aria-label": "Quartalsziel hinzuf\xFCgen" }, "+ Quartalsziel")), (monthGoalArchive.length > 0 || weekGoalArchive.length > 0) && /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("button", { className: "tiny-archive-link", onClick: () => setShowGoalArchive((v) => !v) }, showGoalArchive ? "\u25BE" : "\u25B8", " vergangene Ziele"), showGoalArchive && /* @__PURE__ */ import_react.default.createElement("div", { className: "goal-archive" }, monthGoalArchive.slice().reverse().map((m, i) => /* @__PURE__ */ import_react.default.createElement("div", { key: "m" + i, className: "archive-line" }, m.done ? "\u2713" : "\u2717", " ", /* @__PURE__ */ import_react.default.createElement("strong", null, m.monthKey), ": ", m.goal)), weekGoalArchive.slice().reverse().map((w, i) => /* @__PURE__ */ import_react.default.createElement("div", { key: "w" + i, className: "archive-line" }, w.done ? "\u2713" : "\u2717", " ", /* @__PURE__ */ import_react.default.createElement("strong", null, "Woche ", w.weekMonday), ": ", w.goal)))))), activeTab === "daily" && /* @__PURE__ */ import_react.default.createElement("div", { className: "reorder-block", style: { order: -999 } }, reflections && /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("div", { className: "collapse-header-row" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "collapse-header", style: { flex: 1 }, onClick: () => setShowAnfangsReflexion((v) => !v) }, /* @__PURE__ */ import_react.default.createElement("span", { className: "collapse-arrow" + (showAnfangsReflexion ? " open" : "") }, "\u25B8"), /* @__PURE__ */ import_react.default.createElement("span", { className: "collapse-title" }, "Anfangsreflexion"))), showAnfangsReflexion && /* @__PURE__ */ import_react.default.createElement("div", { "data-section": "anfangs", className: "section reflection-box" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "reflect-label" }, "So zufrieden bin ich in diesen Bereichen (1\u20135):"), /* @__PURE__ */ import_react.default.createElement("div", { className: "rating-grid" }, LIFE_AREAS.map((area) => /* @__PURE__ */ import_react.default.createElement("div", { className: "rating-row", key: area }, /* @__PURE__ */ import_react.default.createElement("span", { className: "rating-area" }, area), /* @__PURE__ */ import_react.default.createElement(
+    }, "aria-label": "Quartalsziel l\xF6schen" }, "\xD7")), !appState.showQuartalGoal && /* @__PURE__ */ import_react.default.createElement("button", { className: "hierarchy-add", onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { showQuartalGoal: true })), "aria-label": "Quartalsziel hinzuf\xFCgen" }, "+ Quartalsziel")), (monthGoalArchive.length > 0 || weekGoalArchive.length > 0) && /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("button", { className: "tiny-archive-link", onClick: () => setShowGoalArchive((v) => !v) }, showGoalArchive ? "\u25BE" : "\u25B8", " vergangene Ziele"), showGoalArchive && /* @__PURE__ */ import_react.default.createElement("div", { className: "goal-archive" }, monthGoalArchive.slice().reverse().map((m, i) => /* @__PURE__ */ import_react.default.createElement("div", { key: "m" + i, className: "archive-line" }, m.done ? "\u2713" : "\u2717", " ", /* @__PURE__ */ import_react.default.createElement("strong", null, m.monthKey), ": ", m.goal)), weekGoalArchive.slice().reverse().map((w, i) => /* @__PURE__ */ import_react.default.createElement("div", { key: "w" + i, className: "archive-line" }, w.done ? "\u2713" : "\u2717", " ", /* @__PURE__ */ import_react.default.createElement("strong", null, "Woche ", w.weekMonday), ": ", w.goal)))))), activeTab === "daily" && /* @__PURE__ */ import_react.default.createElement("div", { className: "reorder-block", style: { order: -999 } }, reflections && /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("div", { className: "collapse-header-row" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "collapse-header", style: { flex: 1 }, onClick: () => setShowAnfangsReflexion((v) => !v) }, /* @__PURE__ */ import_react.default.createElement("span", { className: "collapse-arrow" + (showAnfangsReflexion ? " open" : "") }, "\u25B8"), /* @__PURE__ */ import_react.default.createElement("span", { className: "collapse-title" }, "Anfangsreflexion"))), showAnfangsReflexion && /* @__PURE__ */ import_react.default.createElement("div", { "data-section": "anfangs", "data-tour": "anfangs", className: "section reflection-box" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "reflect-label" }, "So zufrieden bin ich in diesen Bereichen (1\u20135):"), /* @__PURE__ */ import_react.default.createElement("div", { className: "rating-grid" }, LIFE_AREAS.map((area) => /* @__PURE__ */ import_react.default.createElement("div", { className: "rating-row", key: area }, /* @__PURE__ */ import_react.default.createElement("span", { className: "rating-area" }, area), /* @__PURE__ */ import_react.default.createElement(
       "input",
       {
         type: "number",
@@ -15754,16 +16089,41 @@ try {
       const query = notesSearch.trim().toLowerCase();
       const matches = query ? notesPages.map((p, i) => ({ i, p })).filter(({ p }) => p.content.toLowerCase().includes(query) || p.title.toLowerCase().includes(query)) : [];
       const currentPage = notesPages[notesPageIndex] || notesPages[0];
-      return /* @__PURE__ */ import_react.default.createElement("div", { className: "section slide-fade-in" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "section-title", style: { marginBottom: 10 } }, "\u{1F4DD} Notizen"), /* @__PURE__ */ import_react.default.createElement("div", { className: "todo-list-tabs" }, notebooks.map((nb) => /* @__PURE__ */ import_react.default.createElement("button", { key: nb.id, className: "todo-list-tab" + (activeNotebookId === nb.id ? " active" : ""), onClick: () => {
+      return /* @__PURE__ */ import_react.default.createElement("div", { className: "section slide-fade-in" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "nb-cover-row" }, (() => {
+        const idx = Math.max(0, notebooks.findIndex((n) => n.id === activeNotebookId));
+        const nb = notebooks[idx] || notebooks[0];
+        return /* @__PURE__ */ import_react.default.createElement("div", { className: "nb-cover", onTouchStart: (e) => {
+          nbTabsXRef.current = e.touches[0].clientX;
+          nbTabsYRef.current = e.touches[0].clientY;
+        }, onTouchEnd: (e) => {
+          if (nbTabsXRef.current == null) return;
+          const dx = e.changedTouches[0].clientX - nbTabsXRef.current;
+          const dy = e.changedTouches[0].clientY - (nbTabsYRef.current || 0);
+          nbTabsXRef.current = null;
+          nbTabsYRef.current = null;
+          if (Math.abs(dx) < 45 || Math.abs(dx) < Math.abs(dy) * 1.2) return;
+          const next = dx < 0 ? idx + 1 : idx - 1;
+          if (next < 0 || next >= notebooks.length) return;
+          playPageSound();
+          setActiveNotebookId(notebooks[next].id);
+        }, onClick: () => setBookPickerOpen(true) }, /* @__PURE__ */ import_react.default.createElement("div", { className: "nb-cover-spine" }), /* @__PURE__ */ import_react.default.createElement("div", { className: "nb-cover-inner" }, nb.icon && /* @__PURE__ */ import_react.default.createElement("div", { className: "nb-cover-icon" }, nb.icon), /* @__PURE__ */ import_react.default.createElement("div", { className: "nb-cover-name" }, nb.name), notebooks.length > 1 && /* @__PURE__ */ import_react.default.createElement("div", { className: "nb-cover-count" }, `${idx + 1} von ${notebooks.length} \u2014 wischen zum Wechseln`)));
+      })(), /* @__PURE__ */ import_react.default.createElement("button", { className: "nb-cover-add", onClick: () => setAddingNotebook(true), "aria-label": "Neues Buch" }, "+")), bookPickerOpen && /* @__PURE__ */ import_react.default.createElement("div", { className: "delete-confirm" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "appt-step-label" }, "Welches Buch?"), notebooks.map((nb) => /* @__PURE__ */ import_react.default.createElement("div", { key: nb.id, className: "nb-pick-row" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "nb-pick-btn" + (nb.id === activeNotebookId ? " active" : ""), onClick: () => {
+      if (nb.id !== activeNotebookId) {
+        playPageSound();
         setActiveNotebookId(nb.id);
         setNotesSearch("");
-      } }, nb.name, nb.id !== "default" && /* @__PURE__ */ import_react.default.createElement("span", { className: "todo-list-remove", onClick: (e) => {
-        e.stopPropagation();
-        removeNotebook(nb.id);
-      } }, "\xD7"))), addingNotebook ? /* @__PURE__ */ import_react.default.createElement("span", { className: "todo-list-add-form" }, /* @__PURE__ */ import_react.default.createElement("input", { autoFocus: true, value: newNotebookName, onChange: (e) => setNewNotebookName(e.target.value), placeholder: "z.B. Predigten", onKeyDown: (e) => e.key === "Enter" && addNotebook() }), /* @__PURE__ */ import_react.default.createElement("button", { onClick: addNotebook }, "Anlegen"), /* @__PURE__ */ import_react.default.createElement("button", { className: "cancel-add-btn", onClick: () => {
-        setAddingNotebook(false);
-        setNewNotebookName("");
-      } }, "Abbrechen")) : /* @__PURE__ */ import_react.default.createElement("button", { className: "todo-list-tab add", onClick: () => setAddingNotebook(true) }, "+ Notizbuch")), /* @__PURE__ */ import_react.default.createElement(
+      }
+      setBookPickerOpen(false);
+    } }, nb.icon ? `${nb.icon} ${nb.name}` : nb.name), /* @__PURE__ */ import_react.default.createElement("button", { className: "nb-pick-edit", onClick: () => {
+      setBookPickerOpen(false);
+      startEditNotebook(nb);
+    }, "aria-label": "Buch bearbeiten" }, "\u270E"))), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn", onClick: () => {
+      setBookPickerOpen(false);
+      setAddingNotebook(true);
+    } }, "+ Neues Buch"), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn cancel", onClick: () => setBookPickerOpen(false) }, "Abbrechen")), addingNotebook && /* @__PURE__ */ import_react.default.createElement("div", { className: "delete-confirm" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "appt-step-label" }, "Neues Notizbuch"), /* @__PURE__ */ import_react.default.createElement("input", { className: "appt-name-big", autoFocus: true, value: newNotebookName, onChange: (e) => setNewNotebookName(e.target.value), placeholder: "z.B. Tagebuch oder Trainings-Tracker", onKeyDown: (e) => e.key === "Enter" && addNotebook() }), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginBottom: 6 } }, "Tippe ein Emoji \u00fcber deine Tastatur ein, wenn du m\u00f6chtest \u2014 es geht auch ohne."), /* @__PURE__ */ import_react.default.createElement("input", { className: "nb-icon-input", value: newNotebookIcon, maxLength: 2, onChange: (e) => setNewNotebookIcon(e.target.value), placeholder: "\u{1F4D3}", "aria-label": "Symbol" }), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn", onClick: addNotebook }, "Anlegen"), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn cancel", onClick: () => {
+      setAddingNotebook(false);
+      setNewNotebookName("");
+    } }, "Abbrechen")), editingNotebookId && /* @__PURE__ */ import_react.default.createElement("div", { className: "delete-confirm" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "appt-step-label" }, "Notizbuch bearbeiten"), /* @__PURE__ */ import_react.default.createElement("input", { className: "appt-name-big", autoFocus: true, value: editNotebookName, onChange: (e) => setEditNotebookName(e.target.value), onKeyDown: (e) => e.key === "Enter" && saveEditNotebook() }), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginBottom: 6 } }, "Tippe ein Emoji \u00fcber deine Tastatur ein, wenn du m\u00f6chtest \u2014 es geht auch ohne."), /* @__PURE__ */ import_react.default.createElement("input", { className: "nb-icon-input", value: editNotebookIcon, maxLength: 2, onChange: (e) => setEditNotebookIcon(e.target.value), placeholder: "\u{1F4D3}", "aria-label": "Symbol" }), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn", onClick: saveEditNotebook }, "Speichern"), notebooks.length > 1 && /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn danger", onClick: () => removeNotebook(editingNotebookId) }, "Notizbuch l\xF6schen"), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn cancel", onClick: () => setEditingNotebookId(null) }, "Abbrechen")), /* @__PURE__ */ import_react.default.createElement(
         "input",
         {
           className: "notes-search",
@@ -15798,16 +16158,20 @@ try {
             if (notesTouchXRef.current == null) return;
             const dx = e.changedTouches[0].clientX - notesTouchXRef.current;
             const dy = e.changedTouches[0].clientY - (notesTouchYRef.current || 0);
-            if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) {
-              if (dx < 0) {
-                if (notesPageIndex === notesPages.length - 1) addNotePage();
-                else setNotesPageIndex((i) => i + 1);
-              } else {
-                setNotesPageIndex((i) => Math.max(0, i - 1));
-              }
-            }
             notesTouchXRef.current = null;
             notesTouchYRef.current = null;
+            if (Math.abs(dx) < 55 || Math.abs(dx) < Math.abs(dy) * 1.2) return;
+            playPageSound();
+            setTourFlags((f) => __spreadProps(__spreadValues({}, f), { flip: true }));
+            const nbIdx = notebooks.findIndex((n) => n.id === activeNotebookId);
+            if (dx < 0) {
+              if (notesPageIndex < notesPages.length - 1) setNotesPageIndex((k) => k + 1);
+              else if (nbIdx > -1 && nbIdx < notebooks.length - 1) setActiveNotebookId(notebooks[nbIdx + 1].id);
+              else addNotePage();
+            } else {
+              if (notesPageIndex > 0) setNotesPageIndex((k) => k - 1);
+              else if (nbIdx > 0) setActiveNotebookId(notebooks[nbIdx - 1].id);
+            }
           }
         },
         /* @__PURE__ */ import_react.default.createElement("div", { className: "notes-page-nav" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "nav-btn notes-flip-btn", onClick: () => setNotesPageIndex((i) => Math.max(0, i - 1)), disabled: notesPageIndex === 0 }, "\u2039"), /* @__PURE__ */ import_react.default.createElement("span", { className: "notes-page-label" }, currentPage.title, " \xB7 ", notesPageIndex + 1, " / ", notesPages.length), /* @__PURE__ */ import_react.default.createElement(
@@ -15831,28 +16195,7 @@ try {
             rows: 16
           }
         )),
-        /* @__PURE__ */ import_react.default.createElement("div", { className: "notes-page-actions" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "add-plus-btn", onClick: addNotePage }, "+ Neue Seite"), notesPages.length > 1 && /* @__PURE__ */ import_react.default.createElement("button", { className: "cancel-add-btn", onClick: () => removeNotePage(notesPageIndex) }, "Diese Seite l\xF6schen")),
-        notebooks.length > 1 && /* @__PURE__ */ import_react.default.createElement("div", { className: "notes-move-row" }, /* @__PURE__ */ import_react.default.createElement("span", null, "Diese Seite verschieben nach:"), /* @__PURE__ */ import_react.default.createElement(
-          "select",
-          {
-            value: "",
-            onChange: (e) => __async(null, null, function* () {
-              const targetId = e.target.value;
-              if (!targetId) return;
-              const pageToMove = notesPages[notesPageIndex];
-              const targetKey = targetId === "default" ? "notes-pages" : `notes-pages-${targetId}`;
-              const res = yield window.storage.get(targetKey, false);
-              const targetPages = res && res.value ? JSON.parse(res.value) : [];
-              yield window.storage.set(targetKey, JSON.stringify([...targetPages, pageToMove]), false);
-              const remaining = notesPages.filter((_, i) => i !== notesPageIndex);
-              const finalPages = remaining.length > 0 ? remaining : [{ id: `n${Date.now()}`, title: "Seite 1", content: "" }];
-              saveNotesPages(finalPages);
-              setNotesPageIndex(0);
-            })
-          },
-          /* @__PURE__ */ import_react.default.createElement("option", { value: "" }, "Buch w\xE4hlen \u2026"),
-          notebooks.filter((nb) => nb.id !== activeNotebookId).map((nb) => /* @__PURE__ */ import_react.default.createElement("option", { key: nb.id, value: nb.id }, nb.name))
-        ))
+        /* @__PURE__ */ import_react.default.createElement("div", { className: "notes-page-actions" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "add-plus-btn", onClick: addNotePage }, "+ Neue Seite"), notesPages.length > 1 && /* @__PURE__ */ import_react.default.createElement("button", { className: "cancel-add-btn", onClick: () => removeNotePage(notesPageIndex) }, "Diese Seite l\xF6schen"))
       ));
     })(), activeTab === "business" && (() => {
       const employment = pvData && pvData.employment || "selbstaendig";
@@ -15980,13 +16323,13 @@ try {
     })(), activeTab === "todos" && /* @__PURE__ */ import_react.default.createElement("div", { className: "reorder-block", style: { order: appState.sectionOrder.indexOf("todos") } }, /* @__PURE__ */ import_react.default.createElement("div", { className: "section slide-fade-in" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "section-move-row" }, /* @__PURE__ */ import_react.default.createElement("span", { className: "section-title" }, "\u2705 To-Dos"), /* @__PURE__ */ import_react.default.createElement("div", __spreadValues({ className: "move-btns drag-handle" + (draggingId === "todos" ? " dragging" : "") }, makeDragHandlers("todos", moveSection)), /* @__PURE__ */ import_react.default.createElement("span", { className: "drag-dots" }, "\u283F"))), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginBottom: 10 } }, "Hier kannst du alle To-Dos eintragen"), /* @__PURE__ */ import_react.default.createElement("div", { className: "todo-list-tabs" }, todoLists.map((l) => /* @__PURE__ */ import_react.default.createElement("button", { key: l.id, className: "todo-list-tab" + (activeTodoList === l.id ? " active" : ""), onClick: () => setActiveTodoList(l.id) }, l.name, l.id !== "default" && /* @__PURE__ */ import_react.default.createElement("span", { className: "todo-list-remove", onClick: (e) => {
       e.stopPropagation();
       removeTodoList(l.id);
-    } }, "\xD7"))), addingTodoList ? /* @__PURE__ */ import_react.default.createElement("span", { className: "todo-list-add-form" }, /* @__PURE__ */ import_react.default.createElement("input", { autoFocus: true, value: newListName, onChange: (e) => setNewListName(e.target.value), placeholder: "Listenname", onKeyDown: (e) => e.key === "Enter" && addTodoList() }), /* @__PURE__ */ import_react.default.createElement("div", { className: "todo-list-schedulable-question" }, /* @__PURE__ */ import_react.default.createElement("span", null, "Planbare To-Do-Liste?"), /* @__PURE__ */ import_react.default.createElement("div", { className: "employment-toggle" }, /* @__PURE__ */ import_react.default.createElement("button", { type: "button", className: newListSchedulable ? "active" : "", onClick: () => setNewListSchedulable(true) }, "Ja"), /* @__PURE__ */ import_react.default.createElement("button", { type: "button", className: !newListSchedulable ? "active" : "", onClick: () => setNewListSchedulable(false) }, "Nein"))), /* @__PURE__ */ import_react.default.createElement("button", { onClick: addTodoList }, "Anlegen"), /* @__PURE__ */ import_react.default.createElement("button", { className: "cancel-add-btn", onClick: () => {
+    } }, "\xD7"))), /* @__PURE__ */ import_react.default.createElement("button", { className: "todo-list-tab add", onClick: () => setAddingTodoList(true) }, "+ Liste"), addingTodoList && /* @__PURE__ */ import_react.default.createElement("div", { className: "delete-confirm" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "appt-step-label" }, "Neue Liste"), /* @__PURE__ */ import_react.default.createElement("input", { className: "appt-name-big", autoFocus: true, value: newListName, onChange: (e) => setNewListName(e.target.value), placeholder: "z.B. Einkaufen oder Projekt Umzug", onKeyDown: (e) => e.key === "Enter" && addTodoList() }), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginBottom: 6 } }, "Planbare Liste? Dann lassen sich Aufgaben als Termin in den Kalender schieben."), /* @__PURE__ */ import_react.default.createElement("div", { className: "employment-toggle", style: { marginBottom: 10 } }, /* @__PURE__ */ import_react.default.createElement("button", { type: "button", className: newListSchedulable ? "active" : "", onClick: () => setNewListSchedulable(true) }, "Ja"), /* @__PURE__ */ import_react.default.createElement("button", { type: "button", className: !newListSchedulable ? "active" : "", onClick: () => setNewListSchedulable(false) }, "Nein")), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn", onClick: addTodoList }, "Anlegen"), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn cancel", onClick: () => {
       setAddingTodoList(false);
       setNewListName("");
-    } }, "Abbrechen")) : /* @__PURE__ */ import_react.default.createElement("button", { className: "todo-list-tab add", onClick: () => setAddingTodoList(true) }, "+ Liste")), (() => {
+    } }, "Abbrechen"))), (() => {
       const currentList = todoLists.find((l) => l.id === activeTodoList) || todoLists[0];
       const listTodos = todos.filter((t) => (t.listId || "default") === activeTodoList);
-      return /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, listTodos.length === 0 && /* @__PURE__ */ import_react.default.createElement("div", { className: "habit-empty" }, 'Keine Eintr\xE4ge in "', currentList.name, '".'), listTodos.slice().sort((a, b) => PRIORITY_ORDER[a.priority || "mittel"] - PRIORITY_ORDER[b.priority || "mittel"]).map((t) => /* @__PURE__ */ import_react.default.createElement("div", { key: t.id, className: "todo-block" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "todo-row" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "habit-check" + (t.done ? " checked" : ""), onClick: () => toggleTodoDone(t.id), "aria-label": "Erledigt umschalten" }, t.done ? "\u2713" : ""), /* @__PURE__ */ import_react.default.createElement("span", { className: "todo-priority", title: t.priority }, PRIORITY_ICON[t.priority || "mittel"]), /* @__PURE__ */ import_react.default.createElement("span", { className: "todo-text" + (t.done ? " done" : "") }, t.text, t.duration ? /* @__PURE__ */ import_react.default.createElement("span", { className: "appt-duration" }, " (", t.duration, " Min)") : null), currentList.schedulable && /* @__PURE__ */ import_react.default.createElement("button", { className: "prompt-banner-btn todo-schedule-btn", onClick: () => startScheduleTodo(t) }, "\u{1F4C5} Einplanen"), /* @__PURE__ */ import_react.default.createElement("button", { className: "habit-remove", onClick: () => removeTodo(t.id), "aria-label": "Entfernen" }, "\xD7")), (t.category || t.location || t.deadline) && /* @__PURE__ */ import_react.default.createElement("div", { className: "todo-tags" }, t.category && /* @__PURE__ */ import_react.default.createElement("span", { className: "todo-tag" }, "\u{1F3F7} ", t.category), t.location && /* @__PURE__ */ import_react.default.createElement("span", { className: "todo-tag" }, "\u{1F4CD} ", t.location), t.deadline && /* @__PURE__ */ import_react.default.createElement("span", { className: "todo-tag" }, "\u23F3 ", t.deadline)))));
+      return /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, listTodos.length === 0 && /* @__PURE__ */ import_react.default.createElement("div", { className: "habit-empty" }, 'Keine Eintr\xE4ge in "', currentList.name, '".'), listTodos.slice().sort((a, b) => PRIORITY_ORDER[a.priority || "keine"] - PRIORITY_ORDER[b.priority || "keine"]).map((t) => /* @__PURE__ */ import_react.default.createElement("div", { key: t.id, className: "todo-block" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "todo-row" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "habit-check" + (t.done ? " checked" : ""), onClick: () => toggleTodoDone(t.id), "aria-label": "Erledigt umschalten" }, t.done ? "\u2713" : ""), /* @__PURE__ */ import_react.default.createElement("span", { className: "todo-priority", title: t.priority }, t.priority ? PRIORITY_ICON[t.priority] : ""), /* @__PURE__ */ import_react.default.createElement("span", { className: "todo-text" + (t.done ? " done" : "") }, t.text, t.duration ? /* @__PURE__ */ import_react.default.createElement("span", { className: "appt-duration" }, " (", t.duration, " Min)") : null), currentList.schedulable && /* @__PURE__ */ import_react.default.createElement("button", { className: "prompt-banner-btn todo-schedule-btn", onClick: () => startScheduleTodo(t) }, "\u{1F4C5} Einplanen"), /* @__PURE__ */ import_react.default.createElement("button", { className: "habit-remove", onClick: () => removeTodo(t.id), "aria-label": "Entfernen" }, "\xD7")), (t.category || t.location || t.deadline) && /* @__PURE__ */ import_react.default.createElement("div", { className: "todo-tags" }, t.category && /* @__PURE__ */ import_react.default.createElement("span", { className: "todo-tag" }, "\u{1F3F7} ", t.category), t.location && /* @__PURE__ */ import_react.default.createElement("span", { className: "todo-tag" }, "\u{1F4CD} ", t.location), t.deadline && /* @__PURE__ */ import_react.default.createElement("span", { className: "todo-tag" }, "\u23F3 ", t.deadline)))));
     })(), schedulingTodoId && /* @__PURE__ */ import_react.default.createElement("div", { className: "edit-confirm-text" }, /* @__PURE__ */ import_react.default.createElement("div", { style: { marginBottom: 8 } }, "Wann soll es stattfinden? Es wird als Termin in den Kalender eingetragen."), /* @__PURE__ */ import_react.default.createElement("div", { className: "schedule-mini-nav" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "nav-btn", onClick: () => setScheduleDay((d) => shiftMonthKey(d, -1)) }, "\u2039"), /* @__PURE__ */ import_react.default.createElement("span", { className: "nav-label" }, MONTH_NAMES[Number(scheduleDay.split("-")[1]) - 1], " ", scheduleDay.split("-")[0]), /* @__PURE__ */ import_react.default.createElement("button", { className: "nav-btn", onClick: () => setScheduleDay((d) => shiftMonthKey(d, 1)) }, "\u203A")), /* @__PURE__ */ import_react.default.createElement("div", { className: "schedule-mini-grid" }, WEEKDAY_SHORT.map((wd) => /* @__PURE__ */ import_react.default.createElement("span", { key: wd, className: "schedule-mini-dow" }, wd)), getMonthDates(Number(scheduleDay.split("-")[0]), Number(scheduleDay.split("-")[1]) - 1).map((d, i) => {
       const pad0 = i === 0 ? (d.date.getDay() + 6) % 7 : 0;
       const n = apptsFor(d.key).length;
@@ -15999,13 +16342,14 @@ try {
         d.date.getDate(),
         n > 0 && /* @__PURE__ */ import_react.default.createElement("span", { className: "schedule-mini-dot" }, n)
       ));
-    })), /* @__PURE__ */ import_react.default.createElement("div", { className: "add-appt-row", style: { marginTop: 10, marginBottom: 8 } }, /* @__PURE__ */ import_react.default.createElement("span", { className: "nav-label" }, formatLongDate(scheduleDay)), /* @__PURE__ */ import_react.default.createElement("input", { type: "time", value: scheduleTime, onChange: (e) => setScheduleTime(e.target.value) })), /* @__PURE__ */ import_react.default.createElement("div", { className: "reflect-label", style: { marginBottom: 6 } }, "Schon belegt an dem Tag:"), apptsFor(scheduleDay).length === 0 && /* @__PURE__ */ import_react.default.createElement("div", { className: "habit-empty", style: { padding: "4px 0" } }, "Noch nichts eingetragen \u2014 der ganze Tag ist frei."), apptsFor(scheduleDay).map((a) => /* @__PURE__ */ import_react.default.createElement("div", { key: a.id, className: "busy-row" }, /* @__PURE__ */ import_react.default.createElement("span", { className: "appt-time" }, a.isBirthday ? "\u{1F382}" : a.allDay ? "ganzt\xE4gig" : a.time), /* @__PURE__ */ import_react.default.createElement("span", null, a.title, a.duration ? ` (${a.duration} Min)` : ""))), /* @__PURE__ */ import_react.default.createElement("button", { className: "prompt-banner-btn", onClick: confirmScheduleTodo, style: { marginRight: 8, marginTop: 8 } }, "Einplanen"), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn cancel", onClick: () => setSchedulingTodoId(null) }, "Abbrechen")), showAddTodo ? (todoLists.find((l) => l.id === activeTodoList) || todoLists[0]).schedulable ? /* @__PURE__ */ import_react.default.createElement("div", { className: "add-appt" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "add-appt-row" }, /* @__PURE__ */ import_react.default.createElement("input", { autoFocus: true, value: newTodoText, onChange: (e) => setNewTodoText(e.target.value), placeholder: "Neues To-Do", onKeyDown: (e) => e.key === "Enter" && addTodo() }), /* @__PURE__ */ import_react.default.createElement("select", { className: "recur-select", style: { flex: "0 0 110px" }, value: newTodoDuration, onChange: (e) => setNewTodoDuration(e.target.value) }, /* @__PURE__ */ import_react.default.createElement("option", { value: "" }, "Dauer"), /* @__PURE__ */ import_react.default.createElement("option", { value: "15" }, "15 Min"), /* @__PURE__ */ import_react.default.createElement("option", { value: "30" }, "30 Min"), /* @__PURE__ */ import_react.default.createElement("option", { value: "60" }, "1 Std"), /* @__PURE__ */ import_react.default.createElement("option", { value: "120" }, "2 Std"))), /* @__PURE__ */ import_react.default.createElement("div", { className: "add-appt-row" }, /* @__PURE__ */ import_react.default.createElement("input", { value: newTodoCategory, onChange: (e) => setNewTodoCategory(e.target.value), placeholder: "Kategorie (z.B. Arbeit)" }), /* @__PURE__ */ import_react.default.createElement("input", { value: newTodoLocation, onChange: (e) => setNewTodoLocation(e.target.value), placeholder: "Ort (optional)" })), /* @__PURE__ */ import_react.default.createElement("div", { className: "add-appt-row" }, /* @__PURE__ */ import_react.default.createElement("input", { type: "date", value: newTodoDeadline, onChange: (e) => setNewTodoDeadline(e.target.value), title: "Deadline (optional)" })), /* @__PURE__ */ import_react.default.createElement("select", { className: "recur-select", value: newTodoPriority, onChange: (e) => setNewTodoPriority(e.target.value) }, /* @__PURE__ */ import_react.default.createElement("option", { value: "hoch" }, "\u{1F534} Priorit\xE4t"), /* @__PURE__ */ import_react.default.createElement("option", { value: "mittel" }, "\u{1F7E1} Mittel"), /* @__PURE__ */ import_react.default.createElement("option", { value: "niedrig" }, "\u26AA Unwichtig")), /* @__PURE__ */ import_react.default.createElement("button", { onClick: () => {
+    })), /* @__PURE__ */ import_react.default.createElement("div", { className: "add-appt-row", style: { marginTop: 10, marginBottom: 8 } }, /* @__PURE__ */ import_react.default.createElement("span", { className: "nav-label" }, formatLongDate(scheduleDay)), /* @__PURE__ */ import_react.default.createElement("input", { type: "time", value: scheduleTime, onChange: (e) => setScheduleTime(e.target.value) })), /* @__PURE__ */ import_react.default.createElement("div", { className: "reflect-label", style: { marginBottom: 6 } }, "Schon belegt an dem Tag:"), apptsFor(scheduleDay).length === 0 && /* @__PURE__ */ import_react.default.createElement("div", { className: "habit-empty", style: { padding: "4px 0" } }, "Noch nichts eingetragen \u2014 der ganze Tag ist frei."), apptsFor(scheduleDay).map((a) => /* @__PURE__ */ import_react.default.createElement("div", { key: a.id, className: "busy-row" }, /* @__PURE__ */ import_react.default.createElement("span", { className: "appt-time" }, a.isBirthday ? "\u{1F382}" : a.allDay ? "ganzt\xE4gig" : a.time), /* @__PURE__ */ import_react.default.createElement("span", null, a.title, a.duration ? ` (${a.duration} Min)` : ""))), /* @__PURE__ */ import_react.default.createElement("button", { className: "prompt-banner-btn", onClick: confirmScheduleTodo, style: { marginRight: 8, marginTop: 8 } }, "Einplanen"), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn cancel", onClick: () => setSchedulingTodoId(null) }, "Abbrechen")), showAddTodo ? /* @__PURE__ */ import_react.default.createElement("div", { className: "add-appt" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "add-appt-row" }, /* @__PURE__ */ import_react.default.createElement("input", { autoFocus: true, value: newTodoText, onChange: (e) => setNewTodoText(e.target.value), placeholder: "Was ist zu tun?", onKeyDown: (e) => e.key === "Enter" && addTodo() }), (todoLists.find((l) => l.id === activeTodoList) || todoLists[0]).schedulable && /* @__PURE__ */ import_react.default.createElement("button", { className: "todo-more-btn", onClick: () => setTodoExtras((v) => !v), "aria-label": "Weitere Angaben" }, todoExtras ? "\u2212" : "+")), todoExtras && (todoLists.find((l) => l.id === activeTodoList) || todoLists[0]).schedulable && /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("div", { className: "add-appt-row" }, /* @__PURE__ */ import_react.default.createElement("select", { className: "recur-select", value: newTodoPriority, onChange: (e) => setNewTodoPriority(e.target.value) }, /* @__PURE__ */ import_react.default.createElement("option", { value: "" }, "Ohne Priorit\xE4t"), /* @__PURE__ */ import_react.default.createElement("option", { value: "hoch" }, "\u{1F534} Wichtig"), /* @__PURE__ */ import_react.default.createElement("option", { value: "mittel" }, "\u{1F7E1} Mittel"), /* @__PURE__ */ import_react.default.createElement("option", { value: "niedrig" }, "\u26AA Unwichtig")), /* @__PURE__ */ import_react.default.createElement("select", { className: "recur-select", value: newTodoDuration, onChange: (e) => setNewTodoDuration(e.target.value) }, /* @__PURE__ */ import_react.default.createElement("option", { value: "" }, "Dauer"), /* @__PURE__ */ import_react.default.createElement("option", { value: "15" }, "15 Min"), /* @__PURE__ */ import_react.default.createElement("option", { value: "30" }, "30 Min"), /* @__PURE__ */ import_react.default.createElement("option", { value: "60" }, "1 Std"), /* @__PURE__ */ import_react.default.createElement("option", { value: "120" }, "2 Std"))), /* @__PURE__ */ import_react.default.createElement("div", { className: "add-appt-row" }, /* @__PURE__ */ import_react.default.createElement("input", { value: newTodoCategory, onChange: (e) => setNewTodoCategory(e.target.value), placeholder: "Kategorie (z.B. Arbeit)" }), /* @__PURE__ */ import_react.default.createElement("input", { value: newTodoLocation, onChange: (e) => setNewTodoLocation(e.target.value), placeholder: "Ort (optional)" })), /* @__PURE__ */ import_react.default.createElement("div", { className: "add-appt-row" }, /* @__PURE__ */ import_react.default.createElement("input", { type: "date", value: newTodoDeadline, onChange: (e) => setNewTodoDeadline(e.target.value), title: "Deadline (optional)" }))), /* @__PURE__ */ import_react.default.createElement("button", { onClick: () => {
       addTodo();
       setShowAddTodo(false);
-    } }, "To-Do hinzuf\xFCgen"), /* @__PURE__ */ import_react.default.createElement("button", { className: "cancel-add-btn", onClick: () => setShowAddTodo(false) }, "Abbrechen")) : /* @__PURE__ */ import_react.default.createElement("div", { className: "add-appt" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "add-appt-row" }, /* @__PURE__ */ import_react.default.createElement("input", { autoFocus: true, value: newTodoText, onChange: (e) => setNewTodoText(e.target.value), placeholder: "Neuer Eintrag", onKeyDown: (e) => e.key === "Enter" && (addTodo(), setShowAddTodo(false)) })), /* @__PURE__ */ import_react.default.createElement("button", { onClick: () => {
-      addTodo();
+      setTodoExtras(false);
+    } }, "Hinzuf\xFCgen"), /* @__PURE__ */ import_react.default.createElement("button", { className: "cancel-add-btn", onClick: () => {
       setShowAddTodo(false);
-    } }, "Hinzuf\xFCgen"), /* @__PURE__ */ import_react.default.createElement("button", { className: "cancel-add-btn", onClick: () => setShowAddTodo(false) }, "Abbrechen")) : /* @__PURE__ */ import_react.default.createElement("button", { className: "add-plus-btn", onClick: () => setShowAddTodo(true) }, "+ Neues To-Do"))), activeTab === "daily" && /* @__PURE__ */ import_react.default.createElement(
+      setTodoExtras(false);
+    } }, "Fertig")) : /* @__PURE__ */ import_react.default.createElement("button", { className: "add-plus-btn", onClick: () => setShowAddTodo(true) }, "+ Neues To-Do"))), activeTab === "daily" && /* @__PURE__ */ import_react.default.createElement(
       "div",
       {
         className: "reorder-block",
@@ -16018,11 +16362,11 @@ try {
           if (touchStartXRef.current == null) return;
           const dx = e.changedTouches[0].clientX - touchStartXRef.current;
           const dy = e.changedTouches[0].clientY - (touchStartYRef.current || 0);
+          touchStartXRef.current = null;
+          touchStartYRef.current = null;
           if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) {
             setSelectedDay((cur) => shiftDays(cur, dx < 0 ? 1 : -1));
           }
-          touchStartXRef.current = null;
-          touchStartYRef.current = null;
         }
       },
       /* @__PURE__ */ import_react.default.createElement("div", { className: "section" + (calView === "timeline" ? " merged-top merged-bottom" : "") }, /* @__PURE__ */ import_react.default.createElement("div", { className: "section-move-row" }, /* @__PURE__ */ import_react.default.createElement("span", { className: "nav-label" }, "Kalender ", /* @__PURE__ */ import_react.default.createElement("span", { className: "swipe-hint" }, "(wischen f\xFCr den n\xE4chsten oder vorherigen Tag)")), /* @__PURE__ */ import_react.default.createElement("div", __spreadValues({ className: "move-btns drag-handle" + (draggingId === "calendar" ? " dragging" : "") }, makeDragHandlers("calendar", moveSection)), /* @__PURE__ */ import_react.default.createElement("span", { className: "drag-dots" }, "\u283F"))), /* @__PURE__ */ import_react.default.createElement("div", { className: "nav-row view-select-row" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "nav-btn" + (calView === "timeline" ? " view-active" : ""), onClick: () => setCalView("timeline") }, "\u{1F550} Zeitleiste"), /* @__PURE__ */ import_react.default.createElement("button", { className: "nav-btn" + (calView === "month" ? " view-active" : ""), onClick: () => setCalView("month") }, "\u{1F4C6} Monat"), /* @__PURE__ */ import_react.default.createElement("button", { className: "nav-btn" + (calView === "table" ? " view-active" : ""), onClick: () => setCalView("table") }, "\u{1F4CB} Tabelle")), calView === "timeline" ? /* @__PURE__ */ import_react.default.createElement("div", { className: "timeline-wrap slide-fade-in", key: selectedDay }, /* @__PURE__ */ import_react.default.createElement("div", { className: "timeline-day-nav" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "nav-btn", onClick: () => setSelectedDay((d) => shiftDays(d, timelineNavMode === "monat" ? -30 : -7)), "aria-label": "Zur\xFCck" }, "\u2039"), /* @__PURE__ */ import_react.default.createElement("div", { className: "timeline-nav-mode" }, /* @__PURE__ */ import_react.default.createElement("button", { className: timelineNavMode === "woche" ? "active" : "", onClick: () => setTimelineNavMode("woche") }, "Woche"), /* @__PURE__ */ import_react.default.createElement("button", { className: timelineNavMode === "monat" ? "active" : "", onClick: () => setTimelineNavMode("monat") }, "Monat")), /* @__PURE__ */ import_react.default.createElement("button", { className: "nav-btn", onClick: () => setSelectedDay((d) => shiftDays(d, timelineNavMode === "monat" ? 30 : 7)), "aria-label": "Weiter" }, "\u203A")), timelineNavMode === "woche" ? /* @__PURE__ */ import_react.default.createElement("div", { className: "week-strip" }, getWeekDates(selectedDay).map((d) => /* @__PURE__ */ import_react.default.createElement(
@@ -16109,7 +16453,13 @@ try {
           e.stopPropagation();
           window.open(h.link, "_blank");
         }, "aria-label": `Link zu ${h.name} \xF6ffnen` }, "\u{1F517}"), /* @__PURE__ */ import_react.default.createElement("button", { className: "wt-edit-icon", onClick: () => startEditHabit(h), "aria-label": `${h.name} bearbeiten` }, "\u270E"), /* @__PURE__ */ import_react.default.createElement("button", { className: "habit-remove", onClick: () => removeHabit(h.id), "aria-label": `${h.name} entfernen` }, "\xD7"));
-      }), timelineAddingHabit ? /* @__PURE__ */ import_react.default.createElement("span", { className: "timeline-habit-add-form" }, /* @__PURE__ */ import_react.default.createElement(
+      }), timelineAddingHabit ? /* @__PURE__ */ import_react.default.createElement("span", { className: "timeline-habit-add-form", onClick: (e) => e.stopPropagation() }, /* @__PURE__ */ import_react.default.createElement("button", { className: "pop-close", onClick: () => {
+        setTimelineAddingHabit(false);
+        setTimelineNewHabitName("");
+        setTimelineNewHabitWhy("");
+        setTimelineNewHabitLink("");
+        setTimelineNewHabitZiel("");
+      }, "aria-label": "Schlie\xDFen" }, "\xD7"), /* @__PURE__ */ import_react.default.createElement("div", { className: "appt-step-label" }, "Neue Habit"), /* @__PURE__ */ import_react.default.createElement(
         "input",
         {
           autoFocus: true,
@@ -16176,65 +16526,76 @@ try {
       } }, "Abbrechen")) : /* @__PURE__ */ import_react.default.createElement("button", { className: "timeline-habit-add-btn", onClick: () => setTimelineAddingHabit(true) }, "+ Habit")), /* @__PURE__ */ import_react.default.createElement("div", { className: "timeline-list-label", style: { marginTop: 16, marginBottom: 4 } }, "Trage Termine ein"), /* @__PURE__ */ import_react.default.createElement("div", { "data-tour": "termine", className: "timeline-hours-wrap" }, Array.from({ length: 18 }).map((_, i) => {
         const hour = i + 6;
         const hourLabel = `${pad(hour)}:00`;
-        return /* @__PURE__ */ import_react.default.createElement("div", { key: hour, className: "timeline-row" }, /* @__PURE__ */ import_react.default.createElement("span", { className: "timeline-hour" }, hourLabel), /* @__PURE__ */ import_react.default.createElement("div", { className: "timeline-lane", onClick: () => {
+        return /* @__PURE__ */ import_react.default.createElement("div", { key: hour, className: "timeline-row" }, /* @__PURE__ */ import_react.default.createElement("span", { className: "timeline-hour" }, hourLabel), /* @__PURE__ */ import_react.default.createElement("div", { className: "timeline-lane", onClick: (e) => {
           if (tappedHour !== hour) {
+            setTappedMinute(0);
+            setTourFlags((f) => __spreadProps(__spreadValues({}, f), { appt: true }));
             setTappedHour(hour);
             setTimelineApptTitle("");
+            setTimelineApptEndTime("");
+            setTimelineApptRecurrence("none");
+            setApptStep(1);
           }
-        } }, tappedHour === hour && /* @__PURE__ */ import_react.default.createElement("div", { className: "timeline-add-form", onClick: (e) => e.stopPropagation() }, /* @__PURE__ */ import_react.default.createElement(
+        } }, tappedHour === hour && /* @__PURE__ */ import_react.default.createElement("div", { className: "timeline-add-form", onClick: (e) => e.stopPropagation() }, /* @__PURE__ */ import_react.default.createElement("button", { className: "pop-close", onClick: closeApptForm, "aria-label": "Schlie\xDFen" }, "\xD7"), /* @__PURE__ */ import_react.default.createElement("div", { className: "appt-step-label" }, apptStep === 1 ? "Wann geht es los?" : apptStep === 2 ? "Wie hei\xDFt der Termin?" : apptStep === 3 ? "Bis wann geht er?" : "Wiederholt er sich?"), apptStep === 1 && /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("input", {
+          type: "time",
+          className: "appt-time-big",
+          step: 300,
+          autoFocus: true,
+          ref: (el) => {
+            if (el && !el.dataset.opened) {
+              el.dataset.opened = "1";
+              setTimeout(() => {
+                try {
+                  if (el.showPicker) el.showPicker();
+                } catch (err) {
+                }
+              }, 250);
+            }
+          },
+          value: `${pad(hour)}:${pad(tappedMinute)}`,
+          onChange: (e) => {
+            const v = e.target.value;
+            if (!v) return;
+            const [hh, mm] = v.split(":").map(Number);
+            setTappedHour(hh);
+            setTappedMinute(mm);
+          }
+        }), /* @__PURE__ */ import_react.default.createElement("button", { className: "timeline-add-confirm", onClick: () => setApptStep(2) }, "Weiter")), apptStep === 2 && /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement(
           "input",
           {
             autoFocus: true,
-            className: "timeline-add-input",
+            className: "appt-name-big",
             value: timelineApptTitle,
             onChange: (e) => setTimelineApptTitle(e.target.value),
-            placeholder: `Termin um ${hourLabel} \u2026`
+            onKeyDown: (e) => {
+              if (e.key === "Enter" && timelineApptTitle.trim()) setApptStep(3);
+            },
+            placeholder: "Name des Termins \u2026"
           }
-        ), /* @__PURE__ */ import_react.default.createElement("div", { className: "timeline-add-row2" }, /* @__PURE__ */ import_react.default.createElement("span", { className: "timeline-add-until-label" }, "bis"), /* @__PURE__ */ import_react.default.createElement(
-          "input",
-          {
-            type: "time",
-            className: "timeline-add-time",
-            value: timelineApptEndTime,
-            onChange: (e) => setTimelineApptEndTime(e.target.value),
-            placeholder: "Ende"
-          }
-        ), /* @__PURE__ */ import_react.default.createElement("select", { className: "timeline-add-recur", value: timelineApptRecurrence, onChange: (e) => setTimelineApptRecurrence(e.target.value) }, /* @__PURE__ */ import_react.default.createElement("option", { value: "none" }, "Einmalig"), /* @__PURE__ */ import_react.default.createElement("option", { value: "daily" }, "T\xE4glich"), /* @__PURE__ */ import_react.default.createElement("option", { value: "weekly" }, "W\xF6chentlich"), /* @__PURE__ */ import_react.default.createElement("option", { value: "monthly" }, "Monatlich"), /* @__PURE__ */ import_react.default.createElement("option", { value: "yearly" }, "J\xE4hrlich"))), /* @__PURE__ */ import_react.default.createElement(
-          "button",
-          {
-            className: "timeline-add-confirm",
-            onClick: () => {
-              if (timelineApptTitle.trim()) {
-                const startTime = `${pad(hour)}:00`;
-                let durationMin = "";
-                if (timelineApptEndTime) {
-                  const [sh, sm] = startTime.split(":").map(Number);
-                  const [eh, em] = timelineApptEndTime.split(":").map(Number);
-                  const diff = eh * 60 + em - (sh * 60 + sm);
-                  if (diff > 0) durationMin = String(diff);
+        ), /* @__PURE__ */ import_react.default.createElement("button", { className: "timeline-add-confirm", disabled: !timelineApptTitle.trim(), onClick: () => timelineApptTitle.trim() && setApptStep(3) }, "Weiter"), /* @__PURE__ */ import_react.default.createElement("button", { className: "cancel-add-btn", onClick: () => setApptStep(1) }, "Zur\xFCck")), apptStep === 3 && /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("input", {
+          type: "time",
+          className: "appt-time-big",
+          step: 300,
+          value: timelineApptEndTime || `${pad((hour + 1) % 24)}:${pad(tappedMinute)}`,
+          ref: (el) => {
+            if (el && !el.dataset.opened) {
+              el.dataset.opened = "1";
+              setTimeout(() => {
+                try {
+                  if (el.showPicker) el.showPicker();
+                } catch (err) {
                 }
-                addAppointment(selectedDay, startTime, timelineApptTitle, timelineApptRecurrence, { context: activeTab, duration: durationMin });
-                setTappedHour(null);
-                setTimelineApptTitle("");
-                setTimelineApptEndTime("");
-                setTimelineApptRecurrence("none");
-              }
+              }, 250);
             }
           },
-          "Termin anlegen"
-        ), /* @__PURE__ */ import_react.default.createElement(
-          "button",
-          {
-            className: "cancel-add-btn",
-            onClick: () => {
-              setTappedHour(null);
-              setTimelineApptTitle("");
-              setTimelineApptEndTime("");
-              setTimelineApptRecurrence("none");
-            }
-          },
-          "Abbrechen"
-        ))));
+          onChange: (e) => setTimelineApptEndTime(e.target.value)
+        }), /* @__PURE__ */ import_react.default.createElement("button", { className: "timeline-add-confirm", onClick: () => {
+          if (!timelineApptEndTime) {
+            const t = (hour + 1) % 24;
+            setTimelineApptEndTime(`${pad(t)}:${pad(tappedMinute)}`);
+          }
+          setApptStep(4);
+        } }, "Weiter"), /* @__PURE__ */ import_react.default.createElement("button", { className: "cancel-add-btn", onClick: () => setApptStep(2) }, "Zur\xFCck")), apptStep === 4 && /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, [["none", "Einmalig"], ["daily", "T\xE4glich"], ["weekly", "W\xF6chentlich"], ["monthly", "Monatlich"], ["yearly", "J\xE4hrlich"]].map(([val, label]) => /* @__PURE__ */ import_react.default.createElement("button", { key: val, className: "appt-recur-btn", onClick: () => saveTimelineAppt(hour, tappedMinute, val) }, label)), /* @__PURE__ */ import_react.default.createElement("button", { className: "cancel-add-btn", onClick: () => setApptStep(3) }, "Zur\xFCck")))));
       }), apptsFor(selectedDay).filter((a) => !a.allDay && !a.isBirthday).map((a) => {
         const startHour = parseInt(a.time.split(":")[0], 10);
         const startMin = parseInt(a.time.split(":")[1], 10);
@@ -16250,10 +16611,55 @@ try {
           "div",
           {
             key: a.id,
-            className: "timeline-block timeline-appt-overlay" + (apptDone ? " done" : ""),
-            style: { top, height },
+            className: "timeline-block timeline-appt-overlay" + (apptDone ? " done" : "") + (movingAppt && movingAppt.id === a.id ? " moving" : ""),
+            style: { top: movingAppt && movingAppt.id === a.id ? movingAppt.top : top, height },
+            onTouchStart: (e) => {
+              const y = e.touches[0].clientY;
+              if (apptDragRef.current && apptDragRef.current.timer) clearTimeout(apptDragRef.current.timer);
+              apptDragRef.current = {
+                id: a.id,
+                startY: y,
+                baseTop: top,
+                timer: setTimeout(() => {
+                  setMovingAppt({ id: a.id, top });
+                  try {
+                    if (navigator.vibrate) navigator.vibrate(18);
+                  } catch (err) {
+                  }
+                }, 380)
+              };
+            },
+            onTouchMove: (e) => {
+              const d = apptDragRef.current;
+              if (!d || d.id !== a.id) return;
+              const y = e.touches[0].clientY;
+              if (!movingAppt || movingAppt.id !== a.id) {
+                if (Math.abs(y - d.startY) > 10) {
+                  clearTimeout(d.timer);
+                  apptDragRef.current = null;
+                }
+                return;
+              }
+              const nextTop = Math.max(0, d.baseTop + (y - d.startY));
+              if (Math.abs(nextTop - movingAppt.top) < 4) return;
+              setMovingAppt({ id: a.id, top: nextTop });
+            },
+            onTouchEnd: () => {
+              const d = apptDragRef.current;
+              if (d && d.timer) clearTimeout(d.timer);
+              if (movingAppt && movingAppt.id === a.id) {
+                const raw = 6 * 60 + Math.round(movingAppt.top / 48 * 60 / 5) * 5;
+                const clamped = Math.min(23 * 60 + 55, Math.max(6 * 60, raw));
+                const newTime = `${pad(Math.floor(clamped / 60))}:${pad(clamped % 60)}`;
+                if (newTime !== a.time) updateAppointment(selectedDay, a.id, { time: newTime });
+                setMovingAppt(null);
+                justDraggedRef.current = Date.now();
+              }
+              apptDragRef.current = null;
+            },
             onClick: (e) => {
               e.stopPropagation();
+              if (Date.now() - justDraggedRef.current < 500) return;
               startEditAppt(a);
             }
           },
@@ -16361,7 +16767,21 @@ try {
         onChange: (e) => updatePriority(shiftDays(todayKey, 1), i, e.target.value),
         placeholder: `Priorit\xE4t ${i + 1} \u2026`
       }
-    ))))), celebration && /* @__PURE__ */ import_react.default.createElement("div", { className: "celebrate-toast", onClick: () => setCelebration(null) }, /* @__PURE__ */ import_react.default.createElement("div", { className: "celebrate-icon" }, celebration.icon), /* @__PURE__ */ import_react.default.createElement("div", { className: "celebrate-title" }, celebration.title), /* @__PURE__ */ import_react.default.createElement("div", { className: "celebrate-text" }, celebration.text)), tourStep >= 0 && tourStep < TOUR_STEPS.length && (tourPaused ? /* @__PURE__ */ import_react.default.createElement("div", { className: "tour-bar" }, /* @__PURE__ */ import_react.default.createElement("span", { className: "tour-bar-text" }, `${tourStep + 1}/${TOUR_STEPS.length} \u2014 ${TOUR_STEPS[tourStep].action || ""}`), TOUR_STEPS[tourStep].target && !tourTargetVisible && /* @__PURE__ */ import_react.default.createElement("button", { className: "tour-bar-back", onClick: () => {
+    ))))), celebration && /* @__PURE__ */ import_react.default.createElement("div", { className: "celebrate-toast", onClick: () => setCelebration(null) }, /* @__PURE__ */ import_react.default.createElement("div", { className: "celebrate-icon" }, celebration.icon), /* @__PURE__ */ import_react.default.createElement("div", { className: "celebrate-title" }, celebration.title), /* @__PURE__ */ import_react.default.createElement("div", { className: "celebrate-text" }, celebration.text)), tourStep >= 0 && tourStep < TOUR_STEPS.length && (tourPaused ? (() => {
+      const st = TOUR_STEPS[tourStep];
+      let done = true;
+      if (st.check === "anfangs") done = !!(reflections && reflections.anfangs.completed);
+      else if (st.check === "monthGoal") done = !!(monthGoalData && monthGoalData.monthGoal.trim());
+      else if (st.check === "yearGoal") done = !!(yearGoalData && yearGoalData.goal.trim());
+      else if (st.check === "weekGoal") done = !!(weekData && weekData.goal.trim());
+      else if (st.check === "habit") done = appState.habitTemplate.length > (tourBase.habits || 0);
+      else if (st.check === "appt") done = !!tourFlags.appt || apptsFor(selectedDay).length !== (tourBase.appts || 0);
+      else if (st.check === "alarm") done = !!tourFlags.alarm;
+      else if (st.check === "todo") done = todos.length > (tourBase.todos || 0);
+      else if (st.check === "note") done = notesPages.some((pg) => (pg.content || "").trim());
+      else if (st.check === "flip") done = !!tourFlags.flip;
+      else if (st.check === "book") done = activeNotebookId !== tourBase.bookId || notebooks.length > (tourBase.books || 0);
+      return /* @__PURE__ */ import_react.default.createElement("div", { className: "tour-bar", "data-done": done ? "1" : "0" }, /* @__PURE__ */ import_react.default.createElement("span", { className: "tour-bar-text" }, done ? `${tourStep + 1}/${TOUR_STEPS.length} \u2014 erledigt` : `${tourStep + 1}/${TOUR_STEPS.length} \u2014 ${st.action || ""}`), TOUR_STEPS[tourStep].target && !tourTargetVisible && /* @__PURE__ */ import_react.default.createElement("button", { className: "tour-bar-back", onClick: () => {
       const step = TOUR_STEPS[tourStep];
       if (step.tab && step.tab !== activeTab) setActiveTab(step.tab);
       if (step.view) setCalView(step.view);
@@ -16372,7 +16792,7 @@ try {
         } catch (e) {
         }
       }, 80);
-    } }, TOUR_STEPS[tourStep].back || "Zur\xFCck zum Feld"), /* @__PURE__ */ import_react.default.createElement("button", { className: "tour-bar-btn", onClick: () => {
+    } }, TOUR_STEPS[tourStep].back || "Zur\xFCck zum Feld"), !done && /* @__PURE__ */ import_react.default.createElement("button", { className: "tour-bar-skip", onClick: () => {
       const next = tourStep + 1;
       setTourPaused(false);
       if (next < TOUR_STEPS.length) {
@@ -16382,7 +16802,19 @@ try {
         setActiveTab("daily");
         setTourStep(-1);
       }
-    } }, tourStep === TOUR_STEPS.length - 1 ? "Fertig" : "Weiter")) : /* @__PURE__ */ import_react.default.createElement("div", { className: "day-modal-backdrop" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "day-modal" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "onboard-icon" }, TOUR_STEPS[tourStep].icon), /* @__PURE__ */ import_react.default.createElement("div", { className: "onboard-title" }, TOUR_STEPS[tourStep].title), /* @__PURE__ */ import_react.default.createElement("div", { className: "onboard-body" }, TOUR_STEPS[tourStep].body), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginBottom: 16 } }, `Schritt ${tourStep + 1} von ${TOUR_STEPS.length}`), /* @__PURE__ */ import_react.default.createElement(
+    } }, "\xDCberspringen"), /* @__PURE__ */ import_react.default.createElement("button", { className: "tour-bar-btn", disabled: !done, onClick: () => {
+      if (!done) return;
+      const next = tourStep + 1;
+      setTourPaused(false);
+      if (next < TOUR_STEPS.length) {
+        setActiveTab(TOUR_STEPS[next].tab);
+        setTourStep(next);
+      } else {
+        setActiveTab("daily");
+        setTourStep(-1);
+      }
+    } }, tourStep === TOUR_STEPS.length - 1 ? "Fertig" : "Weiter"));
+    })() : /* @__PURE__ */ import_react.default.createElement("div", { className: "day-modal-backdrop" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "day-modal" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "onboard-icon" }, TOUR_STEPS[tourStep].icon), /* @__PURE__ */ import_react.default.createElement("div", { className: "onboard-title" }, TOUR_STEPS[tourStep].title), /* @__PURE__ */ import_react.default.createElement("div", { className: "onboard-body" }, TOUR_STEPS[tourStep].body), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginBottom: 16 } }, `Schritt ${tourStep + 1} von ${TOUR_STEPS.length}`), /* @__PURE__ */ import_react.default.createElement(
       "button",
       {
         className: "onboard-next",
@@ -16390,7 +16822,27 @@ try {
         onClick: () => {
           if (TOUR_STEPS[tourStep].action) {
             setTourPaused(true);
-            if (TOUR_STEPS[tourStep].openSettings) setShowSettings(true);
+            setTourFlags({});
+            setTourBase({
+              habits: appState.habitTemplate.length,
+              appts: apptsFor(selectedDay).length,
+              todos: todos.length,
+              pageIdx: notesPageIndex,
+              bookId: activeNotebookId,
+              books: notebooks.length
+            });
+            if (TOUR_STEPS[tourStep].openAnfangs) openAnfangsReflexion();
+            if (TOUR_STEPS[tourStep].openSettings) {
+              setShowSettings(false);
+              setShowAlarmSettings(true);
+              setTimeout(() => {
+                try {
+                  const el = document.querySelector(".settings-pop");
+                  if (el && el.scrollIntoView) el.scrollIntoView({ behavior: "smooth", block: "center" });
+                } catch (err) {
+                }
+              }, 120);
+            }
             if (TOUR_STEPS[tourStep].view) setCalView(TOUR_STEPS[tourStep].view);
             const target = TOUR_STEPS[tourStep].target;
             if (target) {
@@ -16415,7 +16867,17 @@ try {
         }
       },
       TOUR_STEPS[tourStep].action ? TOUR_STEPS[tourStep].action : tourStep === TOUR_STEPS.length - 1 ? "Fertig" : TOUR_STEPS[tourStep].intro ? "Okay" : "Weiter"
-    ), TOUR_STEPS[tourStep].skipLabel && /* @__PURE__ */ import_react.default.createElement("button", { className: "onboard-skip", onClick: () => {
+    ), TOUR_STEPS[tourStep].action && /* @__PURE__ */ import_react.default.createElement("button", { className: "onboard-skip", onClick: () => {
+      const next = tourStep + 1;
+      setTourPaused(false);
+      if (next < TOUR_STEPS.length) {
+        setActiveTab(TOUR_STEPS[next].tab);
+        setTourStep(next);
+      } else {
+        setActiveTab("daily");
+        setTourStep(-1);
+      }
+    } }, TOUR_STEPS[tourStep].skipText || "Diesen Schritt \xFCberspringen"), TOUR_STEPS[tourStep].skipLabel && /* @__PURE__ */ import_react.default.createElement("button", { className: "onboard-skip", onClick: () => {
       const curTab = TOUR_STEPS[tourStep].tab;
       let k = tourStep + 1;
       while (k < TOUR_STEPS.length && TOUR_STEPS[k].tab === curTab) k++;
@@ -16436,7 +16898,7 @@ try {
       setTourPaused(false);
       setActiveTab("daily");
       setTourStep(-1);
-    } }, "Tour \xFCberspringen")))), resetConfirmOpen && /* @__PURE__ */ import_react.default.createElement("div", { className: "day-modal-backdrop", onClick: () => setResetConfirmOpen(false) }, /* @__PURE__ */ import_react.default.createElement("div", { className: "day-modal", onClick: (e) => e.stopPropagation() }, /* @__PURE__ */ import_react.default.createElement("div", { className: "day-modal-head" }, /* @__PURE__ */ import_react.default.createElement("span", { className: "day-modal-title" }, "Wirklich alles zur\xFCcksetzen?")), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginBottom: 14 } }, "L\xF6scht Habits, Termine, Ziele und Reflexionen unwiderruflich und startet die App wie neu \u2014 f\xFCr eine Testphase."), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn danger", style: { width: "100%", marginBottom: 8 }, onClick: resetAllData }, "Ja, alles zur\xFCcksetzen"), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn cancel", style: { width: "100%" }, onClick: () => setResetConfirmOpen(false) }, "Abbrechen"))));
+    } }, "Tour \xFCberspringen")))), resetConfirmOpen && /* @__PURE__ */ import_react.default.createElement("div", { className: "day-modal-backdrop", onClick: () => setResetConfirmOpen(false) }, /* @__PURE__ */ import_react.default.createElement("div", { className: "day-modal", onClick: (e) => e.stopPropagation() }, /* @__PURE__ */ import_react.default.createElement("div", { className: "day-modal-head" }, /* @__PURE__ */ import_react.default.createElement("span", { className: "day-modal-title" }, "Wirklich alles l\xF6schen?")), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginBottom: 14 } }, "Alles wird gel\xF6scht: Ziele, Habits, Termine, To-Dos, Notizen und Reflexionen. Die App startet danach wie frisch installiert. Das l\xE4sst sich nicht r\xFCckg\xE4ngig machen."), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn danger", style: { width: "100%", marginBottom: 8 }, onClick: resetAllData }, "Ja, alles l\xF6schen"), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn cancel", style: { width: "100%" }, onClick: () => setResetConfirmOpen(false) }, "Abbrechen"))));
   }
 
   // entry.jsx
