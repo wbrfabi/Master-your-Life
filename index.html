@@ -12851,7 +12851,7 @@ try {
   function ymKey(year, monthIdx0) {
     return `${year}-${pad(monthIdx0 + 1)}`;
   }
-  var APP_BUILD = "Aufbau 88 \u2014 29.07.2026";
+  var APP_BUILD = "Aufbau 90 \u2014 24.11.2026";
   var ALARM_CATCHUP_MINUTES = 5;
   function hhmm(d = /* @__PURE__ */ new Date()) {
     return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
@@ -13100,6 +13100,68 @@ try {
     const [editApptTime, setEditApptTime] = (0, import_react.useState)("");
     const [editApptTitle, setEditApptTitle] = (0, import_react.useState)("");
     const [deleteConfirm, setDeleteConfirm] = (0, import_react.useState)(null);
+    const [confirmAct, setConfirmAct] = (0, import_react.useState)(null);
+    const [seriesChoice, setSeriesChoice] = (0, import_react.useState)(null);
+    const [noticeMsg, setNoticeMsg] = (0, import_react.useState)(null);
+    const [openNudge, setOpenNudge] = (0, import_react.useState)(false);
+    const [rewardOpen, setRewardOpen] = (0, import_react.useState)("");
+    const [lockInfo, setLockInfo] = (0, import_react.useState)(null);
+    const [training, setTraining] = (0, import_react.useState)({ exercises: [], log: {} });
+    const [trainingOpen, setTrainingOpen] = (0, import_react.useState)(false);
+    const [trainDraft, setTrainDraft] = (0, import_react.useState)({ name: "", sets: "3", reps: "10", kg: "" });
+    const [excuseLog, setExcuseLog] = (0, import_react.useState)([]);
+    const [excuseDraft, setExcuseDraft] = (0, import_react.useState)("");
+    const saveTraining = (0, import_react.useCallback)((next) => {
+      setTraining(next);
+      try {
+        window.storage.set("training", JSON.stringify(next), false);
+      } catch (err) {
+      }
+    }, []);
+    const saveExcuseLog = (0, import_react.useCallback)((next) => {
+      setExcuseLog(next);
+      try {
+        window.storage.set("excuse-log", JSON.stringify(next), false);
+      } catch (err) {
+      }
+    }, []);
+    (0, import_react.useEffect)(() => {
+      if (!ready) return;
+      try {
+        window.storage.get("training", false).then((res) => {
+          if (res && res.value) {
+            const t = JSON.parse(res.value);
+            if (t && Array.isArray(t.exercises)) setTraining({ exercises: t.exercises, log: t.log || {} });
+          }
+        }).catch(() => {
+        });
+        window.storage.get("excuse-log", false).then((res) => {
+          if (res && res.value) {
+            const l = JSON.parse(res.value);
+            if (Array.isArray(l)) setExcuseLog(l);
+          }
+        }).catch(() => {
+        });
+      } catch (err) {
+      }
+    }, [ready]);
+    const noticeTimerRef = (0, import_react.useRef)(null);
+    const nudgeInitRef = (0, import_react.useRef)(false);
+    const hiddenAtRef = (0, import_react.useRef)(0);
+    function askConfirm(text, onYes, yesLabel) {
+      setConfirmAct({ text, onYes, yesLabel: yesLabel || "Ja, l\xF6schen" });
+    }
+    function showNotice(msg) {
+      setNoticeMsg(msg);
+      try {
+        if (noticeTimerRef.current) clearTimeout(noticeTimerRef.current);
+      } catch (err) {
+      }
+      noticeTimerRef.current = setTimeout(() => setNoticeMsg(null), 3200);
+    }
+    function showLockInfo(a) {
+      setLockInfo({ title: a.title, until: a.lockedUntil, reason: (a.lockReason || "").trim() });
+    }
     const [editConfirmFor, setEditConfirmFor] = (0, import_react.useState)(null);
     const [reflections, setReflections] = (0, import_react.useState)(null);
     const [showAnfangsReflexion, setShowAnfangsReflexion] = (0, import_react.useState)(false);
@@ -13541,10 +13603,12 @@ try {
     }
     function removeNotebook(id) {
       if (notebooks.length <= 1) return;
-      const rest = notebooks.filter((n) => n.id !== id);
-      saveNotebooks(rest);
-      setActiveNotebookId(rest[0].id);
-      setEditingNotebookId(null);
+      askConfirm("Dieses Notizbuch mit allen Seiten wirklich l\xF6schen?", () => {
+        const rest = notebooks.filter((n) => n.id !== id);
+        saveNotebooks(rest);
+        setActiveNotebookId(rest[0].id);
+        setEditingNotebookId(null);
+      });
     }
     function startEditNotebook(nb) {
       setEditingNotebookId(nb.id);
@@ -13614,9 +13678,11 @@ ${stamp}
     }
     function removeNotePage(index) {
       if (notesPages.length <= 1) return;
-      const next = notesPages.filter((_, i) => i !== index);
-      saveNotesPages(next);
-      setNotesPageIndex(Math.max(0, Math.min(notesPageIndex, next.length - 1)));
+      askConfirm("Diese Seite wirklich l\xF6schen?", () => {
+        const next = notesPages.filter((_, i) => i !== index);
+        saveNotesPages(next);
+        setNotesPageIndex(Math.max(0, Math.min(notesPageIndex, next.length - 1)));
+      });
     }
     (0, import_react.useEffect)(() => {
       if (!ready) return;
@@ -13654,9 +13720,11 @@ ${stamp}
     }
     function removeTodoList(id) {
       if (id === "default") return;
-      saveTodoLists(todoLists.filter((l) => l.id !== id));
-      saveTodos(todos.filter((t) => (t.listId || "default") !== id));
-      setActiveTodoList("default");
+      askConfirm("Diese Liste samt allen To-Dos darin wirklich l\xF6schen?", () => {
+        saveTodoLists(todoLists.filter((l) => l.id !== id));
+        saveTodos(todos.filter((t) => (t.listId || "default") !== id));
+        setActiveTodoList("default");
+      });
     }
     function addTodo() {
       if (!newTodoText.trim()) return;
@@ -13688,7 +13756,7 @@ ${stamp}
       }
     }
     function removeTodo(id) {
-      saveTodos(todos.filter((t) => t.id !== id));
+      askConfirm("Dieses To-Do wirklich l\xF6schen?", () => saveTodos(todos.filter((t) => t.id !== id)));
     }
     function startScheduleTodo(t) {
       const dur = parseInt(t.duration, 10) || 60;
@@ -13787,7 +13855,7 @@ ${stamp}
               const prevData = prevRes && prevRes.value ? JSON.parse(prevRes.value) : null;
               const alreadyArchivedThisTransition = arch.length > 0 && arch[arch.length - 1].monthKey === prevMonthKey;
               if (prevData && prevData.monthGoal && !alreadyArchivedThisTransition) {
-                setPendingMonthRollover({ monthKey: prevMonthKey, goal: prevData.monthGoal });
+                setPendingMonthRollover({ monthKey: prevMonthKey, goal: prevData.monthGoal, reward: prevData.reward || "", punishment: prevData.punishment || "" });
                 setShowMonthRolloverBanner(true);
               }
             }
@@ -13902,7 +13970,7 @@ ${stamp}
               const prevData = prevRes && prevRes.value ? JSON.parse(prevRes.value) : null;
               const alreadyArchivedThisTransition = arch.length > 0 && arch[arch.length - 1].weekMonday === prevMonday;
               if (prevData && prevData.goal && !alreadyArchivedThisTransition) {
-                setPendingWeekRollover({ weekMonday: prevMonday, goal: prevData.goal });
+                setPendingWeekRollover({ weekMonday: prevMonday, goal: prevData.goal, reward: prevData.reward || "", punishment: prevData.punishment || "" });
                 setShowWeekRolloverBanner(true);
               }
             }
@@ -13957,9 +14025,61 @@ ${stamp}
         value: g.text || "",
         onChange: (e) => saveExtras(data, saveFn, list.map((x, j) => j === i ? __spreadProps(__spreadValues({}, x), { text: e.target.value }) : x)),
         placeholder
-      }), /* @__PURE__ */ import_react.default.createElement("button", { className: "hierarchy-hide", onClick: () => saveExtras(data, saveFn, list.filter((_, j) => j !== i)), "aria-label": "Ziel l\xF6schen" }, "\xD7")));
+      }), /* @__PURE__ */ import_react.default.createElement("button", { className: "hierarchy-hide", onClick: () => askConfirm("Dieses Ziel wirklich l\xF6schen?", () => saveExtras(data, saveFn, list.filter((_, j) => j !== i))), "aria-label": "Ziel l\xF6schen" }, "\xD7")));
       rows.push(/* @__PURE__ */ import_react.default.createElement("button", { key: "xg-add", className: "hierarchy-add", onClick: () => saveExtras(data, saveFn, [...list, { text: "", done: false }]) }, "+ Ziel"));
       return rows;
+    };
+    const renderRewardRow = (key, data, saveFn) => {
+      if (appState.showRewards === false || !data) return null;
+      const open = rewardOpen === key;
+      const rw = (data.reward || "").trim();
+      const pu = (data.punishment || "").trim();
+      if (!open) {
+        return /* @__PURE__ */ import_react.default.createElement("div", { className: "goal-reward-row", key: "rw-" + key }, /* @__PURE__ */ import_react.default.createElement("button", { className: "goal-reward-toggle", onClick: () => setRewardOpen(key) }, rw || pu ? ("\u{1F381} " + (rw || "\u2014") + "  \u00B7  \u26A1 " + (pu || "\u2014")) : "+ Belohnung & Strafe"));
+      }
+      return /* @__PURE__ */ import_react.default.createElement("div", { className: "goal-reward-row", key: "rw-" + key }, /* @__PURE__ */ import_react.default.createElement("input", { className: "goal-reward-input", value: data.reward || "", placeholder: "\u{1F381} Belohnung, wenn du es schaffst (z.B. Abendessen im Restaurant)", onChange: (e) => saveFn({ ...data, reward: e.target.value }) }), /* @__PURE__ */ import_react.default.createElement("input", { className: "goal-reward-input", value: data.punishment || "", placeholder: "\u26A1 Strafe, wenn nicht (z.B. 20 \u20AC spenden)", onChange: (e) => saveFn({ ...data, punishment: e.target.value }) }), /* @__PURE__ */ import_react.default.createElement("button", { className: "goal-reward-toggle", onClick: () => setRewardOpen("") }, "Fertig"));
+    };
+    const renderTraining = () => {
+      const tl = training || { exercises: [], log: {} };
+      const exs = tl.exercises || [];
+      const log = tl.log || {};
+      const today = log[todayKey] || {};
+      const doneToday = exs.filter((x) => today[x.id]).length;
+      const trainedDays = Object.keys(log).filter((d) => Object.keys(log[d] || {}).length > 0).sort();
+      const last30 = trainedDays.filter((d) => d > addDaysKey(todayKey, -30)).length;
+      const lastDay = trainedDays.length ? trainedDays[trainedDays.length - 1] : null;
+      const dots = Array.from({ length: 14 }, (_, i) => addDaysKey(todayKey, i - 13));
+      const setEx = (id, field, val) => saveTraining({ ...tl, exercises: exs.map((x) => x.id === id ? { ...x, [field]: val } : x) });
+      const logEx = (x) => {
+        saveTraining({ ...tl, log: { ...log, [todayKey]: { ...today, [x.id]: { sets: x.sets, reps: x.reps, kg: x.kg } } } });
+        playSuccessChime();
+        buzz(22);
+      };
+      const prevOf = (x) => {
+        for (let i = trainedDays.length - 1; i >= 0; i--) {
+          const d = trainedDays[i];
+          if (d < todayKey && log[d][x.id]) return { day: d, e: log[d][x.id] };
+        }
+        return null;
+      };
+      const fmtE = (e) => e.sets + "\xD7" + e.reps + (e.kg ? " \xB7 " + e.kg + " kg" : "");
+      const vol = (e) => (Number(e.sets) || 0) * (Number(e.reps) || 0) * (Number(String(e.kg).replace(",", ".")) || 1);
+      const addEx = () => {
+        const nm = trainDraft.name.trim();
+        if (!nm) return;
+        saveTraining({ ...tl, exercises: [...exs, { id: newId("e"), name: nm, sets: trainDraft.sets || "3", reps: trainDraft.reps || "10", kg: trainDraft.kg || "" }] });
+        setTrainDraft({ name: "", sets: trainDraft.sets, reps: trainDraft.reps, kg: "" });
+      };
+      const num = (x, field, label) => /* @__PURE__ */ import_react.default.createElement("label", null, label, /* @__PURE__ */ import_react.default.createElement("input", { className: "train-in", type: "number", inputMode: "decimal", value: x[field], onChange: (e) => setEx(x.id, field, e.target.value), "aria-label": label }));
+      return /* @__PURE__ */ import_react.default.createElement("div", { className: "section train-card", "data-tour": "training" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "train-head", onClick: () => setTrainingOpen(!trainingOpen) }, /* @__PURE__ */ import_react.default.createElement("span", { className: "train-title" }, "\u{1F4AA} Training"), /* @__PURE__ */ import_react.default.createElement("span", { className: "train-sum" }, exs.length === 0 ? "\xDCbungen anlegen" : "heute " + doneToday + "/" + exs.length + " \xB7 " + last30 + " Tage in 30"), /* @__PURE__ */ import_react.default.createElement("span", null, trainingOpen ? "\u25BE" : "\u25B8")), trainingOpen && /* @__PURE__ */ import_react.default.createElement("div", { className: "train-body" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "train-dots" }, dots.map((d) => /* @__PURE__ */ import_react.default.createElement("span", { key: d, className: "train-dot" + (log[d] && Object.keys(log[d]).length ? " on" : "") + (d === todayKey ? " today" : "") }, WD_SHORT[dowOf(d)]))), lastDay ? /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: 0 } }, "Letztes Training: " + fmtDE(lastDay).slice(0, 6) + "  \xB7  Die Tage merkt sich die App, sobald du eine \xDCbung eintr\xE4gst.") : /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: 0 } }, "Lege deine \xDCbungen an und trag sie nach jedem Training ein. Die App merkt sich die Tage und zeigt dir, ob du dich steigerst."), exs.map((x) => {
+        const p = prevOf(x);
+        const t = today[x.id];
+        return /* @__PURE__ */ import_react.default.createElement("div", { key: x.id, className: "train-ex" + (t ? " done" : "") }, /* @__PURE__ */ import_react.default.createElement("div", { className: "train-ex-top" }, /* @__PURE__ */ import_react.default.createElement("span", { className: "train-ex-name" }, (t ? "\u2713 " : "") + x.name), /* @__PURE__ */ import_react.default.createElement("button", { className: "habit-remove", onClick: () => askConfirm("\u201E" + x.name + "\u201C wirklich l\xF6schen?", () => saveTraining({ ...tl, exercises: exs.filter((y) => y.id !== x.id) })), "aria-label": "\xDCbung l\xF6schen" }, "\xD7")), /* @__PURE__ */ import_react.default.createElement("div", { className: "train-ex-inputs" }, num(x, "sets", "S\xE4tze"), num(x, "reps", "Wdh."), num(x, "kg", "kg")), p ? /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: 0 } }, "Letztes Mal (" + fmtDE(p.day).slice(0, 6) + "): " + fmtE(p.e) + (t && vol(t) > vol(p.e) ? "   \u25B2 gesteigert" : t && vol(t) < vol(p.e) ? "   \u25BC weniger" : "")) : null, /* @__PURE__ */ import_react.default.createElement("div", { className: "train-ex-actions" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "train-btn", onClick: () => setEx(x.id, "reps", String((Number(x.reps) || 0) + 1)) }, "\u25B2 +1 Wdh."), /* @__PURE__ */ import_react.default.createElement("button", { className: "train-btn", onClick: () => setEx(x.id, "sets", String((Number(x.sets) || 0) + 1)) }, "\u25B2 +1 Satz"), /* @__PURE__ */ import_react.default.createElement("button", { className: "train-btn", onClick: () => setEx(x.id, "kg", String(Math.round(((Number(String(x.kg).replace(",", ".")) || 0) + 2.5) * 10) / 10)) }, "\u25B2 +2,5 kg"), /* @__PURE__ */ import_react.default.createElement("button", { className: "train-btn primary", onClick: () => logEx(x) }, t ? "\u2713 Neu eintragen" : "Heute eintragen")));
+      }), /* @__PURE__ */ import_react.default.createElement("div", { className: "train-ex" }, /* @__PURE__ */ import_react.default.createElement("input", { className: "goal-reward-input", value: trainDraft.name, placeholder: "Neue \xDCbung, z.B. Kniebeugen", onChange: (e) => setTrainDraft({ ...trainDraft, name: e.target.value }), onKeyDown: (e) => e.key === "Enter" && addEx() }), /* @__PURE__ */ import_react.default.createElement("div", { className: "train-ex-inputs" }, /* @__PURE__ */ import_react.default.createElement("label", null, "S\xE4tze", /* @__PURE__ */ import_react.default.createElement("input", { className: "train-in", type: "number", inputMode: "numeric", value: trainDraft.sets, onChange: (e) => setTrainDraft({ ...trainDraft, sets: e.target.value }) })), /* @__PURE__ */ import_react.default.createElement("label", null, "Wdh.", /* @__PURE__ */ import_react.default.createElement("input", { className: "train-in", type: "number", inputMode: "numeric", value: trainDraft.reps, onChange: (e) => setTrainDraft({ ...trainDraft, reps: e.target.value }) })), /* @__PURE__ */ import_react.default.createElement("label", null, "kg (optional)", /* @__PURE__ */ import_react.default.createElement("input", { className: "train-in", type: "number", inputMode: "decimal", value: trainDraft.kg, onChange: (e) => setTrainDraft({ ...trainDraft, kg: e.target.value }) }))), /* @__PURE__ */ import_react.default.createElement("button", { className: "train-btn primary", style: { marginLeft: 0 }, onClick: addEx }, "+ \xDCbung hinzuf\xFCgen")), doneToday > 0 && /* @__PURE__ */ import_react.default.createElement("button", { className: "tiny-archive-link", style: { alignSelf: "flex-start" }, onClick: () => askConfirm("Das heutige Training zur\xFCcksetzen?", () => {
+        const l2 = { ...log };
+        delete l2[todayKey];
+        saveTraining({ ...tl, log: l2 });
+      }, "Ja, zur\xFCcksetzen") }, "Heute zur\xFCcksetzen")));
     };
     const secIcon = (key) => {
       const icons = appState.sectionIcons || {};
@@ -13977,6 +14097,29 @@ ${stamp}
       setActiveTab(TOUR_STEPS[0].tab);
       setTourStep(0);
     }, [ready, reflections, appState.onboardingDone, appState.tourSeen, appState.anfangsPromptDismissed]);
+    (0, import_react.useEffect)(() => {
+      if (!ready) return;
+      const maybe = () => {
+        if (appState.alarmMode === "none" && appState.onboardingDone && appState.openNudge !== false) setOpenNudge(true);
+      };
+      if (!nudgeInitRef.current) {
+        nudgeInitRef.current = true;
+        maybe();
+      }
+      const onVis = () => {
+        try {
+          if (document.hidden) {
+            hiddenAtRef.current = Date.now();
+          } else if (hiddenAtRef.current && Date.now() - hiddenAtRef.current > 3 * 60 * 1e3) {
+            hiddenAtRef.current = 0;
+            maybe();
+          }
+        } catch (err) {
+        }
+      };
+      document.addEventListener("visibilitychange", onVis);
+      return () => document.removeEventListener("visibilitychange", onVis);
+    }, [ready, appState.alarmMode, appState.onboardingDone, appState.openNudge]);
     (0, import_react.useEffect)(() => {
       if (!ready) return;
       const d = appState.testDateOverride ? new Date(appState.testDateOverride) : /* @__PURE__ */ new Date();
@@ -14737,7 +14880,7 @@ ${stamp}
       setAddingHabit(false);
     }
     function removeHabit(id) {
-      saveAppState(__spreadProps(__spreadValues({}, appState), { habitTemplate: appState.habitTemplate.filter((h) => h.id !== id) }));
+      askConfirm("Wirklich l\xF6schen?", () => saveAppState(__spreadProps(__spreadValues({}, appState), { habitTemplate: appState.habitTemplate.filter((h) => h.id !== id) })));
     }
     function addKpi(name, why) {
       if (!name.trim()) return;
@@ -14745,7 +14888,7 @@ ${stamp}
       saveAppState(__spreadProps(__spreadValues({}, appState), { kpiTemplate: [...appState.kpiTemplate || [], kpi] }));
     }
     function removeKpi(id) {
-      saveAppState(__spreadProps(__spreadValues({}, appState), { kpiTemplate: (appState.kpiTemplate || []).filter((k) => k.id !== id) }));
+      askConfirm("Wirklich l\xF6schen?", () => saveAppState(__spreadProps(__spreadValues({}, appState), { kpiTemplate: (appState.kpiTemplate || []).filter((k) => k.id !== id) })));
     }
     function startEditHabit(h) {
       setEditingHabitId(h.id);
@@ -14784,12 +14927,32 @@ ${stamp}
         buzz(22);
       }
     }
+    function addDaysKey(dayKey, n) {
+      const [y, m, d] = dayKey.split("-").map(Number);
+      const t = new Date(y, m - 1, d + n);
+      return `${t.getFullYear()}-${pad(t.getMonth() + 1)}-${pad(t.getDate())}`;
+    }
+    function daysBetweenKeys(a, b) {
+      const [ay, am, ad] = a.split("-").map(Number);
+      const [by, bm, bd] = b.split("-").map(Number);
+      return Math.round((Date.UTC(by, bm - 1, bd) - Date.UTC(ay, am - 1, ad)) / 864e5);
+    }
+    function dowOf(dayKey) {
+      const [y, m, d] = dayKey.split("-").map(Number);
+      return (new Date(y, m - 1, d).getDay() + 6) % 7;
+    }
+    function fmtDE(dayKey) {
+      const [y, m, d] = dayKey.split("-");
+      return `${d}.${m}.${y}`;
+    }
     function matchesRecurrence(rule, dayKey) {
       if (dayKey < rule.startDate) return false;
+      if (rule.endDate && dayKey > rule.endDate) return false;
       if (rule.exceptions && rule.exceptions.includes(dayKey)) return false;
       const [sy, sm, sd] = rule.startDate.split("-").map(Number);
       const [y, m, d] = dayKey.split("-").map(Number);
       if (rule.recurrence === "daily") return true;
+      if (rule.recurrence === "weekdays") return (rule.weekdays || []).includes(dowOf(dayKey));
       if (rule.recurrence === "weekly") {
         const startDow = (new Date(sy, sm - 1, sd).getDay() + 6) % 7;
         const dow = (new Date(y, m - 1, d).getDay() + 6) % 7;
@@ -14799,19 +14962,109 @@ ${stamp}
       if (rule.recurrence === "yearly") return d === sd && m === sm;
       return false;
     }
+    function isApptLocked(a) {
+      return !!(a && a.lockedUntil && todayKey <= a.lockedUntil);
+    }
+    function apptSpan(a) {
+      if (a.allDay || !/^\d\d:\d\d$/.test(a.time || "")) return null;
+      const [h, m] = a.time.split(":").map(Number);
+      const st = h * 60 + m;
+      return [st, st + (parseInt(a.duration, 10) || 60)];
+    }
+    function findLockedConflict(dayKey, startMin, endMin, ignore) {
+      const list = apptsFor(dayKey, "*");
+      for (const a of list) {
+        if (!isApptLocked(a)) continue;
+        if (ignore && (ignore.id && a.id === ignore.id || ignore.seriesId && a.seriesId === ignore.seriesId)) continue;
+        const sp = apptSpan(a);
+        if (sp && startMin < sp[1] && endMin > sp[0]) return a;
+      }
+      return null;
+    }
+    function slotConflict(startDate, startTime, allDay, durMin, ruleLike, ignore) {
+      if (allDay || !startTime) return null;
+      const [h, m] = startTime.split(":").map(Number);
+      const st = h * 60 + m;
+      const en = st + (parseInt(durMin, 10) || 60);
+      const days = [startDate];
+      if (ruleLike && ruleLike.recurrence && ruleLike.recurrence !== "none") {
+        const rule = { recurrence: ruleLike.recurrence, weekdays: ruleLike.weekdays || [], endDate: ruleLike.endDate || "", startDate, exceptions: [] };
+        const horizon = ruleLike.endDate ? Math.min(400, Math.max(0, daysBetweenKeys(startDate, ruleLike.endDate))) : 120;
+        for (let i = 1; i <= horizon; i++) {
+          const k = addDaysKey(startDate, i);
+          if (matchesRecurrence(rule, k)) days.push(k);
+        }
+      }
+      for (const d of days) {
+        const c = findLockedConflict(d, st, en, ignore);
+        if (c) return { appt: c, day: d };
+      }
+      return null;
+    }
+    function newId(prefix) {
+      return `${prefix}${Date.now()}${randInt(10, 99)}`;
+    }
+    function moveOneOff(fromDay, id, toDay, patch) {
+      const days = __spreadValues({}, daysData);
+      const src = days[fromDay];
+      if (!src) return;
+      const old = (src.appointments || []).find((a) => a.id === id);
+      if (!old) return;
+      days[fromDay] = __spreadProps(__spreadValues({}, src), { appointments: (src.appointments || []).filter((a) => a.id !== id) });
+      const dst = days[toDay] || { checks: {} };
+      const list = [...dst.appointments || [], __spreadValues(__spreadValues({}, old), patch)].sort((a, b) => a.time.localeCompare(b.time));
+      days[toDay] = __spreadProps(__spreadValues({}, dst), { appointments: list });
+      saveDaysData(days);
+    }
+    function addOneOffRaw(toDay, appt) {
+      const days = __spreadValues({}, daysData);
+      const dst = days[toDay] || { checks: {} };
+      days[toDay] = __spreadProps(__spreadValues({}, dst), { appointments: [...dst.appointments || [], appt].sort((a, b) => a.time.localeCompare(b.time)) });
+      saveDaysData(days);
+    }
+    function detachOccurrence(seriesId, occDay, toDay, patch) {
+      const rule = recurringAppts.find((r) => r.id === seriesId);
+      if (!rule) return;
+      saveRecurringAppts(recurringAppts.map((r) => r.id === seriesId ? __spreadProps(__spreadValues({}, r), { exceptions: [...r.exceptions || [], occDay] }) : r));
+      const one = __spreadValues({
+        id: newId("a"),
+        time: rule.time,
+        title: rule.title,
+        allDay: !!rule.allDay,
+        duration: rule.duration || "",
+        isBirthday: !!rule.isBirthday,
+        context: rule.context || "daily",
+        location: rule.location || "",
+        notes: rule.notes || ""
+      }, patch);
+      addOneOffRaw(toDay, one);
+    }
+    function setSeriesException(seriesId, day, on) {
+      saveRecurringAppts(recurringAppts.map((r) => {
+        if (r.id !== seriesId) return r;
+        const ex = (r.exceptions || []).filter((x) => x !== day);
+        return __spreadProps(__spreadValues({}, r), { exceptions: on ? [...ex, day] : ex });
+      }));
+    }
     function addAppointment(dayKey, time, title, recurrence, extra) {
       if (!title.trim()) return;
       const opts = extra || {};
       const isBirthday = !!opts.isBirthday;
       const effectiveRecurrence = isBirthday ? "yearly" : recurrence;
-      const base = { time: opts.allDay ? "ganzt\xE4gig" : time, title: title.trim(), allDay: !!opts.allDay, duration: opts.duration || "", isBirthday, context: opts.context || activeTab };
+      const base = { time: opts.allDay ? "ganzt\xE4gig" : time, title: title.trim(), allDay: !!opts.allDay, duration: opts.duration || "", isBirthday, context: opts.context || activeTab, location: opts.location || "", notes: opts.notes || "" };
+      if (opts.lockedUntil) {
+        base.lockedUntil = opts.lockedUntil;
+        base.lockReason = opts.lockReason || "";
+      }
       if (effectiveRecurrence && effectiveRecurrence !== "none") {
         const rule = __spreadProps(__spreadValues({
           id: `r${Date.now()}${randInt(10, 99)}`
         }, base), {
           recurrence: effectiveRecurrence,
           startDate: dayKey,
-          exceptions: []
+          exceptions: [],
+          endDate: opts.until || "",
+          weekdays: effectiveRecurrence === "weekdays" ? (opts.weekdays && opts.weekdays.length ? opts.weekdays : [dowOf(dayKey)]) : []
         });
         saveRecurringAppts([...recurringAppts, rule]);
         return;
@@ -14844,7 +15097,14 @@ ${stamp}
         notes: a.notes || "",
         recurring: !!a.recurring,
         seriesId: a.seriesId || null,
-        isBirthday: !!a.isBirthday
+        isBirthday: !!a.isBirthday,
+        weekdays: a.weekdays || [],
+        until: a.until || "",
+        exceptions: a.exceptions || [],
+        skipDate: "",
+        lockedUntil: a.lockedUntil || null,
+        lockReason: a.lockReason || "",
+        lock: false
       });
     }
     function openNewApptEditor(hour) {
@@ -14869,6 +15129,10 @@ ${stamp}
     function saveApptEditor() {
       const e = apptEdit;
       if (!e || !e.title.trim()) return;
+      if (e.lockedUntil && todayKey <= e.lockedUntil) {
+        showNotice(`\u{1F512} Gesperrt bis ${fmtDE(e.lockedUntil)} \u2014 nicht \xE4nderbar.`);
+        return;
+      }
       let durationMin = "";
       if (!e.allDay) {
         const [sy, sm2, sd] = e.startDate.split("-").map(Number);
@@ -14878,6 +15142,14 @@ ${stamp}
         const diff = Math.round((new Date(ey, em2 - 1, ed, eh, emin) - new Date(sy, sm2 - 1, sd, sh, smin)) / 6e4);
         if (diff > 0) durationMin = String(diff);
       }
+      let weekdays = e.weekdays || [];
+      if (e.recurrence === "weekdays" && weekdays.length === 0) weekdays = [dowOf(e.startDate)];
+      const until = e.recurrence !== "none" ? e.until || "" : "";
+      if (until && until < e.startDate) {
+        showNotice("Das Ende der Wiederholung liegt vor dem Start.");
+        return;
+      }
+      const lockUntil = e.lock ? addDaysKey(todayKey, 31) : void 0;
       const patch = {
         title: e.title.trim(),
         time: e.allDay ? "ganzt\xE4gig" : e.startTime,
@@ -14886,25 +15158,75 @@ ${stamp}
         location: e.location.trim(),
         notes: e.notes.trim()
       };
-      if (!e.id) {
-        addAppointment(e.startDate, patch.time, patch.title, e.recurrence, { duration: durationMin, allDay: e.allDay, context: activeTab });
-      } else if (e.recurring && e.seriesId) {
-        updateRecurringSeries(e.seriesId, __spreadProps(__spreadValues({}, patch), { recurrence: e.recurrence }));
-      } else if (e.startDate !== e.dayKey) {
-        removeOneOffAppointment(e.dayKey, e.id);
-        addAppointment(e.startDate, patch.time, patch.title, e.recurrence, { duration: durationMin, allDay: e.allDay, context: activeTab });
-      } else {
-        updateAppointment(e.dayKey, e.id, patch);
+      if (lockUntil) {
+        patch.lockedUntil = lockUntil;
+        patch.lockReason = (e.lockReason || "").trim();
       }
-      if (e.fromTodoId) saveTodos(todos.filter((x) => x.id !== e.fromTodoId));
-      playApptDoneSound();
-      setApptEdit(null);
+      const extra = { duration: durationMin, allDay: e.allDay, context: activeTab, location: patch.location, notes: patch.notes, lockedUntil: lockUntil, lockReason: (e.lockReason || "").trim(), weekdays, until };
+      const finish = (scope) => {
+        const rec = scope === "one" ? "none" : e.recurrence;
+        const conflict = slotConflict(e.startDate, e.startTime, e.allDay, durationMin, { recurrence: rec, weekdays, endDate: until }, { id: e.id, seriesId: e.seriesId });
+        if (conflict) {
+          showNotice(`\u{1F512} Diese Zeit ist durch \u201E${conflict.appt.title}\u201C gesperrt (${fmtDE(conflict.day)}).`);
+          return;
+        }
+        if (!e.id) {
+          addAppointment(e.startDate, patch.time, patch.title, e.recurrence, extra);
+        } else if (e.recurring && e.seriesId) {
+          if (scope === "one") {
+            detachOccurrence(e.seriesId, e.dayKey, e.startDate, patch);
+          } else if (e.recurrence === "none") {
+            const rule0 = recurringAppts.find((r) => r.id === e.seriesId);
+            saveRecurringAppts(recurringAppts.filter((r) => r.id !== e.seriesId));
+            addOneOffRaw(e.startDate, __spreadValues({ id: newId("a"), isBirthday: !!(rule0 && rule0.isBirthday), context: rule0 && rule0.context || activeTab }, patch));
+          } else {
+            const rule0 = recurringAppts.find((r) => r.id === e.seriesId);
+            const shift = e.startDate !== e.dayKey ? daysBetweenKeys(e.dayKey, e.startDate) : 0;
+            const ser = __spreadProps(__spreadValues({}, patch), { recurrence: e.recurrence, weekdays, endDate: until });
+            if (rule0 && shift) {
+              ser.startDate = addDaysKey(rule0.startDate, shift);
+              ser.exceptions = (rule0.exceptions || []).map((x) => addDaysKey(x, shift));
+              if (until) ser.endDate = addDaysKey(until, 0);
+            }
+            updateRecurringSeries(e.seriesId, ser);
+          }
+        } else if (e.recurrence !== "none") {
+          const days = __spreadValues({}, daysData);
+          const src = days[e.dayKey];
+          if (src) days[e.dayKey] = __spreadProps(__spreadValues({}, src), { appointments: (src.appointments || []).filter((x) => x.id !== e.id) });
+          saveDaysData(days);
+          addAppointment(e.startDate, patch.time, patch.title, e.recurrence, extra);
+        } else if (e.startDate !== e.dayKey) {
+          moveOneOff(e.dayKey, e.id, e.startDate, patch);
+        } else {
+          updateAppointment(e.dayKey, e.id, patch);
+        }
+        if (e.fromTodoId) saveTodos(todos.filter((x) => x.id !== e.fromTodoId));
+        playApptDoneSound();
+        setApptEdit(null);
+      };
+      const proceed = (scope) => {
+        if (e.lock) {
+          askConfirm(`\u201E${patch.title}\u201C f\xFCr 31 Tage sperren? Bis ${fmtDE(lockUntil)} ist der Termin nicht \xE4nderbar und nicht l\xF6schbar \u2014 das l\xE4sst sich nicht r\xFCckg\xE4ngig machen.`, () => finish(scope), "Ja, sperren");
+        } else {
+          finish(scope);
+        }
+      };
+      if (e.id && e.recurring && e.seriesId) {
+        setSeriesChoice({ title: patch.title, onOne: () => proceed("one"), onAll: () => proceed("all") });
+      } else {
+        proceed(null);
+      }
     }
     function requestRemoveAppointment(dayKey, appt) {
+      if (isApptLocked(appt)) {
+        showLockInfo(appt);
+        return;
+      }
       if (appt.recurring) {
         setDeleteConfirm({ dayKey, appt });
       } else {
-        removeOneOffAppointment(dayKey, appt.id);
+        askConfirm(`\u201E${appt.title}\u201C wirklich l\xF6schen?`, () => removeOneOffAppointment(dayKey, appt.id));
       }
     }
     function removeOneOffAppointment(dayKey, id) {
@@ -15006,7 +15328,7 @@ ${stamp}
       saveMonthGoal(updated);
       if (next) {
         playCelebrationSound();
-        celebrate("\u{1F389}", "Monatsziel erreicht!", pickCheer(MONTH_CHEERS));
+        celebrate("\u{1F389}", "Monatsziel erreicht!", pickCheer(MONTH_CHEERS) + (monthGoalData.reward ? " \u{1F381} Deine Belohnung: " + monthGoalData.reward : ""));
         const entry = { monthKey: selMonthKey, goal: monthGoalData.monthGoal, done: true, achievedAt: todayStr() };
         const newArch = [...monthGoalArchive, entry];
         setMonthGoalArchive(newArch);
@@ -15057,7 +15379,7 @@ ${stamp}
       saveWeek(updated);
       if (next) {
         playCelebrationSound();
-        celebrate("\u2705", "Wochenziel erreicht!", pickCheer(WEEK_CHEERS));
+        celebrate("\u2705", "Wochenziel erreicht!", pickCheer(WEEK_CHEERS) + (weekData.reward ? " \u{1F381} Deine Belohnung: " + weekData.reward : ""));
         const entry = { weekMonday, goal: weekData.goal, done: true, achievedAt: todayStr() };
         const newArch = [...weekGoalArchive, entry];
         setWeekGoalArchive(newArch);
@@ -15141,8 +15463,9 @@ ${stamp}
     }
     function apptsFor(dayKey, context) {
       const ctx = context || activeTab;
-      const oneOff = (daysData[dayKey] && daysData[dayKey].appointments || []).filter((a) => (a.context || "daily") === ctx).map((a) => __spreadProps(__spreadValues({}, a), { recurring: false }));
-      const recurring = recurringAppts.filter((r) => (r.context || "daily") === ctx && matchesRecurrence(r, dayKey)).map((r) => ({ id: `${r.id}-${dayKey}`, seriesId: r.id, time: r.time, title: r.title, recurring: true, recurrence: r.recurrence }));
+      const anyCtx = ctx === "*";
+      const oneOff = (daysData[dayKey] && daysData[dayKey].appointments || []).filter((a) => anyCtx || (a.context || "daily") === ctx).map((a) => __spreadProps(__spreadValues({}, a), { recurring: false }));
+      const recurring = recurringAppts.filter((r) => (anyCtx || (r.context || "daily") === ctx) && matchesRecurrence(r, dayKey)).map((r) => ({ id: `${r.id}-${dayKey}`, seriesId: r.id, time: r.time, title: r.title, recurring: true, recurrence: r.recurrence, weekdays: r.weekdays || [], until: r.endDate || "", exceptions: r.exceptions || [], duration: r.duration || "", allDay: !!r.allDay, isBirthday: !!r.isBirthday, location: r.location || "", notes: r.notes || "", lockedUntil: r.lockedUntil || "", lockReason: r.lockReason || "" }));
       return [...oneOff, ...recurring].sort((a, b) => a.time.localeCompare(b.time));
     }
     const styles = `
@@ -15450,6 +15773,87 @@ ${stamp}
       from { opacity: 0; transform: translate(-50%, 14px); }
       to { opacity: 1; transform: translate(-50%, 0); }
     }
+
+
+    /* ---------- Aufbau 89: Sperre, Wochentage, Hinweise ---------- */
+    .timeline-block.locked {
+      background: #FF1212 !important; background-image: none !important;
+      border-left: 4px solid #7A0000 !important; color: #fff !important; font-weight: 700;
+      box-shadow: 0 0 0 1px #7A0000, 0 3px 16px rgba(255, 18, 18, 0.6) !important;
+    }
+    .timeline-block.locked .habit-check { border-color: #fff; color: #fff; }
+    .timeline-allday.locked { background: #FF1212; border: 1px solid #7A0000; color: #fff; font-weight: 700; }
+    .appt-editor .pop-close { position: relative !important; }
+    .appt-lock-banner { background: #FF1212; color: #fff; border-radius: 10px; padding: 10px 12px; font-size: 13px; font-weight: 700; line-height: 1.4; }
+    .appt-editor.locked input, .appt-editor.locked textarea, .appt-editor.locked select,
+    .appt-editor.locked .appt-toggle, .appt-editor.locked .wd-chip { pointer-events: none; opacity: 0.6; }
+    .wd-row { display: flex; gap: 6px; flex-wrap: wrap; }
+    .wd-chip {
+      flex: 1 1 0; min-width: 40px; padding: 10px 0; border-radius: 10px;
+      border: 1px solid var(--hairline); background: var(--ink-900); color: var(--fog);
+      font-size: 12px; font-weight: 700; text-align: center;
+    }
+    .wd-chip.on { background: var(--amber); color: var(--ink-950); border-color: var(--amber); }
+    .until-box { display: flex; flex-direction: column; gap: 8px; }
+    .skip-chip {
+      display: inline-block; margin: 3px 6px 0 0; padding: 5px 10px; border-radius: 999px;
+      border: 1px solid var(--hairline); background: var(--ink-900); color: var(--paper); font-size: 12px;
+    }
+    .notice-flash { background: #B00000; top: 12%; z-index: 995; white-space: normal; max-width: calc(100vw - 32px); text-align: center; animation-duration: 2.8s; }
+    .goal-reward-row { margin-top: 6px; display: flex; flex-direction: column; gap: 6px; }
+    .goal-reward-toggle {
+      align-self: flex-start; background: none; border: 1px dashed var(--hairline); color: var(--fog);
+      border-radius: 999px; padding: 5px 12px; font-size: 12px; text-align: left;
+    }
+    .goal-reward-input {
+      width: 100%; box-sizing: border-box; background: var(--ink-900); border: 1px solid var(--hairline);
+      color: var(--paper); border-radius: 9px; padding: 9px 11px; font-size: 13px;
+    }
+    .nudge-item { text-align: left; font-size: 13px; line-height: 1.45; padding: 8px 0; border-top: 1px solid var(--hairline); }
+    .nudge-item b { color: var(--amber); }
+
+
+    /* ---------- Aufbau 90: Training, Ausrede, Sperrgrund ---------- */
+    .train-card { padding: 0; overflow: hidden; }
+    .train-head {
+      width: 100%; display: flex; align-items: center; gap: 10px; background: none; border: none;
+      color: var(--paper); padding: 14px 16px; text-align: left;
+    }
+    .train-title { font-weight: 700; font-size: 16px; }
+    .train-sum { flex: 1; text-align: right; color: var(--fog); font-size: 12px; }
+    .train-body { padding: 0 16px 16px; display: flex; flex-direction: column; gap: 10px; }
+    .train-dots { display: flex; gap: 4px; }
+    .train-dot {
+      flex: 1; text-align: center; font-size: 10px; padding: 6px 0; border-radius: 6px;
+      background: var(--ink-900); color: var(--fog); border: 1px solid var(--hairline);
+    }
+    .train-dot.on { background: var(--amber); color: var(--ink-950); border-color: var(--amber); font-weight: 700; }
+    .train-dot.today { outline: 2px solid var(--paper); outline-offset: 1px; }
+    .train-ex { border: 1px solid var(--hairline); border-radius: 12px; padding: 11px 12px; display: flex; flex-direction: column; gap: 8px; }
+    .train-ex.done { border-color: var(--signal); }
+    .train-ex-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .train-ex-name { font-weight: 700; font-size: 15px; }
+    .train-ex-inputs { display: flex; gap: 8px; align-items: flex-end; }
+    .train-ex-inputs label { display: flex; flex-direction: column; gap: 3px; font-size: 10px; color: var(--fog); text-transform: uppercase; letter-spacing: 0.06em; flex: 1; }
+    .train-in {
+      width: 100%; box-sizing: border-box; background: var(--ink-900); border: 1px solid var(--hairline);
+      color: var(--paper); border-radius: 9px; padding: 10px 8px; font-size: 16px; text-align: center;
+    }
+    .train-ex-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+    .train-btn {
+      background: var(--ink-900); border: 1px solid var(--hairline); color: var(--paper);
+      border-radius: 999px; padding: 8px 12px; font-size: 12px; font-weight: 600;
+    }
+    .train-btn.primary { background: var(--amber); color: var(--ink-950); border-color: var(--amber); margin-left: auto; }
+    .excuse-blocker { position: fixed; inset: 0; z-index: 991; background: rgba(0, 0, 0, 0.55); }
+    .excuse-box { border: 2px solid #E02020 !important; z-index: 992 !important; }
+    .excuse-red { color: #E02020; font-weight: 800; font-size: 15px; line-height: 1.35; margin: 0; }
+    .excuse-area {
+      width: 100%; box-sizing: border-box; min-height: 120px; background: var(--ink-900);
+      border: 1px solid #E02020; color: var(--paper); border-radius: 10px; padding: 11px; font-size: 14px;
+      font-family: inherit; line-height: 1.45; resize: vertical;
+    }
+    .lock-reason-text { font-size: 15px; line-height: 1.5; font-style: italic; color: var(--paper); margin: 4px 0 8px; }
 
     /* ---------- Das Jahr auf einen Blick ---------- */
     .year-strip { margin: 14px 0 10px; }
@@ -16447,15 +16851,23 @@ ${stamp}
     const cycleOver = reflections && todayDate.getFullYear() > reflections.cycleYear;
     const showYearEndBanner = reflections && !reflections.abschluss.completed && (isDecember && reflections.anfangs.completed || cycleOver);
     const isFirstOfMonth = todayDate.getDate() === 1;
-    const showMonthlyGoalBanner = isFirstOfMonth && monthGoalData && !monthGoalData.monthGoal.trim();
+    const showMonthlyGoalBanner = appState.showMonthGoal !== false && isFirstOfMonth && monthGoalData && !monthGoalData.monthGoal.trim();
+    const showMondayBanner = appState.showWeekGoal !== false && appState.onboardingDone && todayDate.getDay() === 1 && !weekLoading && !!weekData && !(weekData.goal || "").trim() && !showWeekRolloverBanner && appState.mondayPromptDismissed !== todayKey && weekMonday === mondayOf(todayKey);
     const showAnfangsPromptBanner = reflections && !reflections.anfangs.completed && !appState.anfangsNeverRemind;
     const yesterdayKey = shiftDays(todayKey, -1);
     const yesterdayEntry = daysData[yesterdayKey];
     const yesterdayChecks = yesterdayEntry && yesterdayEntry.checks || {};
     const usedAppYesterday = !!yesterdayEntry;
     const missedYesterday = usedAppYesterday ? appState.habitTemplate.filter((h) => !yesterdayChecks[h.id]) : [];
-    const showMissedHabitBanner = usedAppYesterday && appState.habitTemplate.length > 0 && missedYesterday.length > 0 && appState.lastMissedBannerDate !== todayKey;
-    const RECURRENCE_LABEL = { daily: "t\xE4glich", weekly: "w\xF6chentlich", monthly: "monatlich", yearly: "j\xE4hrlich" };
+    const showMissedHabitBanner = appState.missedExcuse === false && usedAppYesterday && appState.habitTemplate.length > 0 && missedYesterday.length > 0 && appState.lastMissedBannerDate !== todayKey;
+    const missedForced = appState.missedExcuse !== false && ready && phase === "dashboard" && !!appState.onboardingDone && !(tourStep >= 0 && tourStep < TOUR_STEPS.length) && usedAppYesterday && appState.habitTemplate.length > 0 && missedYesterday.length > 0 && appState.lastMissedBannerDate !== todayKey;
+    const RECURRENCE_LABEL = { daily: "t\xE4glich", weekly: "w\xF6chentlich", weekdays: "an Wochentagen", monthly: "monatlich", yearly: "j\xE4hrlich" };
+    const WD_SHORT = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
+    const recurLabel = (a) => {
+      const base = a.recurrence === "weekdays" ? (a.weekdays || []).slice().sort().map((i) => WD_SHORT[i]).join(" ") : RECURRENCE_LABEL[a.recurrence];
+      return base + (a.until ? ` bis ${fmtDE(a.until).slice(0, 6)}` : "");
+    };
+    const apptEditLocked = !!(apptEdit && apptEdit.lockedUntil && todayKey <= apptEdit.lockedUntil);
     const PRIORITY_ICON = { hoch: "\u{1F534}", mittel: "\u{1F7E1}", niedrig: "\u26AA" };
     const PRIORITY_ORDER = { hoch: 0, mittel: 1, keine: 2, niedrig: 3 };
     const ENERGY_ICON = { niedrig: "\u{1F50B}", mittel: "\u{1F50B}\u{1F50B}", hoch: "\u{1F50B}\u{1F50B}\u{1F50B}" };
@@ -16471,7 +16883,7 @@ ${stamp}
           }
         ), /* @__PURE__ */ import_react.default.createElement("button", { onClick: () => saveEditAppt(dayKey, a) }, "OK"), /* @__PURE__ */ import_react.default.createElement("button", { className: "cancel-add-btn", onClick: () => setEditingApptId(null) }, "Abbrechen")));
       }
-      return /* @__PURE__ */ import_react.default.createElement("div", { className: "appt-row", key: a.id }, /* @__PURE__ */ import_react.default.createElement("span", { className: "appt-time" }, a.isBirthday ? "\u{1F382}" : a.allDay ? "ganzt\xE4gig" : a.time), a.recurring && /* @__PURE__ */ import_react.default.createElement("span", { className: "appt-recur", title: a.recurrence }, "\u{1F501} ", RECURRENCE_LABEL[a.recurrence]), /* @__PURE__ */ import_react.default.createElement("span", { className: "appt-title", onClick: () => startEditAppt(a) }, a.title, a.duration ? /* @__PURE__ */ import_react.default.createElement("span", { className: "appt-duration" }, "(", a.duration, " Min)") : null), /* @__PURE__ */ import_react.default.createElement("button", { className: "appt-edit-btn", onClick: () => startEditAppt(a), "aria-label": `${a.title} bearbeiten` }, "\u270E"), /* @__PURE__ */ import_react.default.createElement("button", { className: "habit-remove", onClick: () => requestRemoveAppointment(dayKey, a), "aria-label": `${a.title} entfernen` }, "\xD7"));
+      return /* @__PURE__ */ import_react.default.createElement("div", { className: "appt-row", key: a.id }, /* @__PURE__ */ import_react.default.createElement("span", { className: "appt-time" }, a.isBirthday ? "\u{1F382}" : a.allDay ? "ganzt\xE4gig" : a.time), a.recurring && /* @__PURE__ */ import_react.default.createElement("span", { className: "appt-recur", title: a.recurrence }, "\u{1F501} ", recurLabel(a)), /* @__PURE__ */ import_react.default.createElement("span", { className: "appt-title", onClick: () => startEditAppt(a) }, a.title, a.duration ? /* @__PURE__ */ import_react.default.createElement("span", { className: "appt-duration" }, "(", a.duration, " Min)") : null), /* @__PURE__ */ import_react.default.createElement("button", { className: "appt-edit-btn", onClick: () => startEditAppt(a), "aria-label": `${a.title} bearbeiten` }, "\u270E"), /* @__PURE__ */ import_react.default.createElement("button", { className: "habit-remove", onClick: () => requestRemoveAppointment(dayKey, a), "aria-label": `${a.title} entfernen` }, "\xD7"));
     };
     return /* @__PURE__ */ import_react.default.createElement("div", { className: "md-root", "data-theme": appState.theme, "data-bg": appState.bgChoice || (appState.theme === "light" ? "creme" : "schwarz"), "data-plain": appState.plainMode ? "true" : "false", "data-font": appState.fontChoice || "elegant", "data-accent": appState.accentChoice || "amber" }, /* @__PURE__ */ import_react.default.createElement("style", null, styles), /* @__PURE__ */ import_react.default.createElement("div", { className: "app-col" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "top-tabs", style: { order: -1001 } }, /* @__PURE__ */ import_react.default.createElement("button", { className: "top-tab" + (activeTab === "daily" ? " active" : ""), onClick: () => setActiveTab("daily") }, "\u2600\uFE0F Daily"), /* @__PURE__ */ import_react.default.createElement("button", { className: "top-tab" + (activeTab === "todos" ? " active" : ""), onClick: () => setActiveTab("todos") }, "\u2705 To-Dos"), appState.showBusiness && /* @__PURE__ */ import_react.default.createElement("button", { className: "top-tab" + (activeTab === "business" ? " active" : ""), onClick: () => setActiveTab("business") }, "\u{1F4BC} Business"), /* @__PURE__ */ import_react.default.createElement("button", { className: "top-tab" + (activeTab === "notizen" ? " active" : ""), onClick: () => setActiveTab("notizen") }, "\u{1F4DD} Notizen")), /* @__PURE__ */ import_react.default.createElement("div", { style: { order: -999 } }, storageWarning && /* @__PURE__ */ import_react.default.createElement("div", { className: "warn-banner" }, "Das Speichern hat gerade nicht funktioniert \u2014 versuche es gleich noch einmal."), activeTab !== "business" && showYearEndBanner && /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-title" }, "\u{1F56F} Jahresende \u2014 Zeit f\xFCr die Abschlussreflexion"), /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-text" }, "Ein Jahr ist fast vorbei. Ein guter Moment zur\xFCckzuschauen, bevor der n\xE4chste Zyklus beginnt \u2014 was hat funktioniert, was nicht?"), /* @__PURE__ */ import_react.default.createElement("button", { className: "prompt-banner-btn", onClick: () => {
       setActiveTab("daily");
@@ -16484,7 +16896,19 @@ ${stamp}
         onChange: (e) => updateMonthlyPlanText(i, e.target.value),
         placeholder: "Wochenziel \u2026"
       }
-    ))), /* @__PURE__ */ import_react.default.createElement("div", { className: "monthly-plan-actions" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "prompt-banner-btn", onClick: saveMonthlyPlan }, "Speichern"), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn cancel", onClick: () => setMonthlyPlanOpen(false) }, "Abbrechen"))), activeTab !== "business" && showAnfangsPromptBanner && !showYearEndBanner && /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-title" }, "\u270D\uFE0F Deine Anfangsreflexion fehlt noch"), /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-text" }, "Sie ist dein Ausgangspunkt f\xFCr dieses Jahr und wird nur einmal pro Zyklus ausgef\xFCllt."), /* @__PURE__ */ import_react.default.createElement("button", { className: "prompt-banner-btn", onClick: openAnfangsReflexion }, "Jetzt ausf\xFCllen"), /* @__PURE__ */ import_react.default.createElement("button", { className: "banner-dismiss-link", onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { anfangsNeverRemind: true })) }, "Nie mehr erinnern")), activeTab === "daily" && showMissedHabitBanner && /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner accountability" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-title" }, appState.userName ? `${appState.userName}, ` : "", "wenn du deine Habits nicht erf\xFCllst, erreichst du deine Ziele nicht."), /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-text" }, "Diese Habits hast du nicht gemacht:"), /* @__PURE__ */ import_react.default.createElement("ul", { className: "missed-goals-list" }, missedYesterday.map((h) => /* @__PURE__ */ import_react.default.createElement("li", { key: h.id }, h.name))), /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-text" }, "Deine Ziele waren doch:"), /* @__PURE__ */ import_react.default.createElement("ul", { className: "missed-goals-list" }, missedYesterday.filter((h) => h.ziel).map((h) => /* @__PURE__ */ import_react.default.createElement("li", { key: h.id }, h.ziel)), monthGoalData && monthGoalData.monthGoal && /* @__PURE__ */ import_react.default.createElement("li", null, monthGoalData.monthGoal), weekData && weekData.goal && /* @__PURE__ */ import_react.default.createElement("li", null, weekData.goal)), /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-text" }, "Mach es. Wieso h\xE4ltst du dich nicht an das, was du dir vorgenommen hast? Fange an durchzuhalten \u2014 ob es dir Spa\xDF macht oder nicht."), /* @__PURE__ */ import_react.default.createElement("button", { className: "prompt-banner-btn", onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { lastMissedBannerDate: todayKey })) }, "Verstanden")), activeTab === "daily" && showWeekRolloverBanner && /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-title" }, "\u{1F4C5} Neue Woche \u2014 neues Wochenziel"), /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-text" }, pendingWeekRollover ? /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, 'Hast du dein Wochenziel erreicht: "', pendingWeekRollover.goal, '"?') : "Was ist dein Fokus diese Woche?"), pendingWeekRollover ? /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("button", { className: "prompt-banner-btn", onClick: () => archiveAndStartNewWeekGoal(true), style: { marginRight: 8 } }, "Ja, erreicht"), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn cancel", onClick: () => archiveAndStartNewWeekGoal(false) }, "Nein")) : /* @__PURE__ */ import_react.default.createElement("button", { className: "prompt-banner-btn", onClick: () => archiveAndStartNewWeekGoal(false) }, "Neues Wochenziel eintragen")), activeTab === "daily" && showMonthRolloverBanner && /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-title" }, "\u{1F3C6} Neuer Monat \u2014 neues Monatsziel"), /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-text" }, pendingMonthRollover ? /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, 'Hast du dein Monatsziel erreicht: "', pendingMonthRollover.goal, '"?') : "Was willst du diesen Monat erreichen?"), pendingMonthRollover ? /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("button", { className: "prompt-banner-btn", onClick: () => archiveAndStartNewMonthGoal(true), style: { marginRight: 8 } }, "Ja, erreicht"), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn cancel", onClick: () => archiveAndStartNewMonthGoal(false) }, "Nein")) : /* @__PURE__ */ import_react.default.createElement("button", { className: "prompt-banner-btn", onClick: () => archiveAndStartNewMonthGoal(false) }, "Neues Monatsziel eintragen"))), /* @__PURE__ */ import_react.default.createElement("div", { className: "topbar", style: { order: -1e3 } }, /* @__PURE__ */ import_react.default.createElement("div", null, /* @__PURE__ */ import_react.default.createElement("div", { className: "eyebrow" }, "Master Your Life"), /* @__PURE__ */ import_react.default.createElement("div", { className: "clock-mini" }, "Aktuelle Zeit ", clock, appState.alarmMode !== "none" ? /* @__PURE__ */ import_react.default.createElement("span", { className: "wecker-click", onClick: () => setShowAlarmSettings(true) }, " \xB7 Wecker ", `${appState.alarmTime} Uhr`) : null)), /* @__PURE__ */ import_react.default.createElement("div", { className: "topbar-gears" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "gear", onClick: () => setShowAlarmSettings((s) => !s), "aria-label": "Wecker-Einstellungen" }, "\u23F0"), /* @__PURE__ */ import_react.default.createElement("button", { className: "gear", onClick: () => setShowSettings((s) => !s), "aria-label": "Einstellungen" }, "\u2699")), showAlarmSettings && /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-pop" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "pop-close", onClick: () => setShowAlarmSettings(false), "aria-label": "Schlie\xDFen" }, "\xD7"), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: -4, marginBottom: 8 } }, "Der Wecker ist das Herzst\xFCck der App. Am besten stellst du ihn so ein, dass er dich wirklich zum Aufstehen bringt, statt dass du ihn im Halbschlaf wegtippst."), /* @__PURE__ */ import_react.default.createElement("label", null, "Wecker-Art"), /* @__PURE__ */ import_react.default.createElement("div", { className: "theme-row", style: { flexWrap: "wrap" } }, /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (alarmModeDraft === "text" ? " active" : ""), onClick: () => setAlarmModeDraft("text") }, "Mit Text"), /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (alarmModeDraft === "notext" ? " active" : ""), onClick: () => setAlarmModeDraft("notext") }, "Ohne Text"), /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (alarmModeDraft === "none" ? " active" : ""), onClick: () => setAlarmModeDraft("none") }, "Kein Wecker")), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: -4 } }, alarmModeDraft === "text" && "Der Wecker geht erst aus, wenn ein Text exakt abgeschrieben ist. Dort hinein kannst du deine Ziele, Affirmationen oder einen Satz schreiben, der dich morgens in die richtige Richtung schiebt \u2014 so liest du das Wichtigste, bevor der Tag beginnt.", alarmModeDraft === "notext" && 'Ein Knopf schaltet den Wecker aus \u2014 einfacher, aber leichter zu "snoozen".', alarmModeDraft === "none" && "Der Wecker ist komplett deaktiviert \u2014 die App weckt dich nicht."), alarmModeDraft !== "none" && /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("label", { style: { marginTop: 10 } }, "Weckzeit"), /* @__PURE__ */ import_react.default.createElement("input", { type: "time", value: alarmTimeDraft, onChange: (e) => setAlarmTimeDraft(e.target.value) })), /* @__PURE__ */ import_react.default.createElement(
+    ))), /* @__PURE__ */ import_react.default.createElement("div", { className: "monthly-plan-actions" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "prompt-banner-btn", onClick: saveMonthlyPlan }, "Speichern"), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn cancel", onClick: () => setMonthlyPlanOpen(false) }, "Abbrechen"))), activeTab !== "business" && showAnfangsPromptBanner && !showYearEndBanner && /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-title" }, "\u270D\uFE0F Deine Anfangsreflexion fehlt noch"), /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-text" }, "Sie ist dein Ausgangspunkt f\xFCr dieses Jahr und wird nur einmal pro Zyklus ausgef\xFCllt."), /* @__PURE__ */ import_react.default.createElement("button", { className: "prompt-banner-btn", onClick: openAnfangsReflexion }, "Jetzt ausf\xFCllen"), /* @__PURE__ */ import_react.default.createElement("button", { className: "banner-dismiss-link", onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { anfangsNeverRemind: true })) }, "Nie mehr erinnern")), activeTab === "daily" && showMissedHabitBanner && /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner accountability" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-title" }, appState.userName ? `${appState.userName}, ` : "", "wenn du deine Habits nicht erf\xFCllst, erreichst du deine Ziele nicht."), /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-text" }, "Diese Habits hast du nicht gemacht:"), /* @__PURE__ */ import_react.default.createElement("ul", { className: "missed-goals-list" }, missedYesterday.map((h) => /* @__PURE__ */ import_react.default.createElement("li", { key: h.id }, h.name))), /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-text" }, "Deine Ziele waren doch:"), /* @__PURE__ */ import_react.default.createElement("ul", { className: "missed-goals-list" }, missedYesterday.filter((h) => h.ziel).map((h) => /* @__PURE__ */ import_react.default.createElement("li", { key: h.id }, h.ziel)), monthGoalData && monthGoalData.monthGoal && /* @__PURE__ */ import_react.default.createElement("li", null, monthGoalData.monthGoal), weekData && weekData.goal && /* @__PURE__ */ import_react.default.createElement("li", null, weekData.goal)), /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-text" }, "Mach es. Wieso h\xE4ltst du dich nicht an das, was du dir vorgenommen hast? Fange an durchzuhalten \u2014 ob es dir Spa\xDF macht oder nicht."), /* @__PURE__ */ import_react.default.createElement("button", { className: "prompt-banner-btn", onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { lastMissedBannerDate: todayKey })) }, "Verstanden")), activeTab === "daily" && showMondayBanner && /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-title" }, "\u{1F3AF} Montag \u2014 neues Wochenziel"), /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-text" }, "Was ist diese Woche dein Fokus? Ein Satz reicht."), /* @__PURE__ */ import_react.default.createElement("button", { className: "prompt-banner-btn", style: { marginRight: 8 }, onClick: () => {
+      setCalView("timeline");
+      setTimeout(() => {
+        try {
+          const el = document.querySelector(".timeline-week-goal .mini-input");
+          if (el) {
+            el.scrollIntoView({ behavior: "smooth", block: "center" });
+            el.focus();
+          }
+        } catch (err) {
+        }
+      }, 120);
+    } }, "Wochenziel eintragen"), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn cancel", onClick: () => saveAppState({ ...appState, mondayPromptDismissed: todayKey }) }, "Sp\xE4ter")), activeTab === "daily" && appState.showWeekGoal !== false && showWeekRolloverBanner && /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-title" }, "\u{1F4C5} Neue Woche \u2014 neues Wochenziel"), /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-text" }, pendingWeekRollover ? /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, 'Hast du dein Wochenziel erreicht: "', pendingWeekRollover.goal, '"?', pendingWeekRollover.punishment ? " Wenn nicht: " + pendingWeekRollover.punishment : "") : "Was ist dein Fokus diese Woche?"), pendingWeekRollover ? /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("button", { className: "prompt-banner-btn", onClick: () => archiveAndStartNewWeekGoal(true), style: { marginRight: 8 } }, "Ja, erreicht"), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn cancel", onClick: () => archiveAndStartNewWeekGoal(false) }, "Nein")) : /* @__PURE__ */ import_react.default.createElement("button", { className: "prompt-banner-btn", onClick: () => archiveAndStartNewWeekGoal(false) }, "Neues Wochenziel eintragen")), activeTab === "daily" && appState.showMonthGoal !== false && showMonthRolloverBanner && /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-title" }, "\u{1F3C6} Neuer Monat \u2014 neues Monatsziel"), /* @__PURE__ */ import_react.default.createElement("div", { className: "prompt-banner-text" }, pendingMonthRollover ? /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, 'Hast du dein Monatsziel erreicht: "', pendingMonthRollover.goal, '"?', pendingMonthRollover.punishment ? " Wenn nicht: " + pendingMonthRollover.punishment : "") : "Was willst du diesen Monat erreichen?"), pendingMonthRollover ? /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("button", { className: "prompt-banner-btn", onClick: () => archiveAndStartNewMonthGoal(true), style: { marginRight: 8 } }, "Ja, erreicht"), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn cancel", onClick: () => archiveAndStartNewMonthGoal(false) }, "Nein")) : /* @__PURE__ */ import_react.default.createElement("button", { className: "prompt-banner-btn", onClick: () => archiveAndStartNewMonthGoal(false) }, "Neues Monatsziel eintragen"))), /* @__PURE__ */ import_react.default.createElement("div", { className: "topbar", style: { order: -1e3 } }, /* @__PURE__ */ import_react.default.createElement("div", null, /* @__PURE__ */ import_react.default.createElement("div", { className: "eyebrow" }, "Master Your Life"), /* @__PURE__ */ import_react.default.createElement("div", { className: "clock-mini" }, "Aktuelle Zeit ", clock, appState.alarmMode !== "none" ? /* @__PURE__ */ import_react.default.createElement("span", { className: "wecker-click", onClick: () => setShowAlarmSettings(true) }, " \xB7 Wecker ", `${appState.alarmTime} Uhr`) : null)), /* @__PURE__ */ import_react.default.createElement("div", { className: "topbar-gears" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "gear", onClick: () => setShowAlarmSettings((s) => !s), "aria-label": "Wecker-Einstellungen" }, "\u23F0"), /* @__PURE__ */ import_react.default.createElement("button", { className: "gear", onClick: () => setShowSettings((s) => !s), "aria-label": "Einstellungen" }, "\u2699")), showAlarmSettings && /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-pop" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "pop-close", onClick: () => setShowAlarmSettings(false), "aria-label": "Schlie\xDFen" }, "\xD7"), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: -4, marginBottom: 8 } }, "Der Wecker ist das Herzst\xFCck der App. Am besten stellst du ihn so ein, dass er dich wirklich zum Aufstehen bringt, statt dass du ihn im Halbschlaf wegtippst."), /* @__PURE__ */ import_react.default.createElement("label", null, "Wecker-Art"), /* @__PURE__ */ import_react.default.createElement("div", { className: "theme-row", style: { flexWrap: "wrap" } }, /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (alarmModeDraft === "text" ? " active" : ""), onClick: () => setAlarmModeDraft("text") }, "Mit Text"), /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (alarmModeDraft === "notext" ? " active" : ""), onClick: () => setAlarmModeDraft("notext") }, "Ohne Text"), /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (alarmModeDraft === "none" ? " active" : ""), onClick: () => setAlarmModeDraft("none") }, "Kein Wecker")), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: -4 } }, alarmModeDraft === "text" && "Der Wecker geht erst aus, wenn ein Text exakt abgeschrieben ist. Dort hinein kannst du deine Ziele, Affirmationen oder einen Satz schreiben, der dich morgens in die richtige Richtung schiebt \u2014 so liest du das Wichtigste, bevor der Tag beginnt.", alarmModeDraft === "notext" && 'Ein Knopf schaltet den Wecker aus \u2014 einfacher, aber leichter zu "snoozen".', alarmModeDraft === "none" && "Der Wecker ist komplett deaktiviert \u2014 die App weckt dich nicht."), alarmModeDraft !== "none" && /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("label", { style: { marginTop: 10 } }, "Weckzeit"), /* @__PURE__ */ import_react.default.createElement("input", { type: "time", value: alarmTimeDraft, onChange: (e) => setAlarmTimeDraft(e.target.value) })), /* @__PURE__ */ import_react.default.createElement(
       "button",
       {
         className: "save-btn" + (savedFlash === "alarm" ? " saved" : ""),
@@ -16509,7 +16933,7 @@ ${stamp}
       setTourPaused(false);
       setActiveTab(TOUR_STEPS[0].tab);
       setTourStep(0);
-    }, style: { marginTop: 6 } }, "\u{1F9ED} Tour nochmal starten"), /* @__PURE__ */ import_react.default.createElement("label", { style: { marginTop: 12 } }, "Tage des Jahres beim Monatsziel"), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: -2, marginBottom: 6 } }, "Die Punktereihe mit \u201eTag 210 von 365\u201c \xFCber dem Jahresziel."), /* @__PURE__ */ import_react.default.createElement("div", { className: "theme-row" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (appState.showYearStrip !== false ? " active" : ""), onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { showYearStrip: true })) }, "Anzeigen"), /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (appState.showYearStrip === false ? " active" : ""), onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { showYearStrip: false })) }, "Ausblenden")), /* @__PURE__ */ import_react.default.createElement("label", { style: { marginTop: 12 } }, "Daten sichern"), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: -2, marginBottom: 6 } }, "Speichert alles \u2014 Ziele, Termine, Habits, To-Dos, Notizen und Reflexionen \u2014 in eine Datei. Vor jedem Ger\xE4tewechsel oder neuer Installation zu empfehlen."), /* @__PURE__ */ import_react.default.createElement("button", { className: "test-btn", onClick: exportAllData }, "\u{1F4BE} Sicherung herunterladen"), /* @__PURE__ */ import_react.default.createElement("label", { className: "test-btn", style: { marginTop: 6, display: "block", textAlign: "center", cursor: "pointer" } }, "\u{1F4C2} Sicherung einspielen", /* @__PURE__ */ import_react.default.createElement("input", { type: "file", accept: "application/json,.json", onChange: importAllData, style: { display: "none" } })), /* @__PURE__ */ import_react.default.createElement("label", { style: { marginTop: 12 } }, "Beim \xD6ffnen springen zu"), /* @__PURE__ */ import_react.default.createElement("div", { className: "theme-row", style: { flexWrap: "wrap" } }, [["none", "Nichts"], ["monthGoal", "Monatsziel"], ["yearGoal", "Jahresziel"], ["weekGoal", "Wochenziel"], ["calendar", "Kalender"]].map(([id, label]) => /* @__PURE__ */ import_react.default.createElement("button", { key: id, className: "theme-btn" + ((appState.startSection || "none") === id ? " active" : ""), onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { startSection: id })) }, label))), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: -2 } }, "Bei \u201eNichts\u201c bleibt die App oben stehen, wo du sie verlassen hast."), /* @__PURE__ */ import_react.default.createElement("label", { style: { marginTop: 12 } }, "Mehrere Ziele je Zeitraum"), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: -2, marginBottom: 6 } }, "Normalerweise ein Ziel pro Jahr, Monat und Woche \u2014 das h\xE4lt den Fokus. Wer mehr braucht, schaltet es hier frei."), /* @__PURE__ */ import_react.default.createElement("div", { className: "theme-row" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (appState.multiGoals ? " active" : ""), onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { multiGoals: true })) }, "Erlauben"), /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (!appState.multiGoals ? " active" : ""), onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { multiGoals: false })) }, "Nur ein Ziel")), /* @__PURE__ */ import_react.default.createElement("label", { style: { marginTop: 12 } }, "Symbole in \xDCberschriften"), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: -2, marginBottom: 6 } }, "Tippe ein eigenes Emoji ein oder leere das Feld, wenn du keins willst."), /* @__PURE__ */ import_react.default.createElement("div", { className: "sec-icon-grid" }, [["month", "Monatsziel"], ["today", "Heute geplant"], ["todos", "To-Dos"], ["business", "Business"]].map(([key, label]) => /* @__PURE__ */ import_react.default.createElement("div", { key, className: "sec-icon-row" }, /* @__PURE__ */ import_react.default.createElement("input", { className: "sec-icon-input", maxLength: 2, value: (appState.sectionIcons || {})[key] || "", onChange: (e) => saveAppState(__spreadProps(__spreadValues({}, appState), { sectionIcons: __spreadProps(__spreadValues({}, appState.sectionIcons || {}), { [key]: e.target.value }) })), "aria-label": label }), /* @__PURE__ */ import_react.default.createElement("span", null, label)))), /* @__PURE__ */ import_react.default.createElement("label", { style: { marginTop: 12 } }, "Business-Bereich"), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: -2, marginBottom: 6 } }, "Umsatz, Kosten und Steuer-Orientierung \u2014 vor allem f\xFCr Selbstst\xE4ndige. Als eigener Reiter oben."), /* @__PURE__ */ import_react.default.createElement("div", { className: "theme-row" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (appState.showBusiness ? " active" : ""), onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { showBusiness: true })) }, "Anzeigen"), /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (!appState.showBusiness ? " active" : ""), onClick: () => {
+    }, style: { marginTop: 6 } }, "\u{1F9ED} Tour nochmal starten"), /* @__PURE__ */ import_react.default.createElement("label", { style: { marginTop: 12 } }, "Tage des Jahres beim Monatsziel"), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: -2, marginBottom: 6 } }, "Die Punktereihe mit \u201eTag 210 von 365\u201c \xFCber dem Jahresziel."), /* @__PURE__ */ import_react.default.createElement("div", { className: "theme-row" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (appState.showYearStrip !== false ? " active" : ""), onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { showYearStrip: true })) }, "Anzeigen"), /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (appState.showYearStrip === false ? " active" : ""), onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { showYearStrip: false })) }, "Ausblenden")), /* @__PURE__ */ import_react.default.createElement("label", { style: { marginTop: 12 } }, "Daten sichern"), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: -2, marginBottom: 6 } }, "Speichert alles \u2014 Ziele, Termine, Habits, To-Dos, Notizen und Reflexionen \u2014 in eine Datei. Vor jedem Ger\xE4tewechsel oder neuer Installation zu empfehlen."), /* @__PURE__ */ import_react.default.createElement("button", { className: "test-btn", onClick: exportAllData }, "\u{1F4BE} Sicherung herunterladen"), /* @__PURE__ */ import_react.default.createElement("label", { className: "test-btn", style: { marginTop: 6, display: "block", textAlign: "center", cursor: "pointer" } }, "\u{1F4C2} Sicherung einspielen", /* @__PURE__ */ import_react.default.createElement("input", { type: "file", accept: "application/json,.json", onChange: importAllData, style: { display: "none" } })), /* @__PURE__ */ import_react.default.createElement("label", { style: { marginTop: 12 } }, "Beim \xD6ffnen springen zu"), /* @__PURE__ */ import_react.default.createElement("div", { className: "theme-row", style: { flexWrap: "wrap" } }, [["none", "Nichts"], ["monthGoal", "Monatsziel"], ["yearGoal", "Jahresziel"], ["weekGoal", "Wochenziel"], ["calendar", "Kalender"]].map(([id, label]) => /* @__PURE__ */ import_react.default.createElement("button", { key: id, className: "theme-btn" + ((appState.startSection || "none") === id ? " active" : ""), onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { startSection: id })) }, label))), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: -2 } }, "Bei \u201eNichts\u201c bleibt die App oben stehen, wo du sie verlassen hast."), /* @__PURE__ */ import_react.default.createElement("label", { style: { marginTop: 12 } }, "Mehrere Ziele je Zeitraum"), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: -2, marginBottom: 6 } }, "Normalerweise ein Ziel pro Jahr, Monat und Woche \u2014 das h\xE4lt den Fokus. Wer mehr braucht, schaltet es hier frei."), /* @__PURE__ */ import_react.default.createElement("div", { className: "theme-row" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (appState.multiGoals ? " active" : ""), onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { multiGoals: true })) }, "Erlauben"), /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (!appState.multiGoals ? " active" : ""), onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { multiGoals: false })) }, "Nur ein Ziel")), /* @__PURE__ */ import_react.default.createElement("label", { style: { marginTop: 12 } }, "Wochenziel"), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: -2, marginBottom: 6 } }, "Jeden Montag fragt die App nach einem neuen Wochenziel. Wer das nicht braucht, schaltet es aus."), /* @__PURE__ */ import_react.default.createElement("div", { className: "theme-row" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (appState.showWeekGoal !== false ? " active" : ""), onClick: () => saveAppState({ ...appState, showWeekGoal: true }) }, "An"), /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (appState.showWeekGoal === false ? " active" : ""), onClick: () => saveAppState({ ...appState, showWeekGoal: false }) }, "Aus")), /* @__PURE__ */ import_react.default.createElement("label", { style: { marginTop: 12 } }, "Monatsziel"), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: -2, marginBottom: 6 } }, "Optional \u2014 ausgeschaltet verschwinden Monatsziel und die Monats-Erinnerung."), /* @__PURE__ */ import_react.default.createElement("div", { className: "theme-row" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (appState.showMonthGoal !== false ? " active" : ""), onClick: () => saveAppState({ ...appState, showMonthGoal: true }) }, "An"), /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (appState.showMonthGoal === false ? " active" : ""), onClick: () => saveAppState({ ...appState, showMonthGoal: false }) }, "Aus")), /* @__PURE__ */ import_react.default.createElement("label", { style: { marginTop: 12 } }, "Belohnung & Strafe"), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: -2, marginBottom: 6 } }, "Unter jedem Ziel kannst du eine Belohnung und eine Strafe festlegen."), /* @__PURE__ */ import_react.default.createElement("div", { className: "theme-row" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (appState.showRewards !== false ? " active" : ""), onClick: () => saveAppState({ ...appState, showRewards: true }) }, "An"), /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (appState.showRewards === false ? " active" : ""), onClick: () => saveAppState({ ...appState, showRewards: false }) }, "Aus")), /* @__PURE__ */ import_react.default.createElement("label", { style: { marginTop: 12 } }, "Hinweis beim \xD6ffnen"), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: -2, marginBottom: 6 } }, "Wenn der Wecker aus ist, erinnert dich die App beim \xD6ffnen an deine KPIs und Termine."), /* @__PURE__ */ import_react.default.createElement("div", { className: "theme-row" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (appState.openNudge !== false ? " active" : ""), onClick: () => saveAppState({ ...appState, openNudge: true }) }, "An"), /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (appState.openNudge === false ? " active" : ""), onClick: () => saveAppState({ ...appState, openNudge: false }) }, "Aus")), /* @__PURE__ */ import_react.default.createElement("label", { style: { marginTop: 12 } }, "Training"), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: -2, marginBottom: 6 } }, "Optionales Feld ganz oben: \xDCbungen mit S\xE4tzen und Wiederholungen, die App merkt sich deine Trainingstage."), /* @__PURE__ */ import_react.default.createElement("div", { className: "theme-row" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (!!appState.showTraining ? " active" : ""), onClick: () => saveAppState({ ...appState, showTraining: true }) }, "An"), /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (!appState.showTraining ? " active" : ""), onClick: () => saveAppState({ ...appState, showTraining: false }) }, "Aus")), /* @__PURE__ */ import_react.default.createElement("label", { style: { marginTop: 12 } }, "Pflicht-Begr\xFCndung bei verpassten KPIs"), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: -2, marginBottom: 6 } }, "Hast du gestern deine KPIs nicht gemacht, musst du in mindestens 10 Worten begr\xFCnden, warum \u2014 und was du beim n\xE4chsten Mal anders machst."), /* @__PURE__ */ import_react.default.createElement("div", { className: "theme-row" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (appState.missedExcuse !== false ? " active" : ""), onClick: () => saveAppState({ ...appState, missedExcuse: true }) }, "An"), /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (appState.missedExcuse === false ? " active" : ""), onClick: () => saveAppState({ ...appState, missedExcuse: false }) }, "Aus")), /* @__PURE__ */ import_react.default.createElement("label", { style: { marginTop: 12 } }, "Symbole in \xDCberschriften"), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: -2, marginBottom: 6 } }, "Tippe ein eigenes Emoji ein oder leere das Feld, wenn du keins willst."), /* @__PURE__ */ import_react.default.createElement("div", { className: "sec-icon-grid" }, [["month", "Monatsziel"], ["today", "Heute geplant"], ["todos", "To-Dos"], ["business", "Business"]].map(([key, label]) => /* @__PURE__ */ import_react.default.createElement("div", { key, className: "sec-icon-row" }, /* @__PURE__ */ import_react.default.createElement("input", { className: "sec-icon-input", maxLength: 2, value: (appState.sectionIcons || {})[key] || "", onChange: (e) => saveAppState(__spreadProps(__spreadValues({}, appState), { sectionIcons: __spreadProps(__spreadValues({}, appState.sectionIcons || {}), { [key]: e.target.value }) })), "aria-label": label }), /* @__PURE__ */ import_react.default.createElement("span", null, label)))), /* @__PURE__ */ import_react.default.createElement("label", { style: { marginTop: 12 } }, "Business-Bereich"), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: -2, marginBottom: 6 } }, "Umsatz, Kosten und Steuer-Orientierung \u2014 vor allem f\xFCr Selbstst\xE4ndige. Als eigener Reiter oben."), /* @__PURE__ */ import_react.default.createElement("div", { className: "theme-row" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (appState.showBusiness ? " active" : ""), onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { showBusiness: true })) }, "Anzeigen"), /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (!appState.showBusiness ? " active" : ""), onClick: () => {
       if (activeTab === "business") setActiveTab("daily");
       saveAppState(__spreadProps(__spreadValues({}, appState), { showBusiness: false }));
     } }, "Ausblenden")), /* @__PURE__ */ import_react.default.createElement("button", { className: "test-btn", onClick: () => {
@@ -16519,16 +16943,16 @@ ${stamp}
       const todaysPriorities = prioritiesFor(todayKey);
       const hasAny = todaysPriorities.some((p) => p.text.trim());
       if (!hasAny) return null;
-      return /* @__PURE__ */ import_react.default.createElement("div", { className: "section", style: { order: -998 } }, /* @__PURE__ */ import_react.default.createElement("div", { className: "section-move-row" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "section-title", style: { marginBottom: 0 } }, `${secIcon("today")}Heute geplant`), /* @__PURE__ */ import_react.default.createElement("button", { className: "tiny-archive-link", style: { marginTop: 0 }, onClick: () => {
+      return /* @__PURE__ */ import_react.default.createElement("div", { className: "section", style: { order: -998 } }, /* @__PURE__ */ import_react.default.createElement("div", { className: "section-move-row" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "section-title", style: { marginBottom: 0 } }, `${secIcon("today")}Heute geplant`), /* @__PURE__ */ import_react.default.createElement("button", { className: "tiny-archive-link", style: { marginTop: 0 }, onClick: () => askConfirm("Alle Priorit\xE4ten von heute wirklich l\xF6schen?", () => {
         const days = __spreadValues({}, daysData);
         const existing = days[todayKey] || { checks: {} };
         const priorities = todaysPriorities.map((p) => __spreadProps(__spreadValues({}, p), { text: "" }));
         days[todayKey] = __spreadProps(__spreadValues({}, existing), { priorities });
         saveDaysData(days);
-      } }, "Alle l\xF6schen")), todaysPriorities.map(
-        (p, i) => p.text.trim() ? /* @__PURE__ */ import_react.default.createElement("div", { className: "goal-row", key: i, style: { marginBottom: 8 } }, /* @__PURE__ */ import_react.default.createElement("button", { className: "goal-toggle" + (p.done ? " done" : ""), onClick: () => togglePriorityDone(todayKey, i), "aria-label": `Priorit\xE4t ${i + 1} erledigt umschalten` }, p.done ? "\u2713" : ""), /* @__PURE__ */ import_react.default.createElement("span", { className: "priority-text" + (p.done ? " done" : "") }, p.text), /* @__PURE__ */ import_react.default.createElement("button", { className: "habit-remove", onClick: () => updatePriority(todayKey, i, ""), "aria-label": `Priorit\xE4t ${i + 1} l\xF6schen` }, "\xD7")) : null
+      }) }, "Alle l\xF6schen")), todaysPriorities.map(
+        (p, i) => p.text.trim() ? /* @__PURE__ */ import_react.default.createElement("div", { className: "goal-row", key: i, style: { marginBottom: 8 } }, /* @__PURE__ */ import_react.default.createElement("button", { className: "goal-toggle" + (p.done ? " done" : ""), onClick: () => togglePriorityDone(todayKey, i), "aria-label": `Priorit\xE4t ${i + 1} erledigt umschalten` }, p.done ? "\u2713" : ""), /* @__PURE__ */ import_react.default.createElement("span", { className: "priority-text" + (p.done ? " done" : "") }, p.text), /* @__PURE__ */ import_react.default.createElement("button", { className: "habit-remove", onClick: () => askConfirm("Diese Priorit\xE4t wirklich l\xF6schen?", () => updatePriority(todayKey, i, "")), "aria-label": `Priorit\xE4t ${i + 1} l\xF6schen` }, "\xD7")) : null
       ));
-    })(), activeTab === "daily" && /* @__PURE__ */ import_react.default.createElement("div", { className: "reorder-block", style: { order: appState.sectionOrder.indexOf("monthGoal") } }, /* @__PURE__ */ import_react.default.createElement("div", { "data-tour": "monatsziel", className: "section month-hero" + (calView === "timeline" ? " merged-bottom" : "") }, /* @__PURE__ */ import_react.default.createElement("div", { className: "section-move-row" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "month-hero-title" }, `${secIcon("month")}Monatsziel`), /* @__PURE__ */ import_react.default.createElement("div", __spreadValues({ className: "move-btns drag-handle" + (draggingId === "monthGoal" ? " dragging" : "") }, makeDragHandlers("monthGoal", moveSection)), /* @__PURE__ */ import_react.default.createElement("span", { className: "drag-dots" }, "\u283F"))), /* @__PURE__ */ import_react.default.createElement("div", { className: "goal-row" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "goal-toggle big" + (monthGoalData && monthGoalData.monthDone ? " done" : ""), onClick: toggleMonthDone, "aria-label": "Monatsziel erledigt umschalten" }, monthGoalData && monthGoalData.monthDone ? "\u2713" : ""), /* @__PURE__ */ import_react.default.createElement(
+    })(), activeTab === "daily" && appState.showTraining && /* @__PURE__ */ import_react.default.createElement("div", { style: { order: -997 } }, renderTraining()), activeTab === "daily" && /* @__PURE__ */ import_react.default.createElement("div", { className: "reorder-block", style: { order: appState.sectionOrder.indexOf("monthGoal") } }, /* @__PURE__ */ import_react.default.createElement("div", { "data-tour": "monatsziel", className: "section month-hero" + (calView === "timeline" ? " merged-bottom" : "") }, /* @__PURE__ */ import_react.default.createElement("div", { className: "section-move-row" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "month-hero-title" }, appState.showMonthGoal !== false ? `${secIcon("month")}Monatsziel` : "Meine Ziele"), /* @__PURE__ */ import_react.default.createElement("div", __spreadValues({ className: "move-btns drag-handle" + (draggingId === "monthGoal" ? " dragging" : "") }, makeDragHandlers("monthGoal", moveSection)), /* @__PURE__ */ import_react.default.createElement("span", { className: "drag-dots" }, "\u283F"))), appState.showMonthGoal !== false && /* @__PURE__ */ import_react.default.createElement("div", { className: "goal-row" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "goal-toggle big" + (monthGoalData && monthGoalData.monthDone ? " done" : ""), onClick: toggleMonthDone, "aria-label": "Monatsziel erledigt umschalten" }, monthGoalData && monthGoalData.monthDone ? "\u2713" : ""), /* @__PURE__ */ import_react.default.createElement(
       "textarea",
       {
         className: "month-hero-input" + (monthGoalData && monthGoalData.monthDone ? " done" : ""),
@@ -16538,7 +16962,7 @@ ${stamp}
         disabled: monthGoalLoading,
         rows: 2
       }
-    )), /* @__PURE__ */ import_react.default.createElement("div", { className: "goal-sub" }, MONTH_NAMES[selMonthIdx], " ", selYear), /* @__PURE__ */ import_react.default.createElement("div", { className: "goal-hierarchy" }, renderExtraGoals(monthGoalData, saveMonthGoal, "Weiteres Monatsziel", MONTH_CHEERS)), /* @__PURE__ */ import_react.default.createElement("div", { className: "goal-hierarchy" }, appState.showYearGoal && appState.showYearStrip !== false && (() => {
+    )), appState.showMonthGoal !== false && /* @__PURE__ */ import_react.default.createElement("div", { className: "goal-sub" }, MONTH_NAMES[selMonthIdx], " ", selYear), appState.showMonthGoal !== false && renderRewardRow("month", monthGoalData, saveMonthGoal), appState.showMonthGoal !== false && /* @__PURE__ */ import_react.default.createElement("div", { className: "goal-hierarchy" }, renderExtraGoals(monthGoalData, saveMonthGoal, "Weiteres Monatsziel", MONTH_CHEERS)), /* @__PURE__ */ import_react.default.createElement("div", { className: "goal-hierarchy" }, appState.showYearGoal && appState.showYearStrip !== false && (() => {
       const d = appState.testDateOverride ? new Date(appState.testDateOverride) : /* @__PURE__ */ new Date();
       const y = d.getFullYear();
       const start = new Date(y, 0, 1);
@@ -16560,10 +16984,10 @@ ${stamp}
         onChange: (e) => updateYearGoalText(e.target.value),
         placeholder: "Dein Ziel f\xFCr dieses Jahr"
       }
-    ), /* @__PURE__ */ import_react.default.createElement("button", { className: "hierarchy-hide", onClick: () => {
+    ), /* @__PURE__ */ import_react.default.createElement("button", { className: "hierarchy-hide", onClick: () => askConfirm("Das Jahresziel wirklich l\xF6schen?", () => {
       saveAppState(__spreadProps(__spreadValues({}, appState), { showYearGoal: false }));
       saveYearGoal({ goal: "", done: false });
-    }, "aria-label": "Jahresziel l\xF6schen" }, "\xD7")), appState.showYearGoal && renderExtraGoals(yearGoalData, saveYearGoal, "Weiteres Jahresziel", YEAR_CHEERS), !appState.showYearGoal && /* @__PURE__ */ import_react.default.createElement("button", { className: "hierarchy-add", onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { showYearGoal: true })), "aria-label": "Jahresziel hinzuf\xFCgen" }, "+ Jahresziel"), appState.showQuartalGoal && /* @__PURE__ */ import_react.default.createElement("div", { className: "mini-goal-row hierarchy-row" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "mini-check" + (quartalGoalData && quartalGoalData.done ? " checked" : ""), onClick: toggleQuartalGoalDone, "aria-label": "Quartalsziel erledigt umschalten" }, quartalGoalData && quartalGoalData.done ? "\u2713" : ""), /* @__PURE__ */ import_react.default.createElement("span", { className: "mini-label" }, "Q", Math.floor(selMonthIdx / 3) + 1, ":"), /* @__PURE__ */ import_react.default.createElement(
+    }), "aria-label": "Jahresziel l\xF6schen" }, "\xD7")), appState.showYearGoal && renderRewardRow("year", yearGoalData, saveYearGoal), appState.showYearGoal && renderExtraGoals(yearGoalData, saveYearGoal, "Weiteres Jahresziel", YEAR_CHEERS), !appState.showYearGoal && /* @__PURE__ */ import_react.default.createElement("button", { className: "hierarchy-add", onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { showYearGoal: true })), "aria-label": "Jahresziel hinzuf\xFCgen" }, "+ Jahresziel"), appState.showQuartalGoal && /* @__PURE__ */ import_react.default.createElement("div", { className: "mini-goal-row hierarchy-row" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "mini-check" + (quartalGoalData && quartalGoalData.done ? " checked" : ""), onClick: toggleQuartalGoalDone, "aria-label": "Quartalsziel erledigt umschalten" }, quartalGoalData && quartalGoalData.done ? "\u2713" : ""), /* @__PURE__ */ import_react.default.createElement("span", { className: "mini-label" }, "Q", Math.floor(selMonthIdx / 3) + 1, ":"), /* @__PURE__ */ import_react.default.createElement(
       "input",
       {
         className: "mini-input" + (quartalGoalData && quartalGoalData.done ? " done" : ""),
@@ -16571,10 +16995,10 @@ ${stamp}
         onChange: (e) => updateQuartalGoalText(e.target.value),
         placeholder: "Worauf kommt es in diesen drei Monaten an?"
       }
-    ), /* @__PURE__ */ import_react.default.createElement("button", { className: "hierarchy-hide", onClick: () => {
+    ), /* @__PURE__ */ import_react.default.createElement("button", { className: "hierarchy-hide", onClick: () => askConfirm("Das Quartalsziel wirklich l\xF6schen?", () => {
       saveAppState(__spreadProps(__spreadValues({}, appState), { showQuartalGoal: false }));
       saveQuartalGoal({ goal: "", done: false });
-    }, "aria-label": "Quartalsziel l\xF6schen" }, "\xD7")), !appState.showQuartalGoal && /* @__PURE__ */ import_react.default.createElement("button", { className: "hierarchy-add", onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { showQuartalGoal: true })), "aria-label": "Quartalsziel hinzuf\xFCgen" }, "+ Quartalsziel")), (monthGoalArchive.length > 0 || weekGoalArchive.length > 0) && /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("button", { className: "tiny-archive-link", onClick: () => setShowGoalArchive((v) => !v) }, showGoalArchive ? "\u25BE" : "\u25B8", " vergangene Ziele"), showGoalArchive && /* @__PURE__ */ import_react.default.createElement("div", { className: "goal-archive" }, monthGoalArchive.slice().reverse().map((m, i) => /* @__PURE__ */ import_react.default.createElement("div", { key: "m" + i, className: "archive-line" }, m.done ? "\u2713" : "\u2717", " ", /* @__PURE__ */ import_react.default.createElement("strong", null, m.monthKey), ": ", m.goal)), weekGoalArchive.slice().reverse().map((w, i) => /* @__PURE__ */ import_react.default.createElement("div", { key: "w" + i, className: "archive-line" }, w.done ? "\u2713" : "\u2717", " ", /* @__PURE__ */ import_react.default.createElement("strong", null, "Woche ", w.weekMonday), ": ", w.goal)))))), activeTab === "daily" && /* @__PURE__ */ import_react.default.createElement("div", { className: "reorder-block", style: { order: -999 } }, reflections && /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("div", { className: "collapse-header-row" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "collapse-header", style: { flex: 1 }, onClick: () => setShowAnfangsReflexion((v) => !v) }, /* @__PURE__ */ import_react.default.createElement("span", { className: "collapse-arrow" + (showAnfangsReflexion ? " open" : "") }, "\u25B8"), /* @__PURE__ */ import_react.default.createElement("span", { className: "collapse-title" }, "Anfangsreflexion"))), showAnfangsReflexion && /* @__PURE__ */ import_react.default.createElement("div", { "data-section": "anfangs", "data-tour": "anfangs", className: "section reflection-box" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "reflect-label" }, "So zufrieden bin ich in diesen Bereichen (1\u20135):"), /* @__PURE__ */ import_react.default.createElement("div", { className: "rating-grid" }, LIFE_AREAS.map((area) => /* @__PURE__ */ import_react.default.createElement("div", { className: "rating-row", key: area }, /* @__PURE__ */ import_react.default.createElement("span", { className: "rating-area" }, area), /* @__PURE__ */ import_react.default.createElement(
+    }), "aria-label": "Quartalsziel l\xF6schen" }, "\xD7")), appState.showQuartalGoal && renderRewardRow("quartal", quartalGoalData, saveQuartalGoal), !appState.showQuartalGoal && /* @__PURE__ */ import_react.default.createElement("button", { className: "hierarchy-add", onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { showQuartalGoal: true })), "aria-label": "Quartalsziel hinzuf\xFCgen" }, "+ Quartalsziel")), (monthGoalArchive.length > 0 || weekGoalArchive.length > 0) && /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("button", { className: "tiny-archive-link", onClick: () => setShowGoalArchive((v) => !v) }, showGoalArchive ? "\u25BE" : "\u25B8", " vergangene Ziele"), showGoalArchive && /* @__PURE__ */ import_react.default.createElement("div", { className: "goal-archive" }, monthGoalArchive.slice().reverse().map((m, i) => /* @__PURE__ */ import_react.default.createElement("div", { key: "m" + i, className: "archive-line" }, m.done ? "\u2713" : "\u2717", " ", /* @__PURE__ */ import_react.default.createElement("strong", null, m.monthKey), ": ", m.goal)), weekGoalArchive.slice().reverse().map((w, i) => /* @__PURE__ */ import_react.default.createElement("div", { key: "w" + i, className: "archive-line" }, w.done ? "\u2713" : "\u2717", " ", /* @__PURE__ */ import_react.default.createElement("strong", null, "Woche ", w.weekMonday), ": ", w.goal)))))), activeTab === "daily" && /* @__PURE__ */ import_react.default.createElement("div", { className: "reorder-block", style: { order: -999 } }, reflections && /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("div", { className: "collapse-header-row" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "collapse-header", style: { flex: 1 }, onClick: () => setShowAnfangsReflexion((v) => !v) }, /* @__PURE__ */ import_react.default.createElement("span", { className: "collapse-arrow" + (showAnfangsReflexion ? " open" : "") }, "\u25B8"), /* @__PURE__ */ import_react.default.createElement("span", { className: "collapse-title" }, "Anfangsreflexion"))), showAnfangsReflexion && /* @__PURE__ */ import_react.default.createElement("div", { "data-section": "anfangs", "data-tour": "anfangs", className: "section reflection-box" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "reflect-label" }, "So zufrieden bin ich in diesen Bereichen (1\u20135):"), /* @__PURE__ */ import_react.default.createElement("div", { className: "rating-grid" }, LIFE_AREAS.map((area) => /* @__PURE__ */ import_react.default.createElement("div", { className: "rating-row", key: area }, /* @__PURE__ */ import_react.default.createElement("span", { className: "rating-area" }, area), /* @__PURE__ */ import_react.default.createElement(
       "input",
       {
         type: "number",
@@ -16799,7 +17223,7 @@ ${stamp}
           }
         ), employment === "selbstaendig" && /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("label", null, "Wie viel verdienst du ungef\xE4hr im Jahr?"), /* @__PURE__ */ import_react.default.createElement("div", { className: "income-row", style: { marginBottom: 12 } }, /* @__PURE__ */ import_react.default.createElement("span", { className: "income-label" }, "Gesch\xE4tzter Jahresumsatz"), /* @__PURE__ */ import_react.default.createElement("input", { className: "income-input", type: "number", value: pvData ? pvData.estYearRevenue : "", onChange: (e) => updatePvField("estYearRevenue", e.target.value), placeholder: "z.B. 100000" }), /* @__PURE__ */ import_react.default.createElement("span", { className: "income-unit" }, "\u20AC"))), /* @__PURE__ */ import_react.default.createElement("button", { className: "onboard-next", style: { width: "100%" }, onClick: () => savePvData(__spreadProps(__spreadValues({}, pvData), { businessOnboardingDone: true })) }, "Weiter"), /* @__PURE__ */ import_react.default.createElement("button", { className: "onboard-skip", onClick: () => savePvData(__spreadProps(__spreadValues({}, pvData), { businessOnboardingDone: true })) }, "\xDCberspringen"));
       }
-      return /* @__PURE__ */ import_react.default.createElement("div", { className: "section slide-fade-in" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "section-title", style: { marginBottom: 10 } }, `${secIcon("business")}Business`), /* @__PURE__ */ import_react.default.createElement("div", { className: "employment-toggle" }, /* @__PURE__ */ import_react.default.createElement("button", { className: employment === "selbstaendig" ? "active" : "", onClick: () => updatePvField("employment", "selbstaendig") }, "Selbst\xE4ndig"), /* @__PURE__ */ import_react.default.createElement("button", { className: employment === "angestellt" ? "active" : "", onClick: () => updatePvField("employment", "angestellt") }, "Angestellt")), /* @__PURE__ */ import_react.default.createElement("div", { className: "income-row", style: { marginBottom: 14 } }, /* @__PURE__ */ import_react.default.createElement("span", { className: "income-label" }, "Beruf"), /* @__PURE__ */ import_react.default.createElement("input", { className: "income-input", style: { width: 140, textAlign: "left" }, value: pvData ? pvData.beruf : "", onChange: (e) => updatePvField("beruf", e.target.value), placeholder: "z.B. PV-Vertrieb" })), /* @__PURE__ */ import_react.default.createElement("div", { className: "reflect-label", style: { marginTop: 6 } }, "\u{1F501} Fixkosten (jeden Monat automatisch mitgerechnet)"), fixedCosts.map((x) => /* @__PURE__ */ import_react.default.createElement("div", { key: x.id, className: "biz-entry-row" }, /* @__PURE__ */ import_react.default.createElement("span", { className: "biz-entry-text" }, x.label || "Fixkosten", " \xB7 ", (parseFloat(x.amount) || 0).toFixed(0), " \u20AC/Monat"), /* @__PURE__ */ import_react.default.createElement("button", { className: "habit-remove", onClick: () => savePvData(__spreadProps(__spreadValues({}, pvData), { fixedCosts: fixedCosts.filter((y) => y.id !== x.id) })), "aria-label": "Fixkosten entfernen" }, "\xD7"))), showAddFixed ? /* @__PURE__ */ import_react.default.createElement("div", { className: "add-appt" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "add-appt-row" }, /* @__PURE__ */ import_react.default.createElement("input", { autoFocus: true, value: newFixedLabel, onChange: (e) => setNewFixedLabel(e.target.value), placeholder: "z.B. PKV, Miete, Vertrag" }), /* @__PURE__ */ import_react.default.createElement("input", { type: "number", style: { flex: "0 0 90px" }, value: newFixedAmount, onChange: (e) => setNewFixedAmount(e.target.value), placeholder: "\u20AC/Monat" })), /* @__PURE__ */ import_react.default.createElement("button", { onClick: () => {
+      return /* @__PURE__ */ import_react.default.createElement("div", { className: "section slide-fade-in" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "section-title", style: { marginBottom: 10 } }, `${secIcon("business")}Business`), /* @__PURE__ */ import_react.default.createElement("div", { className: "employment-toggle" }, /* @__PURE__ */ import_react.default.createElement("button", { className: employment === "selbstaendig" ? "active" : "", onClick: () => updatePvField("employment", "selbstaendig") }, "Selbst\xE4ndig"), /* @__PURE__ */ import_react.default.createElement("button", { className: employment === "angestellt" ? "active" : "", onClick: () => updatePvField("employment", "angestellt") }, "Angestellt")), /* @__PURE__ */ import_react.default.createElement("div", { className: "income-row", style: { marginBottom: 14 } }, /* @__PURE__ */ import_react.default.createElement("span", { className: "income-label" }, "Beruf"), /* @__PURE__ */ import_react.default.createElement("input", { className: "income-input", style: { width: 140, textAlign: "left" }, value: pvData ? pvData.beruf : "", onChange: (e) => updatePvField("beruf", e.target.value), placeholder: "z.B. PV-Vertrieb" })), /* @__PURE__ */ import_react.default.createElement("div", { className: "reflect-label", style: { marginTop: 6 } }, "\u{1F501} Fixkosten (jeden Monat automatisch mitgerechnet)"), fixedCosts.map((x) => /* @__PURE__ */ import_react.default.createElement("div", { key: x.id, className: "biz-entry-row" }, /* @__PURE__ */ import_react.default.createElement("span", { className: "biz-entry-text" }, x.label || "Fixkosten", " \xB7 ", (parseFloat(x.amount) || 0).toFixed(0), " \u20AC/Monat"), /* @__PURE__ */ import_react.default.createElement("button", { className: "habit-remove", onClick: () => askConfirm("Wirklich l\xF6schen?", () => savePvData(__spreadProps(__spreadValues({}, pvData), { fixedCosts: fixedCosts.filter((y) => y.id !== x.id) }))), "aria-label": "Fixkosten entfernen" }, "\xD7"))), showAddFixed ? /* @__PURE__ */ import_react.default.createElement("div", { className: "add-appt" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "add-appt-row" }, /* @__PURE__ */ import_react.default.createElement("input", { autoFocus: true, value: newFixedLabel, onChange: (e) => setNewFixedLabel(e.target.value), placeholder: "z.B. PKV, Miete, Vertrag" }), /* @__PURE__ */ import_react.default.createElement("input", { type: "number", style: { flex: "0 0 90px" }, value: newFixedAmount, onChange: (e) => setNewFixedAmount(e.target.value), placeholder: "\u20AC/Monat" })), /* @__PURE__ */ import_react.default.createElement("button", { onClick: () => {
         if (parseFloat(newFixedAmount) > 0) {
           savePvData(__spreadProps(__spreadValues({}, pvData), { fixedCosts: [...fixedCosts, { id: `f${Date.now()}`, label: newFixedLabel.trim(), amount: newFixedAmount }] }));
           setNewFixedLabel("");
@@ -16810,7 +17234,7 @@ ${stamp}
         setShowAddFixed(false);
         setNewFixedLabel("");
         setNewFixedAmount("");
-      } }, "Abbrechen")) : /* @__PURE__ */ import_react.default.createElement("button", { className: "add-plus-btn", onClick: () => setShowAddFixed(true) }, "+ Fixkosten eintragen"), employment === "selbstaendig" ? /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("div", { className: "reflect-label", style: { marginTop: 14 } }, "\u{1F4B0} Verk\xE4ufe / Auftr\xE4ge diesen Monat (netto, ohne USt)"), sales.map((s) => /* @__PURE__ */ import_react.default.createElement("div", { key: s.id, className: "biz-entry-row" }, /* @__PURE__ */ import_react.default.createElement("span", { className: "biz-entry-text" }, s.count && parseInt(s.count, 10) > 1 ? `${s.count}\xD7 ` : "", s.label || "Auftrag", " \xB7 ", (parseFloat(s.amount) || 0).toFixed(0), " \u20AC", s.count && parseInt(s.count, 10) > 1 ? ` = ${((parseFloat(s.amount) || 0) * parseInt(s.count, 10)).toFixed(0)} \u20AC` : ""), /* @__PURE__ */ import_react.default.createElement("button", { className: "habit-remove", onClick: () => savePvData(__spreadProps(__spreadValues({}, pvData), { sales: sales.filter((x) => x.id !== s.id) })), "aria-label": "Verkauf entfernen" }, "\xD7"))), showAddSale ? /* @__PURE__ */ import_react.default.createElement("div", { className: "add-appt" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "add-appt-row" }, /* @__PURE__ */ import_react.default.createElement("input", { autoFocus: true, value: newSaleLabel, onChange: (e) => setNewSaleLabel(e.target.value), placeholder: "Was wurde verkauft? (optional)" }), /* @__PURE__ */ import_react.default.createElement("input", { type: "number", style: { flex: "0 0 74px" }, value: newSaleCount, onChange: (e) => setNewSaleCount(e.target.value), placeholder: "Anzahl" }), /* @__PURE__ */ import_react.default.createElement("input", { type: "number", style: { flex: "0 0 90px" }, value: newSaleAmount, onChange: (e) => setNewSaleAmount(e.target.value), placeholder: "\u20AC/Auftrag" })), /* @__PURE__ */ import_react.default.createElement("button", { onClick: () => {
+      } }, "Abbrechen")) : /* @__PURE__ */ import_react.default.createElement("button", { className: "add-plus-btn", onClick: () => setShowAddFixed(true) }, "+ Fixkosten eintragen"), employment === "selbstaendig" ? /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("div", { className: "reflect-label", style: { marginTop: 14 } }, "\u{1F4B0} Verk\xE4ufe / Auftr\xE4ge diesen Monat (netto, ohne USt)"), sales.map((s) => /* @__PURE__ */ import_react.default.createElement("div", { key: s.id, className: "biz-entry-row" }, /* @__PURE__ */ import_react.default.createElement("span", { className: "biz-entry-text" }, s.count && parseInt(s.count, 10) > 1 ? `${s.count}\xD7 ` : "", s.label || "Auftrag", " \xB7 ", (parseFloat(s.amount) || 0).toFixed(0), " \u20AC", s.count && parseInt(s.count, 10) > 1 ? ` = ${((parseFloat(s.amount) || 0) * parseInt(s.count, 10)).toFixed(0)} \u20AC` : ""), /* @__PURE__ */ import_react.default.createElement("button", { className: "habit-remove", onClick: () => askConfirm("Wirklich l\xF6schen?", () => savePvData(__spreadProps(__spreadValues({}, pvData), { sales: sales.filter((x) => x.id !== s.id) }))), "aria-label": "Verkauf entfernen" }, "\xD7"))), showAddSale ? /* @__PURE__ */ import_react.default.createElement("div", { className: "add-appt" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "add-appt-row" }, /* @__PURE__ */ import_react.default.createElement("input", { autoFocus: true, value: newSaleLabel, onChange: (e) => setNewSaleLabel(e.target.value), placeholder: "Was wurde verkauft? (optional)" }), /* @__PURE__ */ import_react.default.createElement("input", { type: "number", style: { flex: "0 0 74px" }, value: newSaleCount, onChange: (e) => setNewSaleCount(e.target.value), placeholder: "Anzahl" }), /* @__PURE__ */ import_react.default.createElement("input", { type: "number", style: { flex: "0 0 90px" }, value: newSaleAmount, onChange: (e) => setNewSaleAmount(e.target.value), placeholder: "\u20AC/Auftrag" })), /* @__PURE__ */ import_react.default.createElement("button", { onClick: () => {
         if (parseFloat(newSaleAmount) > 0) {
           savePvData(__spreadProps(__spreadValues({}, pvData), { sales: [...sales, { id: `s${Date.now()}`, label: newSaleLabel.trim(), count: newSaleCount || "1", amount: newSaleAmount }] }));
           setNewSaleLabel("");
@@ -16823,7 +17247,7 @@ ${stamp}
         setNewSaleLabel("");
         setNewSaleCount("");
         setNewSaleAmount("");
-      } }, "Abbrechen")) : /* @__PURE__ */ import_react.default.createElement("button", { className: "add-plus-btn", onClick: () => setShowAddSale(true) }, "+ Verkauf eintragen")) : /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("div", { className: "reflect-label", style: { marginTop: 14 } }, "\u{1F4B0} Einnahmen diesen Monat (netto, ohne USt)"), sales.map((s) => /* @__PURE__ */ import_react.default.createElement("div", { key: s.id, className: "biz-entry-row" }, /* @__PURE__ */ import_react.default.createElement("span", { className: "biz-entry-text" }, s.label || "Einnahme", " \xB7 ", (parseFloat(s.amount) || 0).toFixed(0), " \u20AC"), /* @__PURE__ */ import_react.default.createElement("button", { className: "habit-remove", onClick: () => savePvData(__spreadProps(__spreadValues({}, pvData), { sales: sales.filter((x) => x.id !== s.id) })), "aria-label": "Einnahme entfernen" }, "\xD7"))), showAddSale ? /* @__PURE__ */ import_react.default.createElement("div", { className: "add-appt" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "add-appt-row" }, /* @__PURE__ */ import_react.default.createElement("input", { autoFocus: true, value: newSaleLabel, onChange: (e) => setNewSaleLabel(e.target.value), placeholder: "Wof\xFCr? (optional)" }), /* @__PURE__ */ import_react.default.createElement("input", { type: "number", style: { flex: "0 0 90px" }, value: newSaleAmount, onChange: (e) => setNewSaleAmount(e.target.value), placeholder: "\u20AC" })), /* @__PURE__ */ import_react.default.createElement("button", { onClick: () => {
+      } }, "Abbrechen")) : /* @__PURE__ */ import_react.default.createElement("button", { className: "add-plus-btn", onClick: () => setShowAddSale(true) }, "+ Verkauf eintragen")) : /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("div", { className: "reflect-label", style: { marginTop: 14 } }, "\u{1F4B0} Einnahmen diesen Monat (netto, ohne USt)"), sales.map((s) => /* @__PURE__ */ import_react.default.createElement("div", { key: s.id, className: "biz-entry-row" }, /* @__PURE__ */ import_react.default.createElement("span", { className: "biz-entry-text" }, s.label || "Einnahme", " \xB7 ", (parseFloat(s.amount) || 0).toFixed(0), " \u20AC"), /* @__PURE__ */ import_react.default.createElement("button", { className: "habit-remove", onClick: () => askConfirm("Wirklich l\xF6schen?", () => savePvData(__spreadProps(__spreadValues({}, pvData), { sales: sales.filter((x) => x.id !== s.id) }))), "aria-label": "Einnahme entfernen" }, "\xD7"))), showAddSale ? /* @__PURE__ */ import_react.default.createElement("div", { className: "add-appt" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "add-appt-row" }, /* @__PURE__ */ import_react.default.createElement("input", { autoFocus: true, value: newSaleLabel, onChange: (e) => setNewSaleLabel(e.target.value), placeholder: "Wof\xFCr? (optional)" }), /* @__PURE__ */ import_react.default.createElement("input", { type: "number", style: { flex: "0 0 90px" }, value: newSaleAmount, onChange: (e) => setNewSaleAmount(e.target.value), placeholder: "\u20AC" })), /* @__PURE__ */ import_react.default.createElement("button", { onClick: () => {
         if (parseFloat(newSaleAmount) > 0) {
           savePvData(__spreadProps(__spreadValues({}, pvData), { sales: [...sales, { id: `s${Date.now()}`, label: newSaleLabel.trim(), count: "1", amount: newSaleAmount }] }));
           setNewSaleLabel("");
@@ -16834,7 +17258,7 @@ ${stamp}
         setShowAddSale(false);
         setNewSaleLabel("");
         setNewSaleAmount("");
-      } }, "Abbrechen")) : /* @__PURE__ */ import_react.default.createElement("button", { className: "add-plus-btn", onClick: () => setShowAddSale(true) }, "+ Einnahme eintragen")), /* @__PURE__ */ import_react.default.createElement("div", { className: "reflect-label", style: { marginTop: 14 } }, "\u{1F4B8} Einmalige Ausgaben diesen Monat"), expenseList.map((x) => /* @__PURE__ */ import_react.default.createElement("div", { key: x.id, className: "biz-entry-row" }, /* @__PURE__ */ import_react.default.createElement("span", { className: "biz-entry-text" }, x.label || "Ausgabe", " \xB7 ", (parseFloat(x.amount) || 0).toFixed(0), " \u20AC"), /* @__PURE__ */ import_react.default.createElement("button", { className: "habit-remove", onClick: () => savePvData(__spreadProps(__spreadValues({}, pvData), { expenseList: expenseList.filter((y) => y.id !== x.id) })), "aria-label": "Ausgabe entfernen" }, "\xD7"))), showAddExpense ? /* @__PURE__ */ import_react.default.createElement("div", { className: "add-appt" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "add-appt-row" }, /* @__PURE__ */ import_react.default.createElement("input", { autoFocus: true, value: newExpenseLabel, onChange: (e) => setNewExpenseLabel(e.target.value), placeholder: "Wof\xFCr? (optional)" }), /* @__PURE__ */ import_react.default.createElement("input", { type: "number", style: { flex: "0 0 90px" }, value: newExpenseAmount, onChange: (e) => setNewExpenseAmount(e.target.value), placeholder: "\u20AC" })), /* @__PURE__ */ import_react.default.createElement("button", { onClick: () => {
+      } }, "Abbrechen")) : /* @__PURE__ */ import_react.default.createElement("button", { className: "add-plus-btn", onClick: () => setShowAddSale(true) }, "+ Einnahme eintragen")), /* @__PURE__ */ import_react.default.createElement("div", { className: "reflect-label", style: { marginTop: 14 } }, "\u{1F4B8} Einmalige Ausgaben diesen Monat"), expenseList.map((x) => /* @__PURE__ */ import_react.default.createElement("div", { key: x.id, className: "biz-entry-row" }, /* @__PURE__ */ import_react.default.createElement("span", { className: "biz-entry-text" }, x.label || "Ausgabe", " \xB7 ", (parseFloat(x.amount) || 0).toFixed(0), " \u20AC"), /* @__PURE__ */ import_react.default.createElement("button", { className: "habit-remove", onClick: () => askConfirm("Wirklich l\xF6schen?", () => savePvData(__spreadProps(__spreadValues({}, pvData), { expenseList: expenseList.filter((y) => y.id !== x.id) }))), "aria-label": "Ausgabe entfernen" }, "\xD7"))), showAddExpense ? /* @__PURE__ */ import_react.default.createElement("div", { className: "add-appt" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "add-appt-row" }, /* @__PURE__ */ import_react.default.createElement("input", { autoFocus: true, value: newExpenseLabel, onChange: (e) => setNewExpenseLabel(e.target.value), placeholder: "Wof\xFCr? (optional)" }), /* @__PURE__ */ import_react.default.createElement("input", { type: "number", style: { flex: "0 0 90px" }, value: newExpenseAmount, onChange: (e) => setNewExpenseAmount(e.target.value), placeholder: "\u20AC" })), /* @__PURE__ */ import_react.default.createElement("button", { onClick: () => {
         if (parseFloat(newExpenseAmount) > 0) {
           savePvData(__spreadProps(__spreadValues({}, pvData), { expenseList: [...expenseList, { id: `e${Date.now()}`, label: newExpenseLabel.trim(), amount: newExpenseAmount }] }));
           setNewExpenseLabel("");
@@ -16947,7 +17371,7 @@ ${stamp}
             n > 0 && /* @__PURE__ */ import_react.default.createElement("span", { className: "schedule-mini-dot" }, n)
           );
         }));
-      })()), /* @__PURE__ */ import_react.default.createElement("div", { className: "timeline-day-header" }, /* @__PURE__ */ import_react.default.createElement("span", { className: "timeline-day-label" }, formatLongDate(selectedDay)), selectedDay !== todayKey && /* @__PURE__ */ import_react.default.createElement("button", { className: "today-jump-small", onClick: () => setSelectedDay(todayKey) }, "Heute")), /* @__PURE__ */ import_react.default.createElement("div", { className: "timeline-week-goal" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "mini-goal-row", style: { marginBottom: weekData && weekData.goal ? 6 : 0 } }, /* @__PURE__ */ import_react.default.createElement("button", { className: "mini-check" + (weekData && weekData.done ? " checked" : ""), onClick: toggleWeekDone, "aria-label": "Wochenziel erledigt umschalten" }, weekData && weekData.done ? "\u2713" : ""), /* @__PURE__ */ import_react.default.createElement("span", { "data-tour": "wochenziel", className: "mini-label" }, "\u{1F3AF} Woche:"), /* @__PURE__ */ import_react.default.createElement(
+      })()), /* @__PURE__ */ import_react.default.createElement("div", { className: "timeline-day-header" }, /* @__PURE__ */ import_react.default.createElement("span", { className: "timeline-day-label" }, formatLongDate(selectedDay)), selectedDay !== todayKey && /* @__PURE__ */ import_react.default.createElement("button", { className: "today-jump-small", onClick: () => setSelectedDay(todayKey) }, "Heute")), appState.showWeekGoal !== false && /* @__PURE__ */ import_react.default.createElement("div", { className: "timeline-week-goal" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "mini-goal-row", style: { marginBottom: weekData && weekData.goal ? 6 : 0 } }, /* @__PURE__ */ import_react.default.createElement("button", { className: "mini-check" + (weekData && weekData.done ? " checked" : ""), onClick: toggleWeekDone, "aria-label": "Wochenziel erledigt umschalten" }, weekData && weekData.done ? "\u2713" : ""), /* @__PURE__ */ import_react.default.createElement("span", { "data-tour": "wochenziel", className: "mini-label" }, "\u{1F3AF} Woche:"), /* @__PURE__ */ import_react.default.createElement(
         "input",
         {
           className: "mini-input" + (weekData && weekData.done ? " done" : ""),
@@ -16956,7 +17380,7 @@ ${stamp}
           placeholder: "Wochenziel z.B. Wohnung streichen",
           disabled: weekLoading
         }
-      ), renderExtraGoals(weekData, saveWeek, "Weiteres Wochenziel", WEEK_CHEERS))), /* @__PURE__ */ import_react.default.createElement("div", { "data-tour": "habits", className: "timeline-habits-list" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "timeline-list-label" }, "Habits / KPIs"), appState.habitTemplate.map((h) => {
+      ), renderExtraGoals(weekData, saveWeek, "Weiteres Wochenziel", WEEK_CHEERS)), renderRewardRow("week", weekData, saveWeek)), /* @__PURE__ */ import_react.default.createElement("div", { "data-tour": "habits", className: "timeline-habits-list" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "timeline-list-label" }, "Habits / KPIs"), appState.habitTemplate.map((h) => {
         const checks = daysData[selectedDay] && daysData[selectedDay].checks || {};
         const checked = !!checks[h.id];
         if (editingHabitId === h.id) {
@@ -17108,9 +17532,10 @@ ${stamp}
           "div",
           {
             key: a.id,
-            className: "timeline-block timeline-appt-overlay" + (apptDone ? " done" : "") + (movingAppt && movingAppt.id === a.id ? " moving" : ""),
+            className: "timeline-block timeline-appt-overlay" + (apptDone ? " done" : "") + (isApptLocked(a) ? " locked" : "") + (movingAppt && movingAppt.id === a.id ? " moving" : ""),
             style: { top: movingAppt && movingAppt.id === a.id ? movingAppt.top : top, height },
             onTouchStart: (e) => {
+              if (isApptLocked(a)) return;
               const y = e.touches[0].clientY;
               if (apptDragRef.current && apptDragRef.current.timer) clearTimeout(apptDragRef.current.timer);
               apptDragRef.current = {
@@ -17148,7 +17573,12 @@ ${stamp}
                 const raw = 6 * 60 + Math.round(movingAppt.top / 48 * 60 / 5) * 5;
                 const clamped = Math.min(23 * 60 + 55, Math.max(6 * 60, raw));
                 const newTime = `${pad(Math.floor(clamped / 60))}:${pad(clamped % 60)}`;
-                if (newTime !== a.time) updateAppointment(selectedDay, a.id, { time: newTime });
+                if (newTime !== a.time) {
+                  const cf = findLockedConflict(selectedDay, clamped, clamped + (parseInt(a.duration, 10) || 60), { id: a.id, seriesId: a.seriesId });
+                  if (cf) showNotice(`\u{1F512} Diese Zeit ist durch \u201E${cf.title}\u201C gesperrt.`);
+                  else if (a.recurring) setSeriesChoice({ title: a.title, onOne: () => detachOccurrence(a.seriesId, selectedDay, selectedDay, { time: newTime }), onAll: () => updateRecurringSeries(a.seriesId, { time: newTime }) });
+                  else updateAppointment(selectedDay, a.id, { time: newTime });
+                }
                 setMovingAppt(null);
                 justDraggedRef.current = Date.now();
               }
@@ -17171,13 +17601,13 @@ ${stamp}
             const [sh, sm] = a.time.split(":").map(Number);
             const t = sh * 60 + sm + dm;
             return `${a.time}\u2013${pad(Math.floor(t / 60) % 24)}:${pad(t % 60)}`;
-          })(), " ", a.title, a.recurring ? ` \u{1F501} ${RECURRENCE_LABEL[a.recurrence]}` : ""),
-          /* @__PURE__ */ import_react.default.createElement("button", { className: "timeline-block-delete", onClick: (e) => {
+          })(), " ", isApptLocked(a) ? "\u{1F512} " : "", a.title, a.recurring ? ` \u{1F501} ${recurLabel(a)}` : ""),
+          isApptLocked(a) ? null : /* @__PURE__ */ import_react.default.createElement("button", { className: "timeline-block-delete", onClick: (e) => {
             e.stopPropagation();
             requestRemoveAppointment(selectedDay, a);
           }, "aria-label": `${a.title} l\xF6schen` }, "\xD7")
         );
-      })), apptsFor(selectedDay).filter((a) => (a.allDay || a.isBirthday) && (a.title || "").trim()).map((a) => /* @__PURE__ */ import_react.default.createElement("div", { key: a.id, className: "timeline-allday", onClick: () => openApptEditor(selectedDay, a) }, a.isBirthday ? "\u{1F382}" : "\u{1F4CC}", " ", a.title))) : calView === "month" ? /* @__PURE__ */ import_react.default.createElement("div", { className: "month-grid-wrap slide-fade-in", key: selMonthKey }, /* @__PURE__ */ import_react.default.createElement("div", { className: "month-grid" }, WEEKDAY_SHORT.map((wd) => /* @__PURE__ */ import_react.default.createElement("span", { key: wd, className: "month-grid-dow" }, wd)), (() => {
+      })), apptsFor(selectedDay).filter((a) => (a.allDay || a.isBirthday) && (a.title || "").trim()).map((a) => /* @__PURE__ */ import_react.default.createElement("div", { key: a.id, className: "timeline-allday" + (isApptLocked(a) ? " locked" : ""), onClick: () => openApptEditor(selectedDay, a) }, a.isBirthday ? "\u{1F382}" : "\u{1F4CC}", " ", a.title))) : calView === "month" ? /* @__PURE__ */ import_react.default.createElement("div", { className: "month-grid-wrap slide-fade-in", key: selMonthKey }, /* @__PURE__ */ import_react.default.createElement("div", { className: "month-grid" }, WEEKDAY_SHORT.map((wd) => /* @__PURE__ */ import_react.default.createElement("span", { key: wd, className: "month-grid-dow" }, wd)), (() => {
         const dates = getMonthDates(selYear, selMonthIdx);
         const pad0 = (dates[0].date.getDay() + 6) % 7;
         return /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, Array.from({ length: pad0 }).map((_, j) => /* @__PURE__ */ import_react.default.createElement("span", { key: "pad" + j })), dates.map((d) => {
@@ -17339,15 +17769,58 @@ ${stamp}
             setTimelineApptEndTime(`${pad(t)}:${pad(tappedMinute)}`);
           }
           setApptStep(4);
-        } }, "Weiter"), /* @__PURE__ */ import_react.default.createElement("button", { className: "cancel-add-btn", onClick: () => setApptStep(2) }, "Zur\xFCck")), apptStep === 4 && /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, [["none", "Einmalig"], ["daily", "T\xE4glich"], ["weekly", "W\xF6chentlich"], ["monthly", "Monatlich"], ["yearly", "J\xE4hrlich"]].map(([val, label]) => /* @__PURE__ */ import_react.default.createElement("button", { key: val, className: "appt-recur-btn", onClick: () => saveTimelineAppt(tappedHour, tappedMinute, val) }, label)), /* @__PURE__ */ import_react.default.createElement("button", { className: "cancel-add-btn", onClick: () => setApptStep(3) }, "Zur\xFCck"))), apptEdit && /* @__PURE__ */ import_react.default.createElement("div", { className: "appt-editor" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "appt-editor-head" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "pop-close", style: { position: "static", padding: 0 }, onClick: () => setApptEdit(null), "aria-label": "Schlie\xDFen" }, "\xD7"), /* @__PURE__ */ import_react.default.createElement("button", { className: "appt-editor-save", onClick: saveApptEditor }, "Speichern")), /* @__PURE__ */ import_react.default.createElement("input", { className: "appt-editor-title", value: apptEdit.title, onChange: (e) => setApptEdit(__spreadProps(__spreadValues({}, apptEdit), { title: e.target.value })), placeholder: "Titel" }), /* @__PURE__ */ import_react.default.createElement("div", { className: "appt-editor-row" }, /* @__PURE__ */ import_react.default.createElement("span", { className: "appt-editor-label" }, "Ganzt\xE4gig"), /* @__PURE__ */ import_react.default.createElement("button", { className: "appt-toggle" + (apptEdit.allDay ? " on" : ""), onClick: () => setApptEdit(__spreadProps(__spreadValues({}, apptEdit), { allDay: !apptEdit.allDay })), "aria-label": "Ganzt\xE4gig umschalten" }, /* @__PURE__ */ import_react.default.createElement("span", { className: "appt-toggle-knob" }))), /* @__PURE__ */ import_react.default.createElement("div", { className: "appt-editor-row" }, /* @__PURE__ */ import_react.default.createElement("input", { type: "date", className: "appt-editor-date", value: apptEdit.startDate, onChange: (e) => setApptEdit(__spreadProps(__spreadValues({}, apptEdit), { startDate: e.target.value })) }), !apptEdit.allDay && /* @__PURE__ */ import_react.default.createElement("input", { type: "time", step: 300, className: "appt-editor-time", value: apptEdit.startTime, onChange: (e) => setApptEdit(__spreadProps(__spreadValues({}, apptEdit), { startTime: e.target.value })) })), !apptEdit.allDay && /* @__PURE__ */ import_react.default.createElement("div", { className: "appt-editor-row" }, /* @__PURE__ */ import_react.default.createElement("input", { type: "date", className: "appt-editor-date", value: apptEdit.endDate, onChange: (e) => setApptEdit(__spreadProps(__spreadValues({}, apptEdit), { endDate: e.target.value })) }), /* @__PURE__ */ import_react.default.createElement("input", { type: "time", step: 300, className: "appt-editor-time", value: apptEdit.endTime, onChange: (e) => setApptEdit(__spreadProps(__spreadValues({}, apptEdit), { endTime: e.target.value })) })), (() => {
+        } }, "Weiter"), /* @__PURE__ */ import_react.default.createElement("button", { className: "cancel-add-btn", onClick: () => setApptStep(2) }, "Zur\xFCck")), apptStep === 4 && /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, [["none", "Einmalig"], ["daily", "T\xE4glich"], ["weekly", "W\xF6chentlich"], ["monthly", "Monatlich"], ["yearly", "J\xE4hrlich"]].map(([val, label]) => /* @__PURE__ */ import_react.default.createElement("button", { key: val, className: "appt-recur-btn", onClick: () => saveTimelineAppt(tappedHour, tappedMinute, val) }, label)), /* @__PURE__ */ import_react.default.createElement("button", { className: "cancel-add-btn", onClick: () => setApptStep(3) }, "Zur\xFCck"))), apptEdit && /* @__PURE__ */ import_react.default.createElement("div", { className: "appt-editor" + (apptEditLocked ? " locked" : "") }, /* @__PURE__ */ import_react.default.createElement("div", { className: "appt-editor-head" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "pop-close", style: { position: "static", padding: 0 }, onClick: () => setApptEdit(null), "aria-label": "Schlie\xDFen" }, "\xD7"), apptEditLocked ? null : /* @__PURE__ */ import_react.default.createElement("button", { className: "appt-editor-save", onClick: saveApptEditor }, "Speichern")), apptEditLocked && /* @__PURE__ */ import_react.default.createElement("div", { className: "appt-lock-banner" }, "\u{1F512} Gesperrt bis " + fmtDE(apptEdit.lockedUntil) + " \u2014 in dieser Zeit nicht \xE4nderbar, nicht l\xF6schbar, und niemand legt etwas auf diese Uhrzeit." + (apptEdit.lockReason ? " \u201E" + apptEdit.lockReason + "\u201C" : "")), /* @__PURE__ */ import_react.default.createElement("input", { className: "appt-editor-title", value: apptEdit.title, onChange: (e) => setApptEdit(__spreadProps(__spreadValues({}, apptEdit), { title: e.target.value })), placeholder: "Titel" }), /* @__PURE__ */ import_react.default.createElement("div", { className: "appt-editor-row" }, /* @__PURE__ */ import_react.default.createElement("span", { className: "appt-editor-label" }, "Ganzt\xE4gig"), /* @__PURE__ */ import_react.default.createElement("button", { className: "appt-toggle" + (apptEdit.allDay ? " on" : ""), onClick: () => setApptEdit(__spreadProps(__spreadValues({}, apptEdit), { allDay: !apptEdit.allDay })), "aria-label": "Ganzt\xE4gig umschalten" }, /* @__PURE__ */ import_react.default.createElement("span", { className: "appt-toggle-knob" }))), /* @__PURE__ */ import_react.default.createElement("div", { className: "appt-editor-row" }, /* @__PURE__ */ import_react.default.createElement("input", { type: "date", className: "appt-editor-date", value: apptEdit.startDate, onChange: (e) => setApptEdit(__spreadProps(__spreadValues({}, apptEdit), { startDate: e.target.value })) }), !apptEdit.allDay && /* @__PURE__ */ import_react.default.createElement("input", { type: "time", step: 300, className: "appt-editor-time", value: apptEdit.startTime, onChange: (e) => setApptEdit(__spreadProps(__spreadValues({}, apptEdit), { startTime: e.target.value })) })), !apptEdit.allDay && /* @__PURE__ */ import_react.default.createElement("div", { className: "appt-editor-row" }, /* @__PURE__ */ import_react.default.createElement("input", { type: "date", className: "appt-editor-date", value: apptEdit.endDate, onChange: (e) => setApptEdit(__spreadProps(__spreadValues({}, apptEdit), { endDate: e.target.value })) }), /* @__PURE__ */ import_react.default.createElement("input", { type: "time", step: 300, className: "appt-editor-time", value: apptEdit.endTime, onChange: (e) => setApptEdit(__spreadProps(__spreadValues({}, apptEdit), { endTime: e.target.value })) })), (() => {
       const list = apptsFor(apptEdit.startDate).filter((a) => a.id !== apptEdit.id && (a.title || "").trim()).sort((a, b) => String(a.time).localeCompare(String(b.time)));
       return /* @__PURE__ */ import_react.default.createElement("div", { className: "appt-day-load" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "appt-day-load-head" }, formatLongDate(apptEdit.startDate), " \u2014 ", list.length === 0 ? "noch nichts geplant" : list.length === 1 ? "1 Termin" : `${list.length} Termine`), list.slice(0, 6).map((a) => /* @__PURE__ */ import_react.default.createElement("div", { key: a.id, className: "appt-day-load-row" }, /* @__PURE__ */ import_react.default.createElement("span", { className: "appt-day-load-time" }, a.allDay ? "ganzt\xE4gig" : a.time), /* @__PURE__ */ import_react.default.createElement("span", null, a.title))), list.length > 6 && /* @__PURE__ */ import_react.default.createElement("div", { className: "appt-day-load-row" }, `\u2026 und ${list.length - 6} weitere`));
-    })(), /* @__PURE__ */ import_react.default.createElement("div", { className: "appt-editor-row" }, /* @__PURE__ */ import_react.default.createElement("span", { className: "appt-editor-label" }, "Wiederholung"), /* @__PURE__ */ import_react.default.createElement("select", { className: "recur-select", value: apptEdit.recurrence, onChange: (e) => setApptEdit(__spreadProps(__spreadValues({}, apptEdit), { recurrence: e.target.value })) }, /* @__PURE__ */ import_react.default.createElement("option", { value: "none" }, "Einmalig"), /* @__PURE__ */ import_react.default.createElement("option", { value: "daily" }, "T\xE4glich"), /* @__PURE__ */ import_react.default.createElement("option", { value: "weekly" }, "W\xF6chentlich"), /* @__PURE__ */ import_react.default.createElement("option", { value: "monthly" }, "Monatlich"), /* @__PURE__ */ import_react.default.createElement("option", { value: "yearly" }, "J\xE4hrlich"))), /* @__PURE__ */ import_react.default.createElement("input", { className: "appt-editor-input", value: apptEdit.location, onChange: (e) => setApptEdit(__spreadProps(__spreadValues({}, apptEdit), { location: e.target.value })), placeholder: "Ort hinzuf\xFCgen" }), /* @__PURE__ */ import_react.default.createElement("textarea", { className: "appt-editor-input appt-editor-notes", rows: 5, value: apptEdit.notes, onChange: (e) => setApptEdit(__spreadProps(__spreadValues({}, apptEdit), { notes: e.target.value })), placeholder: "Beschreibung hinzuf\xFCgen" }), apptEdit.recurring && /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: 2 } }, "Wiederkehrender Termin \u2014 \xC4nderungen gelten f\xFCr die ganze Serie."), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn danger", style: { marginTop: 10 }, onClick: () => {
+    })(), /* @__PURE__ */ import_react.default.createElement("div", { className: "appt-editor-row" }, /* @__PURE__ */ import_react.default.createElement("span", { className: "appt-editor-label" }, "Wiederholung"), /* @__PURE__ */ import_react.default.createElement("select", { className: "recur-select", value: apptEdit.recurrence, onChange: (e) => setApptEdit(__spreadProps(__spreadValues({}, apptEdit), { recurrence: e.target.value, weekdays: e.target.value === "weekdays" && !(apptEdit.weekdays || []).length ? [dowOf(apptEdit.startDate)] : apptEdit.weekdays })) }, /* @__PURE__ */ import_react.default.createElement("option", { value: "none" }, "Einmalig"), /* @__PURE__ */ import_react.default.createElement("option", { value: "daily" }, "T\xE4glich"), /* @__PURE__ */ import_react.default.createElement("option", { value: "weekly" }, "W\xF6chentlich (am selben Wochentag)"), /* @__PURE__ */ import_react.default.createElement("option", { value: "weekdays" }, "Bestimmte Wochentage"), /* @__PURE__ */ import_react.default.createElement("option", { value: "monthly" }, "Monatlich"), /* @__PURE__ */ import_react.default.createElement("option", { value: "yearly" }, "J\xE4hrlich"))), apptEdit.recurrence === "weekdays" && /* @__PURE__ */ import_react.default.createElement("div", { className: "wd-row" }, WD_SHORT.map((n, i) => /* @__PURE__ */ import_react.default.createElement("button", { key: n, className: "wd-chip" + ((apptEdit.weekdays || []).includes(i) ? " on" : ""), onClick: () => setApptEdit({ ...apptEdit, weekdays: (apptEdit.weekdays || []).includes(i) ? (apptEdit.weekdays || []).filter((x) => x !== i) : [...(apptEdit.weekdays || []), i] }) }, n))), apptEdit.recurrence !== "none" && /* @__PURE__ */ import_react.default.createElement("div", { className: "until-box" }, /* @__PURE__ */ import_react.default.createElement("span", { className: "appt-editor-label" }, "Wiederholen bis"), /* @__PURE__ */ import_react.default.createElement("div", { className: "wd-row" }, [["", "Nie"], ["7", "1 Wo."], ["28", "4 Wo."], ["91", "3 Mon."], ["182", "6 Mon."], ["365", "1 Jahr"]].map(([n, l]) => /* @__PURE__ */ import_react.default.createElement("button", { key: l, className: "wd-chip" + ((n ? apptEdit.until === addDaysKey(apptEdit.startDate, Number(n)) : !apptEdit.until) ? " on" : ""), onClick: () => setApptEdit({ ...apptEdit, until: n ? addDaysKey(apptEdit.startDate, Number(n)) : "" }) }, l))), apptEdit.until ? /* @__PURE__ */ import_react.default.createElement("input", { type: "date", className: "appt-editor-date", value: apptEdit.until, min: apptEdit.startDate, onChange: (e) => setApptEdit({ ...apptEdit, until: e.target.value }) }) : /* @__PURE__ */ import_react.default.createElement("button", { className: "wd-chip", style: { flex: "none", padding: "10px 14px" }, onClick: () => setApptEdit({ ...apptEdit, until: addDaysKey(apptEdit.startDate, 7) }) }, "Eigenes Datum")), apptEdit.recurring && !apptEditLocked && /* @__PURE__ */ import_react.default.createElement("div", { className: "until-box" }, /* @__PURE__ */ import_react.default.createElement("span", { className: "appt-editor-label" }, "Einzelne Tage auslassen"), /* @__PURE__ */ import_react.default.createElement("div", { className: "appt-editor-row" }, /* @__PURE__ */ import_react.default.createElement("input", { type: "date", className: "appt-editor-date", value: apptEdit.skipDate || "", onChange: (e) => setApptEdit({ ...apptEdit, skipDate: e.target.value }) }), /* @__PURE__ */ import_react.default.createElement("button", { className: "wd-chip", style: { flex: "none", padding: "10px 14px" }, onClick: () => {
+      if (!apptEdit.skipDate || !apptEdit.seriesId) return;
+      setSeriesException(apptEdit.seriesId, apptEdit.skipDate, true);
+      setApptEdit({ ...apptEdit, exceptions: [...apptEdit.exceptions || [], apptEdit.skipDate], skipDate: "" });
+    } }, "Auslassen")), (apptEdit.exceptions || []).length > 0 && /* @__PURE__ */ import_react.default.createElement("div", null, (apptEdit.exceptions || []).slice().sort().map((d) => /* @__PURE__ */ import_react.default.createElement("button", { key: d, className: "skip-chip", onClick: () => {
+      setSeriesException(apptEdit.seriesId, d, false);
+      setApptEdit({ ...apptEdit, exceptions: (apptEdit.exceptions || []).filter((x) => x !== d) });
+    } }, fmtDE(d).slice(0, 6) + " \xD7")), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note" }, "Tipp auf ein Datum, um den Tag wieder einzuschalten."))), !apptEditLocked && !apptEdit.isBirthday && /* @__PURE__ */ import_react.default.createElement("div", { className: "appt-editor-row" }, /* @__PURE__ */ import_react.default.createElement("span", { className: "appt-editor-label" }, "\u{1F512} Unl\xF6schbar \u2014 31 Tage sperren"), /* @__PURE__ */ import_react.default.createElement("button", { className: "appt-toggle" + (apptEdit.lock ? " on" : ""), onClick: () => setApptEdit({ ...apptEdit, lock: !apptEdit.lock }), "aria-label": "31 Tage sperren" }, /* @__PURE__ */ import_react.default.createElement("span", { className: "appt-toggle-knob" }))), !apptEditLocked && apptEdit.lock && /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: -4 } }, "Nach dem Speichern ist der Termin 31 Tage lang knallrot, nicht \xE4nderbar und nicht l\xF6schbar \u2014 und auf diese Uhrzeit kann kein anderer Termin gelegt werden."), !apptEditLocked && apptEdit.lock && /* @__PURE__ */ import_react.default.createElement("textarea", { className: "appt-editor-input", rows: 3, value: apptEdit.lockReason || "", onChange: (e) => setApptEdit({ ...apptEdit, lockReason: e.target.value }), placeholder: "Warum ist dieser Termin unl\xF6schbar? Diesen Text siehst du, sobald du ihn l\xF6schen willst \u2014 schreib ihn jetzt, solange du motiviert bist." }), /* @__PURE__ */ import_react.default.createElement("input", { className: "appt-editor-input", value: apptEdit.location, onChange: (e) => setApptEdit(__spreadProps(__spreadValues({}, apptEdit), { location: e.target.value })), placeholder: "Ort hinzuf\xFCgen" }), /* @__PURE__ */ import_react.default.createElement("textarea", { className: "appt-editor-input appt-editor-notes", rows: 5, value: apptEdit.notes, onChange: (e) => setApptEdit(__spreadProps(__spreadValues({}, apptEdit), { notes: e.target.value })), placeholder: "Beschreibung hinzuf\xFCgen" }), apptEdit.recurring && /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: 2 } }, "Wiederkehrender Termin \u2014 beim Speichern fragen wir: nur dieser Termin oder alle?"), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn danger", style: { marginTop: 10 }, onClick: () => {
       const dayKey = apptEdit.dayKey;
-      const a = { id: apptEdit.id, recurring: apptEdit.recurring, seriesId: apptEdit.seriesId, title: apptEdit.title };
+      const a = { id: apptEdit.id, recurring: apptEdit.recurring, seriesId: apptEdit.seriesId, title: apptEdit.title, lockedUntil: apptEdit.lockedUntil, lockReason: apptEdit.lockReason };
+      if (isApptLocked(a)) {
+        showLockInfo(a);
+        return;
+      }
       setApptEdit(null);
       requestRemoveAppointment(dayKey, a);
-    } }, "Termin l\xF6schen")), dayFlash && /* @__PURE__ */ import_react.default.createElement("div", { className: "day-flash" }, formatLongDate(dayFlash)), celebration && /* @__PURE__ */ import_react.default.createElement("div", { className: "celebrate-toast", onClick: () => setCelebration(null) }, /* @__PURE__ */ import_react.default.createElement("div", { className: "celebrate-icon" }, celebration.icon), /* @__PURE__ */ import_react.default.createElement("div", { className: "celebrate-title" }, celebration.title), /* @__PURE__ */ import_react.default.createElement("div", { className: "celebrate-text" }, celebration.text)), tourStep >= 0 && tourStep < TOUR_STEPS.length && (tourPaused ? (() => {
+    } }, "Termin l\xF6schen")), confirmAct && /* @__PURE__ */ import_react.default.createElement("div", { className: "delete-confirm", style: { zIndex: 990 } }, /* @__PURE__ */ import_react.default.createElement("div", { className: "delete-confirm-text" }, confirmAct.text), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn danger", onClick: () => {
+      const fn = confirmAct.onYes;
+      setConfirmAct(null);
+      try {
+        fn();
+      } catch (err) {
+      }
+    } }, confirmAct.yesLabel), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn cancel", onClick: () => setConfirmAct(null) }, "Abbrechen")), seriesChoice && /* @__PURE__ */ import_react.default.createElement("div", { className: "delete-confirm", style: { zIndex: 990 } }, /* @__PURE__ */ import_react.default.createElement("div", { className: "delete-confirm-text" }, "\u201E" + seriesChoice.title + "\u201C \u2014 was soll ge\xE4ndert werden?"), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn", onClick: () => {
+      const fn = seriesChoice.onOne;
+      setSeriesChoice(null);
+      fn();
+    } }, "Nur dieser Termin"), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn danger", onClick: () => {
+      const fn = seriesChoice.onAll;
+      setSeriesChoice(null);
+      fn();
+    } }, "Alle Termine der Serie"), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn cancel", onClick: () => setSeriesChoice(null) }, "Abbrechen")), lockInfo && /* @__PURE__ */ import_react.default.createElement("div", { className: "delete-confirm", style: { zIndex: 993, border: "2px solid #FF1212" } }, /* @__PURE__ */ import_react.default.createElement("div", { className: "delete-confirm-text", style: { fontWeight: 800, fontSize: 17, color: "#FF3B3B" } }, "\u{1F512} Nicht l\xF6schbar"), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note" }, "\u201E" + lockInfo.title + "\u201C ist bis " + fmtDE(lockInfo.until) + " gesperrt."), /* @__PURE__ */ import_react.default.createElement("div", { className: "lock-reason-text" }, lockInfo.reason ? "\u201E" + lockInfo.reason + "\u201C" : "Du hast diesen Termin selbst gesperrt, damit du dich daran h\xE4ltst. Genau daf\xFCr ist die Sperre da \u2014 auch wenn es gerade nervt."), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn", onClick: () => setLockInfo(null) }, "Verstanden")), missedForced && (() => {
+      const words = excuseDraft.trim().split(/\s+/).filter(Boolean).length;
+      const ok = words >= 10;
+      const prev = excuseLog.length ? excuseLog[excuseLog.length - 1] : null;
+      return /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("div", { className: "excuse-blocker" }), /* @__PURE__ */ import_react.default.createElement("div", { className: "delete-confirm excuse-box", style: { textAlign: "left" } }, /* @__PURE__ */ import_react.default.createElement("p", { className: "excuse-red", style: { fontSize: 18 } }, "Du hast deine KPIs nicht gemacht."), /* @__PURE__ */ import_react.default.createElement("p", { className: "excuse-red" }, "Du kommst deinen Zielen wieder nicht n\xE4her."), /* @__PURE__ */ import_react.default.createElement("p", { className: "excuse-red" }, "Du h\xE4ltst dich nicht an deine eigenen Aussagen."), missedYesterday.map((h) => /* @__PURE__ */ import_react.default.createElement("div", { key: h.id, className: "nudge-item" }, /* @__PURE__ */ import_react.default.createElement("b", null, h.name), h.trigger ? /* @__PURE__ */ import_react.default.createElement("div", null, "Du hast gesagt: \u201E" + h.trigger + "\u201C") : null, h.ziel ? /* @__PURE__ */ import_react.default.createElement("div", null, "Dein Ziel: " + h.ziel) : null)), prev ? /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note" }, "Letztes Mal (" + fmtDE(prev.day).slice(0, 6) + ") hast du geschrieben: \u201E" + prev.text + "\u201C") : null, /* @__PURE__ */ import_react.default.createElement("p", { className: "excuse-red" }, "Begr\xFCnde in mindestens 10 klaren Worten: Warum hast du es nicht gemacht? Was war die Ausrede? Was machst du beim n\xE4chsten Mal anders?"), /* @__PURE__ */ import_react.default.createElement("textarea", { className: "excuse-area", value: excuseDraft, onChange: (e) => setExcuseDraft(e.target.value), placeholder: "Meine Ausrede war \u2026 Beim n\xE4chsten Mal \u2026" }), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { color: ok ? "var(--signal)" : "#E02020", fontWeight: 700 } }, words + " / 10 W\xF6rter"), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn danger", disabled: !ok, style: { opacity: ok ? 1 : 0.4 }, onClick: () => {
+        if (!ok) return;
+        saveExcuseLog([...excuseLog, { day: yesterdayKey, missed: missedYesterday.map((h) => h.name), text: excuseDraft.trim() }]);
+        saveAppState({ ...appState, lastMissedBannerDate: todayKey });
+        setExcuseDraft("");
+      } }, "Ehrlich begr\xFCndet \u2014 weiter")));
+    })(), noticeMsg && /* @__PURE__ */ import_react.default.createElement("div", { className: "day-flash notice-flash" }, noticeMsg), openNudge && !missedForced && (() => {
+      const items = [...(appState.habitTemplate || []), ...(appState.kpiTemplate || [])].filter((h) => (h.name || "").trim()).slice(0, 4);
+      const nToday = apptsFor(todayKey).filter((x) => (x.title || "").trim()).length;
+      return /* @__PURE__ */ import_react.default.createElement("div", { className: "delete-confirm", style: { zIndex: 990 } }, /* @__PURE__ */ import_react.default.createElement("div", { className: "delete-confirm-text", style: { fontWeight: 700, fontSize: 17 } }, "K\xFCmmere dich um deine KPIs und Termine"), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note" }, nToday === 0 ? "Heute ist noch nichts geplant." : nToday === 1 ? "Heute steht 1 Termin an." : "Heute stehen " + nToday + " Termine an."), items.map((h, i) => /* @__PURE__ */ import_react.default.createElement("div", { key: i, className: "nudge-item" }, /* @__PURE__ */ import_react.default.createElement("b", null, h.name), h.trigger ? /* @__PURE__ */ import_react.default.createElement("div", null, "Weil: " + h.trigger) : null, h.ziel ? /* @__PURE__ */ import_react.default.createElement("div", null, "Dann erreichst du: " + h.ziel) : null)), yearGoalData && (yearGoalData.goal || "").trim() ? /* @__PURE__ */ import_react.default.createElement("div", { className: "nudge-item" }, "Alles zusammen f\xFChrt zu deinem Jahresziel: ", /* @__PURE__ */ import_react.default.createElement("b", null, yearGoalData.goal)) : null, /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn", onClick: () => setOpenNudge(false) }, "Los geht\u2019s"), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn cancel", onClick: () => {
+        setOpenNudge(false);
+        saveAppState({ ...appState, openNudge: false });
+      } }, "Nicht mehr anzeigen"));
+    })(), dayFlash && /* @__PURE__ */ import_react.default.createElement("div", { className: "day-flash" }, formatLongDate(dayFlash)), celebration && /* @__PURE__ */ import_react.default.createElement("div", { className: "celebrate-toast", onClick: () => setCelebration(null) }, /* @__PURE__ */ import_react.default.createElement("div", { className: "celebrate-icon" }, celebration.icon), /* @__PURE__ */ import_react.default.createElement("div", { className: "celebrate-title" }, celebration.title), /* @__PURE__ */ import_react.default.createElement("div", { className: "celebrate-text" }, celebration.text)), tourStep >= 0 && tourStep < TOUR_STEPS.length && (tourPaused ? (() => {
       const st = TOUR_STEPS[tourStep];
       let done = true;
       if (st.check === "anfangs") done = !!(reflections && reflections.anfangs.completed);
