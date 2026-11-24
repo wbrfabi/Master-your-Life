@@ -12851,7 +12851,7 @@ try {
   function ymKey(year, monthIdx0) {
     return `${year}-${pad(monthIdx0 + 1)}`;
   }
-  var APP_BUILD = "Aufbau 92 \u2014 24.11.2026";
+  var APP_BUILD = "Aufbau 93 \u2014 24.11.2026";
   var ALARM_CATCHUP_MINUTES = 5;
   function hhmm(d = /* @__PURE__ */ new Date()) {
     return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
@@ -13091,6 +13091,14 @@ try {
     const [editHabitLink, setEditHabitLink] = (0, import_react.useState)("");
     const [editHabitZiel, setEditHabitZiel] = (0, import_react.useState)("");
     const [editHabitLock, setEditHabitLock] = (0, import_react.useState)(false);
+    const [editHabitDays, setEditHabitDays] = (0, import_react.useState)([]);
+    const [editHabitLabelDone, setEditHabitLabelDone] = (0, import_react.useState)("");
+    const [editHabitLabelMissed, setEditHabitLabelMissed] = (0, import_react.useState)("");
+    const [timelineNewHabitLabelDone, setTimelineNewHabitLabelDone] = (0, import_react.useState)("");
+    const [timelineNewHabitLabelMissed, setTimelineNewHabitLabelMissed] = (0, import_react.useState)("");
+    const [timelineNewHabitDays, setTimelineNewHabitDays] = (0, import_react.useState)([]);
+    const [timelineNewHabitLock, setTimelineNewHabitLock] = (0, import_react.useState)(false);
+    const [timelineNewHabitLockReason, setTimelineNewHabitLockReason] = (0, import_react.useState)("");
     const [editHabitLockReason, setEditHabitLockReason] = (0, import_react.useState)("");
     const [newApptTime, setNewApptTime] = (0, import_react.useState)("08:00");
     const [newApptTitle, setNewApptTitle] = (0, import_react.useState)("");
@@ -14087,8 +14095,14 @@ ${stamp}
       const cur = appState.habitTemplate.find((h) => h.id === editingHabitId);
       if (!cur) return null;
       if (isHabitLocked(cur)) return /* @__PURE__ */ import_react.default.createElement("div", { className: "appt-lock-banner", key: "hlb" }, "\u{1F512} Gesperrt bis " + fmtDE(cur.lockedUntil) + " \u2014 nur der Name ist \xE4nderbar, der KPI ist nicht l\xF6schbar." + (cur.lockReason ? " \u201E" + cur.lockReason + "\u201C" : ""));
-      return /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, { key: "hlb" }, /* @__PURE__ */ import_react.default.createElement("button", { style: editHabitLock ? { background: "#FF1212", color: "#fff" } : null, onClick: () => setEditHabitLock(!editHabitLock) }, editHabitLock ? "\u{1F512} 31 Tage sperren: AN" : "\u{1F512} Unl\xF6schbar \u2014 31 Tage sperren"), editHabitLock && /* @__PURE__ */ import_react.default.createElement("textarea", { className: "goal-reward-input", rows: 2, value: editHabitLockReason, onChange: (e) => setEditHabitLockReason(e.target.value), placeholder: "Warum darf dieser KPI nicht gel\xF6scht werden? Diesen Text siehst du, sobald du ihn l\xF6schen willst." }));
+      return /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, { key: "hlb" }, /* @__PURE__ */ import_react.default.createElement("button", { className: editHabitLock ? "lock-on" : "", style: editHabitLock ? { background: "#FF1212", color: "#fff" } : null, onClick: () => setEditHabitLock(!editHabitLock) }, editHabitLock ? "\u{1F512} 31 Tage sperren: AN" : "\u{1F512} Unl\xF6schbar \u2014 31 Tage sperren"), editHabitLock && /* @__PURE__ */ import_react.default.createElement("textarea", { className: "goal-reward-input", rows: 2, value: editHabitLockReason, onChange: (e) => setEditHabitLockReason(e.target.value), placeholder: "Warum darf dieser KPI nicht gel\xF6scht werden? Diesen Text siehst du, sobald du ihn l\xF6schen willst." }));
     };
+    const renderDaysChips = (days, setDays) => /* @__PURE__ */ import_react.default.createElement("div", { key: "dch", style: { display: "flex", flexDirection: "column", gap: 4 } }, /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { margin: 0 } }, days.length ? "Nur an diesen Tagen" : "An welchen Tagen? (leer = jeden Tag)"), /* @__PURE__ */ import_react.default.createElement("div", { className: "wd-row" }, WD_SHORT.map((n, i) => /* @__PURE__ */ import_react.default.createElement("button", { key: n, type: "button", className: "wd-chip" + (days.includes(i) ? " on" : ""), onClick: () => setDays(days.includes(i) ? days.filter((x) => x !== i) : [...days, i].sort()) }, n))));
+    const renderNewHabitLock = () => /* @__PURE__ */ import_react.default.createElement("div", { key: "nhl", style: { display: "flex", flexDirection: "column", gap: 6 } }, /* @__PURE__ */ import_react.default.createElement("button", { type: "button", className: timelineNewHabitLock ? "lock-on" : "", style: timelineNewHabitLock ? { background: "#FF1212", color: "#fff", border: "none", borderRadius: 8, padding: "9px 10px", fontWeight: 700, fontSize: 13 } : { background: "var(--ink-900)", color: "var(--fog)", border: "1px solid var(--hairline)", borderRadius: 8, padding: "9px 10px", fontSize: 13 }, onClick: () => setTimelineNewHabitLock(!timelineNewHabitLock) }, timelineNewHabitLock ? "\u{1F512} 31 Tage sperren: AN" : "\u{1F512} Unl\xF6schbar \u2014 31 Tage sperren"), timelineNewHabitLock && /* @__PURE__ */ import_react.default.createElement("textarea", { className: "goal-reward-input", rows: 2, value: timelineNewHabitLockReason, onChange: (e) => setTimelineNewHabitLockReason(e.target.value), placeholder: "Warum darf dieser Habit nicht gel\xF6scht werden? Diesen Text siehst du, sobald du ihn l\xF6schen willst." }));
+    const labelInputs = (done, setDone, missed, setMissed) => /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, { key: "lbl" }, /* @__PURE__ */ import_react.default.createElement("input", { className: "timeline-habit-add-input", value: missed, onChange: (e) => setMissed(e.target.value), placeholder: "Wort zur roten Zahl, z.B. Nicht gelesen (optional)" }), /* @__PURE__ */ import_react.default.createElement("input", { className: "timeline-habit-add-input", value: done, onChange: (e) => setDone(e.target.value), placeholder: "Wort zur gr\xFCnen Zahl, z.B. Gelesen (optional)" }));
+    const renderHabitLabels = () => labelInputs(editHabitLabelDone, setEditHabitLabelDone, editHabitLabelMissed, setEditHabitLabelMissed);
+    const renderNewHabitLabels = () => labelInputs(timelineNewHabitLabelDone, setTimelineNewHabitLabelDone, timelineNewHabitLabelMissed, setTimelineNewHabitLabelMissed);
+    const renderHabitDays = () => renderDaysChips(editHabitDays, setEditHabitDays);
     const secIcon = (key) => {
       const icons = appState.sectionIcons || {};
       const v = icons[key];
@@ -14105,6 +14119,18 @@ ${stamp}
       setActiveTab(TOUR_STEPS[0].tab);
       setTourStep(0);
     }, [ready, reflections, appState.onboardingDone, appState.tourSeen, appState.anfangsPromptDismissed]);
+    (0, import_react.useEffect)(() => {
+      if (!ready || Object.keys(daysData).length === 0) return;
+      if (!appState.habitTemplate.some((h) => !h.startDate)) return;
+      const keys = Object.keys(daysData).sort();
+      saveAppState(__spreadProps(__spreadValues({}, appState), {
+        habitTemplate: appState.habitTemplate.map((h) => {
+          if (h.startDate) return h;
+          const first = keys.find((k) => daysData[k] && daysData[k].checks && daysData[k].checks[h.id]);
+          return __spreadProps(__spreadValues({}, h), { startDate: first || todayKey });
+        })
+      }));
+    }, [ready, appState.habitTemplate, daysData]);
     (0, import_react.useEffect)(() => {
       if (!ready) return;
       const maybe = () => {
@@ -14880,7 +14906,7 @@ ${stamp}
     function addHabit() {
       const name = newHabitName.trim();
       if (!name) return;
-      const habit = { id: `h${Date.now()}${randInt(10, 99)}`, name, trigger: newHabitTrigger.trim(), link: newHabitLink.trim() };
+      const habit = { id: `h${Date.now()}${randInt(10, 99)}`, name, trigger: newHabitTrigger.trim(), link: newHabitLink.trim(), startDate: todayKey };
       saveAppState(__spreadProps(__spreadValues({}, appState), { habitTemplate: [...appState.habitTemplate, habit] }));
       setNewHabitName("");
       setNewHabitTrigger("");
@@ -14910,6 +14936,9 @@ ${stamp}
       setEditHabitLink(h.link || "");
       setEditHabitZiel(h.ziel || "");
       setEditHabitLock(false);
+      setEditHabitDays(h.days || []);
+      setEditHabitLabelDone(h.labelDone || "");
+      setEditHabitLabelMissed(h.labelMissed || "");
       setEditHabitLockReason(h.lockReason || "");
     }
     function saveEditHabit() {
@@ -14926,7 +14955,7 @@ ${stamp}
       const commit = () => {
         saveAppState(__spreadProps(__spreadValues({}, appState), {
           habitTemplate: appState.habitTemplate.map(
-            (h) => h.id === editingHabitId ? __spreadProps(__spreadValues(__spreadValues({}, h), { name: editHabitName.trim(), trigger: editHabitTrigger.trim(), link: editHabitLink.trim(), ziel: editHabitZiel.trim() }), editHabitLock ? { lockedUntil: lockUntil, lockReason: editHabitLockReason.trim() } : {}) : h
+            (h) => h.id === editingHabitId ? __spreadProps(__spreadValues(__spreadValues({}, h), { name: editHabitName.trim(), trigger: editHabitTrigger.trim(), link: editHabitLink.trim(), ziel: editHabitZiel.trim(), days: editHabitDays, labelDone: editHabitLabelDone.trim(), labelMissed: editHabitLabelMissed.trim() }), editHabitLock ? { lockedUntil: lockUntil, lockReason: editHabitLockReason.trim() } : {}) : h
           )
         }));
         setEditingHabitId(null);
@@ -14992,6 +15021,36 @@ ${stamp}
       if (rule.recurrence === "monthly") return d === sd;
       if (rule.recurrence === "yearly") return d === sd && m === sm;
       return false;
+    }
+    function habitOnDay(h, dayKey) {
+      return !h.days || h.days.length === 0 || h.days.includes(dowOf(dayKey));
+    }
+    function habitStats(h) {
+      const start = h.startDate || todayKey;
+      let done = 0;
+      for (const k in daysData) {
+        const c = daysData[k] && daysData[k].checks;
+        if (c && c[h.id]) done++;
+      }
+      let missed = 0;
+      const span = Math.min(3650, Math.max(0, daysBetweenKeys(start, todayKey)));
+      for (let i = 0; i < span; i++) {
+        const k = addDaysKey(start, i);
+        if (!habitOnDay(h, k)) continue;
+        const c = daysData[k] && daysData[k].checks;
+        if (!(c && c[h.id])) missed++;
+      }
+      return { done, missed };
+    }
+    function addTimelineHabit() {
+      const habit = { id: `h${Date.now()}${randInt(10, 99)}`, name: timelineNewHabitName.trim(), trigger: timelineNewHabitWhy.trim(), link: timelineNewHabitLink.trim(), ziel: timelineNewHabitZiel.trim(), days: timelineNewHabitDays, startDate: todayKey, labelDone: timelineNewHabitLabelDone.trim(), labelMissed: timelineNewHabitLabelMissed.trim() };
+      if (timelineNewHabitLock) {
+        const until = addDaysKey(todayKey, 31);
+        const locked = __spreadProps(__spreadValues({}, habit), { lockedUntil: until, lockReason: timelineNewHabitLockReason.trim() });
+        askConfirm(`\u201E${habit.name}\u201C anlegen und 31 Tage sperren? Bis ${fmtDE(until)} ist er nicht l\xF6schbar und nur der Name \xE4nderbar \u2014 das l\xE4sst sich nicht r\xFCckg\xE4ngig machen.`, () => saveAppState(__spreadProps(__spreadValues({}, appState), { habitTemplate: [...appState.habitTemplate, locked] })), "Ja, sperren");
+      } else {
+        saveAppState(__spreadProps(__spreadValues({}, appState), { habitTemplate: [...appState.habitTemplate, habit] }));
+      }
     }
     function isHabitLocked(h) {
       return !!(h && h.lockedUntil && todayKey <= h.lockedUntil);
@@ -15927,6 +15986,26 @@ ${stamp}
     tr.habit-locked td.wt-rowlabel * { color: #fff !important; }
     .timeline-habit-edit-stack:has(.appt-lock-banner) input:not(:first-of-type),
     .wt-rowlabel-edit-stack:has(.appt-lock-banner) input:not(:first-of-type) { pointer-events: none; opacity: 0.55; }
+
+
+    /* ---------- Aufbau 93: KPI-Tage, Zaehler ---------- */
+    .habit-stat { display: flex; flex-direction: column; gap: 1px; margin-top: 2px; }
+    .habit-stat span { display: block; font-size: 11px; font-weight: 700; }
+    .habit-stat .bad { color: #FF3B3B; }
+    .habit-stat .ok { color: #2FBF5B; }
+    .wt-rowlabel .habit-stat { margin-top: 4px; }
+    .timeline-habit-row.habit-locked .habit-stat span { background: #fff; border-radius: 6px; padding: 0 6px; align-self: flex-start; }
+    .timeline-habit-row.habit-locked .habit-stat .bad { color: #C00000 !important; }
+    .timeline-habit-row.habit-locked .habit-stat .ok { color: #11803A !important; }
+    .wt-check-cell.off { opacity: 0.28; }
+    button.lock-on { background: #FF1212 !important; color: #fff !important; border-color: #7A0000 !important; }
+    .timeline-habit-edit-stack button.wd-chip:not(.cancel-add-btn), .wt-rowlabel-edit-stack button.wd-chip:not(.cancel-add-btn), .timeline-habit-add-form button.wd-chip {
+      background: var(--ink-900); color: var(--fog); border: 1px solid var(--hairline); padding: 8px 0; font-size: 12px; align-self: auto;
+    }
+    .timeline-habit-edit-stack button.wd-chip.on:not(.cancel-add-btn), .wt-rowlabel-edit-stack button.wd-chip.on:not(.cancel-add-btn), .timeline-habit-add-form button.wd-chip.on {
+      background: var(--amber); color: var(--ink-950); border-color: var(--amber);
+    }
+    .timeline-habit-edit-stack:has(.appt-lock-banner) .wd-chip, .wt-rowlabel-edit-stack:has(.appt-lock-banner) .wd-chip { pointer-events: none; opacity: 0.5; }
 
     /* ---------- Das Jahr auf einen Blick ---------- */
     .year-strip { margin: 14px 0 10px; }
@@ -16931,7 +17010,7 @@ ${stamp}
     const yesterdayEntry = daysData[yesterdayKey];
     const yesterdayChecks = yesterdayEntry && yesterdayEntry.checks || {};
     const usedAppYesterday = !!yesterdayEntry;
-    const missedYesterday = usedAppYesterday ? appState.habitTemplate.filter((h) => !yesterdayChecks[h.id]) : [];
+    const missedYesterday = usedAppYesterday ? appState.habitTemplate.filter((h) => !yesterdayChecks[h.id] && habitOnDay(h, yesterdayKey)) : [];
     const showMissedHabitBanner = appState.missedExcuse === false && usedAppYesterday && appState.habitTemplate.length > 0 && missedYesterday.length > 0 && appState.lastMissedBannerDate !== todayKey;
     const missedForced = appState.missedExcuse !== false && ready && phase === "dashboard" && !!appState.onboardingDone && !(tourStep >= 0 && tourStep < TOUR_STEPS.length) && usedAppYesterday && appState.habitTemplate.length > 0 && missedYesterday.length > 0 && appState.lastMissedBannerDate !== todayKey;
     const RECURRENCE_LABEL = { daily: "t\xE4glich", weekly: "w\xF6chentlich", weekdays: "an Wochentagen", monthly: "monatlich", yearly: "j\xE4hrlich" };
@@ -17453,7 +17532,7 @@ ${stamp}
           placeholder: "Wochenziel z.B. Wohnung streichen",
           disabled: weekLoading
         }
-      ), renderExtraGoals(weekData, saveWeek, "Weiteres Wochenziel", WEEK_CHEERS)), renderRewardRow("week", weekData, saveWeek)), /* @__PURE__ */ import_react.default.createElement("div", { "data-tour": "habits", className: "timeline-habits-list" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "timeline-list-label" }, "Habits / KPIs"), appState.habitTemplate.map((h) => {
+      ), renderExtraGoals(weekData, saveWeek, "Weiteres Wochenziel", WEEK_CHEERS)), renderRewardRow("week", weekData, saveWeek)), /* @__PURE__ */ import_react.default.createElement("div", { "data-tour": "habits", className: "timeline-habits-list" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "timeline-list-label" }, "Habits / KPIs"), appState.habitTemplate.filter((h) => habitOnDay(h, selectedDay) || editingHabitId === h.id).map((h) => {
         const checks = daysData[selectedDay] && daysData[selectedDay].checks || {};
         const checked = !!checks[h.id];
         if (editingHabitId === h.id) {
@@ -17490,22 +17569,28 @@ ${stamp}
               onKeyDown: (e) => e.key === "Enter" && saveEditHabit(),
               placeholder: "Link (optional): z.B. Bibel-Seite"
             }
-          ), renderHabitLockBox(), /* @__PURE__ */ import_react.default.createElement("button", { onClick: saveEditHabit }, "OK"), /* @__PURE__ */ import_react.default.createElement("button", { className: "cancel-add-btn", onClick: () => setEditingHabitId(null) }, "Abbrechen"));
+          ), renderHabitLabels(), renderHabitDays(), renderHabitLockBox(), /* @__PURE__ */ import_react.default.createElement("button", { onClick: saveEditHabit }, "OK"), /* @__PURE__ */ import_react.default.createElement("button", { className: "cancel-add-btn", onClick: () => setEditingHabitId(null) }, "Abbrechen"));
         }
         return /* @__PURE__ */ import_react.default.createElement("div", { key: h.id, className: "timeline-habit-row" + (draggingId === h.id ? " dragging" : "") + (isHabitLocked(h) ? " habit-locked" : "") }, /* @__PURE__ */ import_react.default.createElement("span", __spreadValues({ className: "drag-dots habit-drag-handle" }, makeDragHandlers(h.id, moveHabit)), "\u283F"), /* @__PURE__ */ import_react.default.createElement("span", { className: "habit-check" + (checked ? " checked" : ""), onClick: () => toggleHabit(selectedDay, h.id) }, checked ? "\u2713" : ""), /* @__PURE__ */ import_react.default.createElement("span", { className: "timeline-habit-textwrap", onClick: () => toggleHabit(selectedDay, h.id) }, /* @__PURE__ */ import_react.default.createElement("span", { className: "timeline-habit-name" + (checked ? " done" : "") }, (isHabitLocked(h) ? "\u{1F512} " : "") + h.name), h.trigger && /* @__PURE__ */ import_react.default.createElement("span", { className: "timeline-habit-why" }, h.trigger), (() => {
           const total = totalCompletionCount(daysData, h.id);
           const formed = total >= HABIT_FORMATION_DAYS;
-          return /* @__PURE__ */ import_react.default.createElement("span", { className: "timeline-habit-formation" }, formed ? "Gewohnheit \u2713" : `Tag ${total}/${HABIT_FORMATION_DAYS}`);
+          const st = habitStats(h);
+          return /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("span", { className: "timeline-habit-formation" }, formed ? "Gewohnheit \u2713 \xB7 Tag " + total : "Tag " + total + "/" + HABIT_FORMATION_DAYS), /* @__PURE__ */ import_react.default.createElement("span", { className: "habit-stat" }, /* @__PURE__ */ import_react.default.createElement("span", { className: "bad" }, "\u2717 " + st.missed + "\xD7 " + (h.labelMissed || "nicht gemacht")), /* @__PURE__ */ import_react.default.createElement("span", { className: "ok" }, "\u2713 " + st.done + "\xD7 " + (h.labelDone || "gemacht"))));
         })()), h.link && /* @__PURE__ */ import_react.default.createElement("button", { className: "timeline-habit-link", onClick: (e) => {
           e.stopPropagation();
           window.open(h.link, "_blank");
         }, "aria-label": `Link zu ${h.name} \xF6ffnen` }, "\u{1F517}"), /* @__PURE__ */ import_react.default.createElement("button", { className: "wt-edit-icon", onClick: () => startEditHabit(h), "aria-label": `${h.name} bearbeiten` }, "\u270E"), /* @__PURE__ */ import_react.default.createElement("button", { className: "habit-remove", onClick: () => removeHabit(h.id), "aria-label": `${h.name} entfernen` }, "\xD7"));
-      }), timelineAddingHabit ? /* @__PURE__ */ import_react.default.createElement("span", { className: "timeline-habit-add-form", onClick: (e) => e.stopPropagation() }, /* @__PURE__ */ import_react.default.createElement("button", { className: "pop-close", onClick: () => {
+      }), appState.habitTemplate.some((h) => !habitOnDay(h, selectedDay)) && /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: 2 } }, "An diesem Tag nicht dran: " + appState.habitTemplate.filter((h) => !habitOnDay(h, selectedDay)).map((h) => h.name).join(", ")), timelineAddingHabit ? /* @__PURE__ */ import_react.default.createElement("span", { className: "timeline-habit-add-form", onClick: (e) => e.stopPropagation() }, /* @__PURE__ */ import_react.default.createElement("button", { className: "pop-close", onClick: () => {
         setTimelineAddingHabit(false);
         setTimelineNewHabitName("");
         setTimelineNewHabitWhy("");
         setTimelineNewHabitLink("");
         setTimelineNewHabitZiel("");
+              setTimelineNewHabitDays([]);
+              setTimelineNewHabitLock(false);
+              setTimelineNewHabitLabelDone("");
+              setTimelineNewHabitLabelMissed("");
+              setTimelineNewHabitLockReason("");
       }, "aria-label": "Schlie\xDFen" }, "\xD7"), /* @__PURE__ */ import_react.default.createElement("div", { className: "appt-step-label" }, "Neue Habit"), /* @__PURE__ */ import_react.default.createElement(
         "input",
         {
@@ -17539,27 +17624,37 @@ ${stamp}
           onChange: (e) => setTimelineNewHabitLink(e.target.value),
           onKeyDown: (e) => {
             if (e.key === "Enter" && timelineNewHabitName.trim()) {
-              saveAppState(__spreadProps(__spreadValues({}, appState), { habitTemplate: [...appState.habitTemplate, { id: `h${Date.now()}${randInt(10, 99)}`, name: timelineNewHabitName.trim(), trigger: timelineNewHabitWhy.trim(), link: timelineNewHabitLink.trim(), ziel: timelineNewHabitZiel.trim() }] }));
+              addTimelineHabit();
               setTimelineNewHabitName("");
               setTimelineNewHabitWhy("");
               setTimelineNewHabitLink("");
               setTimelineNewHabitZiel("");
+              setTimelineNewHabitDays([]);
+              setTimelineNewHabitLock(false);
+              setTimelineNewHabitLabelDone("");
+              setTimelineNewHabitLabelMissed("");
+              setTimelineNewHabitLockReason("");
               setTimelineAddingHabit(false);
             }
           },
           placeholder: "Link (optional): z.B. Bibel-Seite"
         }
-      ), /* @__PURE__ */ import_react.default.createElement(
+      ), renderNewHabitLabels(), renderDaysChips(timelineNewHabitDays, setTimelineNewHabitDays), renderNewHabitLock(), /* @__PURE__ */ import_react.default.createElement(
         "button",
         {
           className: "timeline-habit-add-btn",
           onClick: () => {
             if (timelineNewHabitName.trim()) {
-              saveAppState(__spreadProps(__spreadValues({}, appState), { habitTemplate: [...appState.habitTemplate, { id: `h${Date.now()}${randInt(10, 99)}`, name: timelineNewHabitName.trim(), trigger: timelineNewHabitWhy.trim(), link: timelineNewHabitLink.trim(), ziel: timelineNewHabitZiel.trim() }] }));
+              addTimelineHabit();
               setTimelineNewHabitName("");
               setTimelineNewHabitWhy("");
               setTimelineNewHabitLink("");
               setTimelineNewHabitZiel("");
+              setTimelineNewHabitDays([]);
+              setTimelineNewHabitLock(false);
+              setTimelineNewHabitLabelDone("");
+              setTimelineNewHabitLabelMissed("");
+              setTimelineNewHabitLockReason("");
               setTimelineAddingHabit(false);
             }
           }
@@ -17748,7 +17843,7 @@ ${stamp}
             onKeyDown: (e) => e.key === "Enter" && saveEditHabit(),
             placeholder: "Link (optional): z.B. Bibel-Seite"
           }
-        ), renderHabitLockBox(), /* @__PURE__ */ import_react.default.createElement("button", { onClick: saveEditHabit }, "OK"), /* @__PURE__ */ import_react.default.createElement("button", { className: "cancel-add-btn", onClick: () => setEditingHabitId(null) }, "Abbrechen")) : /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("div", { className: "wt-habit-name-row" }, /* @__PURE__ */ import_react.default.createElement("span", { onClick: () => habitNameClick(h) }, h.link ? "\u{1F517} " : "", isHabitLocked(h) ? "\u{1F512} " : "", h.name), /* @__PURE__ */ import_react.default.createElement("span", { className: "wt-week-badge" }, weekCount, "/7"), /* @__PURE__ */ import_react.default.createElement("button", { className: "wt-edit-icon", onClick: () => startEditHabit(h), "aria-label": `${h.name} bearbeiten` }, "\u270E"), /* @__PURE__ */ import_react.default.createElement("button", { className: "wt-remove", onClick: () => removeHabit(h.id), "aria-label": `${h.name} entfernen` }, "\xD7")), h.trigger && /* @__PURE__ */ import_react.default.createElement("div", { className: "wt-trigger" }, "\u21B3 ", h.trigger), (() => {
+        ), renderHabitLabels(), renderHabitDays(), renderHabitLockBox(), /* @__PURE__ */ import_react.default.createElement("button", { onClick: saveEditHabit }, "OK"), /* @__PURE__ */ import_react.default.createElement("button", { className: "cancel-add-btn", onClick: () => setEditingHabitId(null) }, "Abbrechen")) : /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("div", { className: "wt-habit-name-row" }, /* @__PURE__ */ import_react.default.createElement("span", { onClick: () => habitNameClick(h) }, h.link ? "\u{1F517} " : "", isHabitLocked(h) ? "\u{1F512} " : "", h.name), /* @__PURE__ */ import_react.default.createElement("span", { className: "wt-week-badge" }, weekCount, "/", weekDates.filter((wd2) => habitOnDay(h, wd2.key)).length || 7), /* @__PURE__ */ import_react.default.createElement("button", { className: "wt-edit-icon", onClick: () => startEditHabit(h), "aria-label": `${h.name} bearbeiten` }, "\u270E"), /* @__PURE__ */ import_react.default.createElement("button", { className: "wt-remove", onClick: () => removeHabit(h.id), "aria-label": `${h.name} entfernen` }, "\xD7")), h.trigger && /* @__PURE__ */ import_react.default.createElement("div", { className: "wt-trigger" }, "\u21B3 ", h.trigger), (() => {
           const total = totalCompletionCount(daysData, h.id);
           const pct = Math.min(100, Math.round(total / HABIT_FORMATION_DAYS * 100));
           const formed = total >= HABIT_FORMATION_DAYS;
@@ -17757,12 +17852,17 @@ ${stamp}
             const dk = shiftDays(todayKey, -i);
             if (daysData[dk] && daysData[dk].checks && daysData[dk].checks[h.id]) last30++;
           }
-          const ratePct = Math.round(last30 / 30 * 100);
-          return /* @__PURE__ */ import_react.default.createElement("div", { className: "habit-progress" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "habit-progress-track" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "habit-progress-fill", style: { width: `${pct}%` } })), /* @__PURE__ */ import_react.default.createElement("span", { className: "habit-progress-label" }, formed ? "Gewohnheit \u2713" : `Tag ${total}/${HABIT_FORMATION_DAYS}`), /* @__PURE__ */ import_react.default.createElement("span", { className: "habit-rate" }, ratePct, "% (30 Tage)"));
+          let sched30 = 0;
+          for (let i = 0; i < 30; i++) {
+            if (habitOnDay(h, shiftDays(todayKey, -i))) sched30++;
+          }
+          const ratePct = Math.min(100, Math.round(last30 / (sched30 || 30) * 100));
+          const st = habitStats(h);
+          return /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("div", { className: "habit-progress" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "habit-progress-track" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "habit-progress-fill", style: { width: `${pct}%` } })), /* @__PURE__ */ import_react.default.createElement("span", { className: "habit-progress-label" }, formed ? "Gewohnheit \u2713 \xB7 Tag " + total : `Tag ${total}/${HABIT_FORMATION_DAYS}`), /* @__PURE__ */ import_react.default.createElement("span", { className: "habit-rate" }, ratePct, "% (30 Tage)")), /* @__PURE__ */ import_react.default.createElement("div", { className: "habit-stat" }, /* @__PURE__ */ import_react.default.createElement("span", { className: "bad" }, "\u2717 " + st.missed + "\xD7 " + (h.labelMissed || "nicht gemacht")), /* @__PURE__ */ import_react.default.createElement("span", { className: "ok" }, "\u2713 " + st.done + "\xD7 " + (h.labelDone || "gemacht"))));
         })())), displayDates.map((wd) => {
           const checks = daysData[wd.key] && daysData[wd.key].checks || {};
           const checked = !!checks[h.id];
-          return /* @__PURE__ */ import_react.default.createElement("td", { key: wd.key, className: "wt-check-cell" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "wt-check" + (checked ? " checked" : ""), onClick: () => toggleHabit(wd.key, h.id), "aria-label": `${h.name} am ${wd.date.getDate()}. abhaken` }, checked ? "\u2713" : ""));
+          return /* @__PURE__ */ import_react.default.createElement("td", { key: wd.key, className: "wt-check-cell" + (habitOnDay(h, wd.key) ? "" : " off") }, /* @__PURE__ */ import_react.default.createElement("button", { className: "wt-check" + (checked ? " checked" : ""), onClick: () => toggleHabit(wd.key, h.id), "aria-label": `${h.name} am ${wd.date.getDate()}. abhaken` }, checked ? "\u2713" : ""));
         }));
       })))), deleteConfirm && /* @__PURE__ */ import_react.default.createElement("div", { className: "delete-confirm" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "delete-confirm-text" }, '"', deleteConfirm.appt.title, '" l\xF6schen \u2014'), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn", onClick: confirmDeleteThisOccurrence }, "Nur diesen Tag"), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn danger", onClick: confirmDeleteWholeSeries }, "Ganze Serie (alle Wiederholungen)"), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn cancel", onClick: () => setDeleteConfirm(null) }, "Abbrechen")))
     ), activeTab === "daily" && /* @__PURE__ */ import_react.default.createElement("div", { className: "reorder-block", style: { order: appState.sectionOrder.indexOf("planning") } }, /* @__PURE__ */ import_react.default.createElement("div", { className: "section-move-row planning-header" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "collapse-header", style: { flex: 1 }, onClick: () => setShowTomorrowPlanning((v) => !v) }, /* @__PURE__ */ import_react.default.createElement("span", { className: "collapse-arrow" + (showTomorrowPlanning ? " open" : "") }, "\u25B8"), /* @__PURE__ */ import_react.default.createElement("span", { className: "collapse-title" }, "\u{1F319} Planung f\xFCr morgen")), /* @__PURE__ */ import_react.default.createElement("div", __spreadValues({ className: "move-btns drag-handle" + (draggingId === "planning" ? " dragging" : "") }, makeDragHandlers("planning", moveSection)), /* @__PURE__ */ import_react.default.createElement("span", { className: "drag-dots" }, "\u283F"))), showTomorrowPlanning && /* @__PURE__ */ import_react.default.createElement("div", { className: "section" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginBottom: 10 } }, "Abends 3 Priorit\xE4ten f\xFCr ", formatLongDate(shiftDays(todayKey, 1)), ' eintragen \u2014 morgens erscheinen sie oben unter "Heute geplant".'), prioritiesFor(shiftDays(todayKey, 1)).map((p, i) => /* @__PURE__ */ import_react.default.createElement(
@@ -17887,7 +17987,7 @@ ${stamp}
         setExcuseDraft("");
       } }, "Ehrlich begr\xFCndet \u2014 weiter")));
     })(), noticeMsg && /* @__PURE__ */ import_react.default.createElement("div", { className: "day-flash notice-flash" }, noticeMsg), openNudge && !missedForced && (() => {
-      const items = [...(appState.habitTemplate || []), ...(appState.kpiTemplate || [])].filter((h) => (h.name || "").trim()).slice(0, 4);
+      const items = [...(appState.habitTemplate || []), ...(appState.kpiTemplate || [])].filter((h) => (h.name || "").trim() && habitOnDay(h, todayKey)).slice(0, 4);
       const nToday = apptsFor(todayKey).filter((x) => (x.title || "").trim()).length;
       return /* @__PURE__ */ import_react.default.createElement("div", { className: "delete-confirm", style: { zIndex: 990 } }, /* @__PURE__ */ import_react.default.createElement("div", { className: "delete-confirm-text", style: { fontWeight: 700, fontSize: 17 } }, "K\xFCmmere dich um deine KPIs und Termine"), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note" }, nToday === 0 ? "Heute ist noch nichts geplant." : nToday === 1 ? "Heute steht 1 Termin an." : "Heute stehen " + nToday + " Termine an."), items.map((h, i) => /* @__PURE__ */ import_react.default.createElement("div", { key: i, className: "nudge-item" }, /* @__PURE__ */ import_react.default.createElement("b", null, h.name), h.trigger ? /* @__PURE__ */ import_react.default.createElement("div", null, "Weil: " + h.trigger) : null, h.ziel ? /* @__PURE__ */ import_react.default.createElement("div", null, "Dann erreichst du: " + h.ziel) : null)), yearGoalData && (yearGoalData.goal || "").trim() ? /* @__PURE__ */ import_react.default.createElement("div", { className: "nudge-item" }, "Alles zusammen f\xFChrt zu deinem Jahresziel: ", /* @__PURE__ */ import_react.default.createElement("b", null, yearGoalData.goal)) : null, /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn", onClick: () => setOpenNudge(false) }, "Los geht\u2019s"), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn cancel", onClick: () => {
         setOpenNudge(false);
