@@ -15457,6 +15457,7 @@ ${stamp}
           lockPatch.duration = lockDur;
         }
         const lockConflict = (scope) => {
+          return false;
           if (e.allDay) return false;
           const rec = scope === "all" ? e.recurrence : "none";
           const c = slotConflict(e.startDate, e.startTime, e.allDay, lockDur, { recurrence: rec, weekdays: e.weekdays || [], endDate: e.until || "" }, { id: e.id, seriesId: e.seriesId });
@@ -15519,7 +15520,7 @@ ${stamp}
       const extra = { duration: durationMin, allDay: e.allDay, context: activeTab, location: patch.location, notes: patch.notes, lockedUntil: lockUntil, lockReason: (e.lockReason || "").trim(), weekdays, until };
       const finish = (scope) => {
         const rec = scope === "one" ? "none" : e.recurrence;
-        const conflict = slotConflict(e.startDate, e.startTime, e.allDay, durationMin, { recurrence: rec, weekdays, endDate: until }, { id: e.id, seriesId: e.seriesId });
+        const conflict = lockUntil ? null : slotConflict(e.startDate, e.startTime, e.allDay, durationMin, { recurrence: rec, weekdays, endDate: until }, { id: e.id, seriesId: e.seriesId });
         if (conflict) {
           showNotice(`\u{1F512} Diese Zeit ist durch \u201E${conflict.appt.title}\u201C gesperrt (${fmtDE(conflict.day)}).`);
           return;
@@ -16136,6 +16137,7 @@ ${stamp}
       box-shadow: 0 0 0 1px #7A0000, 0 3px 16px rgba(255, 18, 18, 0.6) !important;
     }
     .timeline-block.locked .habit-check { border-color: #fff; color: #fff; }
+    .timeline-block.locked.moving { z-index: 20; box-shadow: 0 10px 26px rgba(0, 0, 0, 0.55) !important; opacity: 0.94; transform: scale(1.03); }
     .timeline-allday.locked { background: #FF1212; border: 1px solid #7A0000; color: #fff; font-weight: 700; }
     .appt-editor .pop-close { position: relative !important; }
     .appt-editor.locked .appt-editor-title, .appt-editor.locked input.appt-editor-time { pointer-events: auto; opacity: 1; }
@@ -17925,6 +17927,19 @@ ${stamp}
         const durMin = parseInt(a.duration, 10) || 60;
         const top = (startHour - 6) * 48 + startMin / 60 * 48;
         const height = Math.max(30, durMin / 60 * 48 - 4);
+        const _ovSpan = (x) => {
+          const [h, m] = x.time.split(":").map(Number);
+          const st0 = h * 60 + m;
+          return [st0, st0 + (parseInt(x.duration, 10) || 60)];
+        };
+        const _ovMine = _ovSpan(a);
+        const _ovList = apptsFor(selectedDay).filter((x) => !x.allDay && !x.isBirthday && (x.title || "").trim()).filter((x) => {
+          const q = _ovSpan(x);
+          return q[0] < _ovMine[1] && q[1] > _ovMine[0];
+        });
+        const _ovCols = Math.max(1, _ovList.length);
+        const _ovCol = Math.max(0, _ovList.findIndex((x) => x.id === a.id));
+        const overlapStyle = _ovCols > 1 ? { left: `calc(58px + (100% - 58px) * ${_ovCol} / ${_ovCols})`, right: "auto", width: `calc((100% - 58px) / ${_ovCols} - 3px)` } : {};
         const checks = daysData[selectedDay] && daysData[selectedDay].checks || {};
         const apptDone = !!checks[a.id];
         if (editingApptId === a.id) {
@@ -17948,7 +17963,7 @@ ${stamp}
           {
             key: a.id,
             className: "timeline-block timeline-appt-overlay" + (apptDone ? " done" : "") + (isApptLocked(a) ? " locked" : "") + (movingAppt && movingAppt.id === a.id ? " moving" : ""),
-            style: { top: movingAppt && movingAppt.id === a.id ? movingAppt.top : top, height },
+            style: __spreadValues({ top: movingAppt && movingAppt.id === a.id ? movingAppt.top : top, height }, overlapStyle),
             onTouchStart: (e) => {
               const y = e.touches[0].clientY;
               if (apptDragRef.current && apptDragRef.current.timer) clearTimeout(apptDragRef.current.timer);
@@ -17988,7 +18003,7 @@ ${stamp}
                 const clamped = Math.min(23 * 60 + 55, Math.max(6 * 60, raw));
                 const newTime = `${pad(Math.floor(clamped / 60))}:${pad(clamped % 60)}`;
                 if (newTime !== a.time) {
-                  const cf = findLockedConflict(selectedDay, clamped, clamped + (parseInt(a.duration, 10) || 60), { id: a.id, seriesId: a.seriesId });
+                  const cf = isApptLocked(a) ? null : findLockedConflict(selectedDay, clamped, clamped + (parseInt(a.duration, 10) || 60), { id: a.id, seriesId: a.seriesId });
                   if (cf) showNotice(`\u{1F512} Diese Zeit ist durch \u201E${cf.title}\u201C gesperrt.`);
                   else if (a.recurring) setSeriesChoice({ title: a.title, onOne: () => detachOccurrence(a.seriesId, selectedDay, selectedDay, isApptLocked(a) ? { time: newTime, lockedUntil: a.lockedUntil, lockReason: a.lockReason || "" } : { time: newTime }), onAll: () => updateRecurringSeries(a.seriesId, { time: newTime }) });
                   else updateAppointment(selectedDay, a.id, { time: newTime });
@@ -18222,7 +18237,7 @@ ${stamp}
       const fn = seriesChoice.onAll;
       setSeriesChoice(null);
       fn();
-    } }, "Alle Termine der Serie"), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn cancel", onClick: () => setSeriesChoice(null) }, "Abbrechen")), lockInfo && /* @__PURE__ */ import_react.default.createElement("div", { className: "delete-confirm", style: { zIndex: 993, border: "2px solid #FF1212" } }, /* @__PURE__ */ import_react.default.createElement("div", { className: "delete-confirm-text", style: { fontWeight: 800, fontSize: 17, color: "#FF3B3B" } }, "\u{1F512} Nicht l\xF6schbar"), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note" }, "\u201E" + lockInfo.title + "\u201C ist bis " + fmtDE(lockInfo.until) + " gesperrt."), /* @__PURE__ */ import_react.default.createElement("div", { className: "lock-reason-text" }, lockInfo.reason ? "\u201E" + lockInfo.reason + "\u201C" : "Du hast diesen Termin selbst gesperrt, damit du dich daran h\xE4ltst. Genau daf\xFCr ist die Sperre da \u2014 auch wenn es gerade nervt."), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn", onClick: () => setLockInfo(null) }, "Verstanden")), missedForced && (() => {
+    } }, "Alle Termine der Reihe"), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn cancel", onClick: () => setSeriesChoice(null) }, "Abbrechen")), lockInfo && /* @__PURE__ */ import_react.default.createElement("div", { className: "delete-confirm", style: { zIndex: 993, border: "2px solid #FF1212" } }, /* @__PURE__ */ import_react.default.createElement("div", { className: "delete-confirm-text", style: { fontWeight: 800, fontSize: 17, color: "#FF3B3B" } }, "\u{1F512} Nicht l\xF6schbar"), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note" }, "\u201E" + lockInfo.title + "\u201C ist bis " + fmtDE(lockInfo.until) + " gesperrt."), /* @__PURE__ */ import_react.default.createElement("div", { className: "lock-reason-text" }, lockInfo.reason ? "\u201E" + lockInfo.reason + "\u201C" : "Du hast diesen Termin selbst gesperrt, damit du dich daran h\xE4ltst. Genau daf\xFCr ist die Sperre da \u2014 auch wenn es gerade nervt."), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn", onClick: () => setLockInfo(null) }, "Verstanden")), missedForced && (() => {
       const words = excuseDraft.trim().split(/\s+/).filter(Boolean).length;
       const ok = words >= 10;
       const prev = excuseLog.length ? excuseLog[excuseLog.length - 1] : null;
