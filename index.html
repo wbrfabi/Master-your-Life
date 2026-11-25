@@ -12851,7 +12851,7 @@ try {
   function ymKey(year, monthIdx0) {
     return `${year}-${pad(monthIdx0 + 1)}`;
   }
-  var APP_BUILD = "Aufbau 93 \u2014 24.11.2026";
+  var APP_BUILD = "Aufbau 95 \u2014 25.11.2026";
   var ALARM_CATCHUP_MINUTES = 5;
   function hhmm(d = /* @__PURE__ */ new Date()) {
     return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
@@ -13118,7 +13118,10 @@ try {
     const [lockInfo, setLockInfo] = (0, import_react.useState)(null);
     const [training, setTraining] = (0, import_react.useState)({ exercises: [], log: {} });
     const [trainingOpen, setTrainingOpen] = (0, import_react.useState)(false);
-    const [trainDraft, setTrainDraft] = (0, import_react.useState)({ name: "", sets: "3", reps: "10", kg: "" });
+    const [trainDraft, setTrainDraft] = (0, import_react.useState)({ name: "", group: "", sets: "3", reps: "10", kg: "" });
+    const [vacDraft, setVacDraft] = (0, import_react.useState)({ from: "", to: "" });
+    const [pauseDraft, setPauseDraft] = (0, import_react.useState)({ from: "", to: "" });
+    const [pauseOpen, setPauseOpen] = (0, import_react.useState)(false);
     const [excuseLog, setExcuseLog] = (0, import_react.useState)([]);
     const [excuseDraft, setExcuseDraft] = (0, import_react.useState)("");
     const saveTraining = (0, import_react.useCallback)((next) => {
@@ -14050,6 +14053,7 @@ ${stamp}
       return /* @__PURE__ */ import_react.default.createElement("div", { className: "goal-reward-row", key: "rw-" + key }, /* @__PURE__ */ import_react.default.createElement("input", { className: "goal-reward-input", value: data.reward || "", placeholder: "\u{1F381} Belohnung, wenn du es schaffst (z.B. Abendessen im Restaurant)", onChange: (e) => saveFn({ ...data, reward: e.target.value }) }), /* @__PURE__ */ import_react.default.createElement("input", { className: "goal-reward-input", value: data.punishment || "", placeholder: "\u26A1 Strafe, wenn nicht (z.B. 20 \u20AC spenden)", onChange: (e) => saveFn({ ...data, punishment: e.target.value }) }), /* @__PURE__ */ import_react.default.createElement("button", { className: "goal-reward-toggle", onClick: () => setRewardOpen("") }, "Fertig"));
     };
     const renderTraining = () => {
+      const H = import_react.default.createElement;
       const tl = training || { exercises: [], log: {} };
       const exs = tl.exercises || [];
       const log = tl.log || {};
@@ -14059,9 +14063,25 @@ ${stamp}
       const last30 = trainedDays.filter((d) => d > addDaysKey(todayKey, -30)).length;
       const lastDay = trainedDays.length ? trainedDays[trainedDays.length - 1] : null;
       const dots = Array.from({ length: 14 }, (_, i) => addDaysKey(todayKey, i - 13));
-      const setEx = (id, field, val) => saveTraining({ ...tl, exercises: exs.map((x) => x.id === id ? { ...x, [field]: val } : x) });
+      const srOf = (x) => Array.isArray(x.setReps) && x.setReps.length ? x.setReps.map(String) : Array.from({ length: Math.max(1, Number(x.sets) || 3) }, () => String(x.reps || "10"));
+      const kgNum = (v) => Number(String(v == null ? "" : v).replace(",", ".")) || 0;
+      const setEx = (id, patch) => saveTraining({ ...tl, exercises: exs.map((x) => x.id === id ? { ...x, ...patch } : x) });
+      const setSR = (x, arr) => setEx(x.id, { setReps: arr });
+      const bumpReps = (x, d) => setSR(x, srOf(x).map((r) => String(Math.max(0, (Number(r) || 0) + d))));
+      const bumpKg = (x, d) => {
+        const v = Math.max(0, Math.round((kgNum(x.kg) + d) * 10) / 10);
+        setEx(x.id, { kg: v > 0 ? String(v) : "" });
+      };
+      const addSet = (x) => {
+        const a2 = srOf(x);
+        setSR(x, [...a2, a2[a2.length - 1] || "10"]);
+      };
+      const delSet = (x) => {
+        const a2 = srOf(x);
+        if (a2.length > 1) setSR(x, a2.slice(0, -1));
+      };
       const logEx = (x) => {
-        saveTraining({ ...tl, log: { ...log, [todayKey]: { ...today, [x.id]: { sets: x.sets, reps: x.reps, kg: x.kg } } } });
+        saveTraining({ ...tl, log: { ...log, [todayKey]: { ...today, [x.id]: { setReps: srOf(x), kg: x.kg } } } });
         playSuccessChime();
         buzz(22);
       };
@@ -14072,24 +14092,90 @@ ${stamp}
         }
         return null;
       };
-      const fmtE = (e) => e.sets + "\xD7" + e.reps + (e.kg ? " \xB7 " + e.kg + " kg" : "");
-      const vol = (e) => (Number(e.sets) || 0) * (Number(e.reps) || 0) * (Number(String(e.kg).replace(",", ".")) || 1);
+      const fmtE = (e) => srOf(e).join("/") + (e.kg ? " \xB7 " + e.kg + " kg" : "");
+      const vol = (e) => srOf(e).reduce((t, r) => t + (Number(r) || 0), 0) * (kgNum(e.kg) || 1);
       const addEx = () => {
         const nm = trainDraft.name.trim();
         if (!nm) return;
-        saveTraining({ ...tl, exercises: [...exs, { id: newId("e"), name: nm, sets: trainDraft.sets || "3", reps: trainDraft.reps || "10", kg: trainDraft.kg || "" }] });
-        setTrainDraft({ name: "", sets: trainDraft.sets, reps: trainDraft.reps, kg: "" });
+        const n = Math.max(1, Math.min(10, Number(trainDraft.sets) || 3));
+        saveTraining({ ...tl, exercises: [...exs, { id: newId("e"), name: nm, group: (trainDraft.group || "").trim(), setReps: Array.from({ length: n }, () => String(trainDraft.reps || "10")), kg: trainDraft.kg || "" }] });
+        setTrainDraft({ ...trainDraft, name: "", kg: "" });
       };
-      const num = (x, field, label) => /* @__PURE__ */ import_react.default.createElement("label", null, label, /* @__PURE__ */ import_react.default.createElement("input", { className: "train-in", type: "number", inputMode: "decimal", value: x[field], onChange: (e) => setEx(x.id, field, e.target.value), "aria-label": label }));
-      return /* @__PURE__ */ import_react.default.createElement("div", { className: "section train-card", "data-tour": "training" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "train-head", onClick: () => setTrainingOpen(!trainingOpen) }, /* @__PURE__ */ import_react.default.createElement("span", { className: "train-title" }, "\u{1F4AA} Training"), /* @__PURE__ */ import_react.default.createElement("span", { className: "train-sum" }, exs.length === 0 ? "\xDCbungen anlegen" : "heute " + doneToday + "/" + exs.length + " \xB7 " + last30 + " Tage in 30"), /* @__PURE__ */ import_react.default.createElement("span", null, trainingOpen ? "\u25BE" : "\u25B8")), trainingOpen && /* @__PURE__ */ import_react.default.createElement("div", { className: "train-body" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "train-dots" }, dots.map((d) => /* @__PURE__ */ import_react.default.createElement("span", { key: d, className: "train-dot" + (log[d] && Object.keys(log[d]).length ? " on" : "") + (d === todayKey ? " today" : "") }, WD_SHORT[dowOf(d)]))), lastDay ? /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: 0 } }, "Letztes Training: " + fmtDE(lastDay).slice(0, 6) + "  \xB7  Die Tage merkt sich die App, sobald du eine \xDCbung eintr\xE4gst.") : /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: 0 } }, "Lege deine \xDCbungen an und trag sie nach jedem Training ein. Die App merkt sich die Tage und zeigt dir, ob du dich steigerst."), exs.map((x) => {
+      const groupNames = [];
+      exs.forEach((x) => {
+        const g = (x.group || "").trim();
+        if (!groupNames.includes(g)) groupNames.push(g);
+      });
+      groupNames.sort((p, q) => (p === "" ? 0 : 1) - (q === "" ? 0 : 1));
+      const renderEx = (x) => {
+        const sr = srOf(x);
         const p = prevOf(x);
         const t = today[x.id];
-        return /* @__PURE__ */ import_react.default.createElement("div", { key: x.id, className: "train-ex" + (t ? " done" : "") }, /* @__PURE__ */ import_react.default.createElement("div", { className: "train-ex-top" }, /* @__PURE__ */ import_react.default.createElement("span", { className: "train-ex-name" }, (t ? "\u2713 " : "") + x.name), /* @__PURE__ */ import_react.default.createElement("button", { className: "habit-remove", onClick: () => askConfirm("\u201E" + x.name + "\u201C wirklich l\xF6schen?", () => saveTraining({ ...tl, exercises: exs.filter((y) => y.id !== x.id) })), "aria-label": "\xDCbung l\xF6schen" }, "\xD7")), /* @__PURE__ */ import_react.default.createElement("div", { className: "train-ex-inputs" }, num(x, "sets", "S\xE4tze"), num(x, "reps", "Wdh."), num(x, "kg", "kg")), p ? /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: 0 } }, "Letztes Mal (" + fmtDE(p.day).slice(0, 6) + "): " + fmtE(p.e) + (t && vol(t) > vol(p.e) ? "   \u25B2 gesteigert" : t && vol(t) < vol(p.e) ? "   \u25BC weniger" : "")) : null, /* @__PURE__ */ import_react.default.createElement("div", { className: "train-ex-actions" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "train-btn", onClick: () => setEx(x.id, "reps", String((Number(x.reps) || 0) + 1)) }, "\u25B2 +1 Wdh."), /* @__PURE__ */ import_react.default.createElement("button", { className: "train-btn", onClick: () => setEx(x.id, "sets", String((Number(x.sets) || 0) + 1)) }, "\u25B2 +1 Satz"), /* @__PURE__ */ import_react.default.createElement("button", { className: "train-btn", onClick: () => setEx(x.id, "kg", String(Math.round(((Number(String(x.kg).replace(",", ".")) || 0) + 2.5) * 10) / 10)) }, "\u25B2 +2,5 kg"), /* @__PURE__ */ import_react.default.createElement("button", { className: "train-btn primary", onClick: () => logEx(x) }, t ? "\u2713 Neu eintragen" : "Heute eintragen")));
-      }), /* @__PURE__ */ import_react.default.createElement("div", { className: "train-ex" }, /* @__PURE__ */ import_react.default.createElement("input", { className: "goal-reward-input", value: trainDraft.name, placeholder: "Neue \xDCbung, z.B. Kniebeugen", onChange: (e) => setTrainDraft({ ...trainDraft, name: e.target.value }), onKeyDown: (e) => e.key === "Enter" && addEx() }), /* @__PURE__ */ import_react.default.createElement("div", { className: "train-ex-inputs" }, /* @__PURE__ */ import_react.default.createElement("label", null, "S\xE4tze", /* @__PURE__ */ import_react.default.createElement("input", { className: "train-in", type: "number", inputMode: "numeric", value: trainDraft.sets, onChange: (e) => setTrainDraft({ ...trainDraft, sets: e.target.value }) })), /* @__PURE__ */ import_react.default.createElement("label", null, "Wdh.", /* @__PURE__ */ import_react.default.createElement("input", { className: "train-in", type: "number", inputMode: "numeric", value: trainDraft.reps, onChange: (e) => setTrainDraft({ ...trainDraft, reps: e.target.value }) })), /* @__PURE__ */ import_react.default.createElement("label", null, "kg (optional)", /* @__PURE__ */ import_react.default.createElement("input", { className: "train-in", type: "number", inputMode: "decimal", value: trainDraft.kg, onChange: (e) => setTrainDraft({ ...trainDraft, kg: e.target.value }) }))), /* @__PURE__ */ import_react.default.createElement("button", { className: "train-btn primary", style: { marginLeft: 0 }, onClick: addEx }, "+ \xDCbung hinzuf\xFCgen")), doneToday > 0 && /* @__PURE__ */ import_react.default.createElement("button", { className: "tiny-archive-link", style: { alignSelf: "flex-start" }, onClick: () => askConfirm("Das heutige Training zur\xFCcksetzen?", () => {
-        const l2 = { ...log };
-        delete l2[todayKey];
-        saveTraining({ ...tl, log: l2 });
-      }, "Ja, zur\xFCcksetzen") }, "Heute zur\xFCcksetzen")));
+        return H(
+          "div",
+          { key: x.id, className: "train-ex" + (t ? " done" : "") },
+          H("div", { className: "train-ex-top" }, H("span", { className: "train-ex-name" }, (t ? "✓ " : "") + x.name), H("button", { className: "habit-remove", onClick: () => askConfirm("„" + x.name + "“ wirklich l\xF6schen?", () => saveTraining({ ...tl, exercises: exs.filter((y) => y.id !== x.id) })), "aria-label": "\xDCbung l\xF6schen" }, "\xD7")),
+          H("div", { className: "settings-note", style: { margin: 0 } }, "Wiederholungen pro Satz (z.B. 12 / 10 / 8)"),
+          H(
+            "div",
+            { className: "train-ex-inputs" },
+            sr.map((r, i) => H("label", { key: i }, "Satz " + (i + 1), H("input", { className: "train-in", type: "number", inputMode: "numeric", value: r, "aria-label": "Wiederholungen Satz " + (i + 1), onChange: (ev) => setSR(x, sr.map((v, j) => j === i ? ev.target.value : v)) }))),
+            H("label", { key: "kg" }, "kg", H("input", { className: "train-in", type: "number", inputMode: "decimal", value: x.kg || "", "aria-label": "kg", onChange: (ev) => setEx(x.id, { kg: ev.target.value }) }))
+          ),
+          p ? H("div", { className: "settings-note", style: { marginTop: 0 } }, "Letztes Mal (" + fmtDE(p.day).slice(0, 6) + "): " + fmtE(p.e) + (t && vol(t) > vol(p.e) ? "   ▲ gesteigert" : t && vol(t) < vol(p.e) ? "   ▼ weniger" : "")) : null,
+          H(
+            "div",
+            { className: "train-ex-actions" },
+            H("button", { className: "train-btn", onClick: () => bumpReps(x, 1) }, "▲ +1 Wdh."),
+            H("button", { className: "train-btn", onClick: () => bumpReps(x, -1) }, "▼ −1 Wdh."),
+            H("button", { className: "train-btn", onClick: () => addSet(x) }, "+ Satz"),
+            H("button", { className: "train-btn", onClick: () => delSet(x), disabled: sr.length < 2 }, "− Satz"),
+            H("button", { className: "train-btn", onClick: () => bumpKg(x, 2.5) }, "▲ +2,5 kg"),
+            H("button", { className: "train-btn", onClick: () => bumpKg(x, -2.5) }, "▼ −2,5 kg"),
+            H("button", { className: "train-btn primary", onClick: () => logEx(x) }, t ? "✓ Neu eintragen" : "Heute eintragen")
+          )
+        );
+      };
+      const list = [];
+      groupNames.forEach((g) => {
+        const inG = exs.filter((x) => (x.group || "").trim() === g);
+        if (g) list.push(H("div", { key: "g-" + g, className: "train-group" }, g + "  \xB7  " + inG.filter((x) => today[x.id]).length + "/" + inG.length));
+        inG.forEach((x) => list.push(renderEx(x)));
+      });
+      const knownGroups = groupNames.filter((g) => g);
+      return H(
+        "div",
+        { className: "section train-card", "data-tour": "training" },
+        H("button", { className: "train-head", onClick: () => setTrainingOpen(!trainingOpen) }, H("span", { className: "train-title" }, "\u{1F4AA} Training"), H("span", { className: "train-sum" }, exs.length === 0 ? "\xDCbungen anlegen" : "heute " + doneToday + "/" + exs.length + " \xB7 " + last30 + " Tage in 30"), H("span", null, trainingOpen ? "▾" : "▸")),
+        trainingOpen && H(
+          "div",
+          { className: "train-body" },
+          H("div", { className: "train-dots" }, dots.map((d) => H("span", { key: d, className: "train-dot" + (log[d] && Object.keys(log[d]).length ? " on" : "") + (d === todayKey ? " today" : "") }, WD_SHORT[dowOf(d)]))),
+          lastDay ? H("div", { className: "settings-note", style: { marginTop: 0 } }, "Letztes Training: " + fmtDE(lastDay).slice(0, 6) + "  \xB7  Die Tage merkt sich die App, sobald du eine \xDCbung eintr\xE4gst.") : H("div", { className: "settings-note", style: { marginTop: 0 } }, "Lege Training (z.B. Brust) und \xDCbungen an, trag pro Satz die Wiederholungen ein und best\xE4tige nach dem Training. Die App zeigt dir, ob du dich steigerst."),
+          list,
+          H(
+            "div",
+            { className: "train-ex" },
+            H("input", { className: "goal-reward-input", list: "train-groups", value: trainDraft.group || "", placeholder: "Training (z.B. Brust, R\xFCcken, Beine)", onChange: (ev) => setTrainDraft({ ...trainDraft, group: ev.target.value }) }),
+            H("datalist", { id: "train-groups" }, knownGroups.map((g) => H("option", { key: g, value: g }))),
+            H("input", { className: "goal-reward-input", value: trainDraft.name, placeholder: "Neue \xDCbung, z.B. Bankdr\xFCcken", onChange: (ev) => setTrainDraft({ ...trainDraft, name: ev.target.value }), onKeyDown: (ev) => ev.key === "Enter" && addEx() }),
+            H(
+              "div",
+              { className: "train-ex-inputs" },
+              H("label", null, "S\xE4tze", H("input", { className: "train-in", type: "number", inputMode: "numeric", value: trainDraft.sets, onChange: (ev) => setTrainDraft({ ...trainDraft, sets: ev.target.value }) })),
+              H("label", null, "Wdh. je Satz", H("input", { className: "train-in", type: "number", inputMode: "numeric", value: trainDraft.reps, onChange: (ev) => setTrainDraft({ ...trainDraft, reps: ev.target.value }) })),
+              H("label", null, "kg (optional)", H("input", { className: "train-in", type: "number", inputMode: "decimal", value: trainDraft.kg, onChange: (ev) => setTrainDraft({ ...trainDraft, kg: ev.target.value }) }))
+            ),
+            H("div", { className: "settings-note", style: { margin: 0 } }, "Danach kannst du jeden Satz einzeln \xE4ndern (z.B. 12 / 10 / 8)."),
+            H("button", { className: "train-btn primary", style: { marginLeft: 0 }, onClick: addEx }, "+ \xDCbung hinzuf\xFCgen")
+          ),
+          doneToday > 0 && H("button", { className: "tiny-archive-link", style: { alignSelf: "flex-start" }, onClick: () => askConfirm("Das heutige Training zur\xFCcksetzen?", () => {
+            const l2 = { ...log };
+            delete l2[todayKey];
+            saveTraining({ ...tl, log: l2 });
+          }, "Ja, zur\xFCcksetzen") }, "Heute zur\xFCcksetzen")
+        )
+      );
     };
     const renderHabitLockBox = () => {
       const cur = appState.habitTemplate.find((h) => h.id === editingHabitId);
@@ -14103,6 +14189,88 @@ ${stamp}
     const renderHabitLabels = () => labelInputs(editHabitLabelDone, setEditHabitLabelDone, editHabitLabelMissed, setEditHabitLabelMissed);
     const renderNewHabitLabels = () => labelInputs(timelineNewHabitLabelDone, setTimelineNewHabitLabelDone, timelineNewHabitLabelMissed, setTimelineNewHabitLabelMissed);
     const renderHabitDays = () => renderDaysChips(editHabitDays, setEditHabitDays);
+    const renderVacation = () => {
+      const H = import_react.default.createElement;
+      if (!pvData) return null;
+      const year = todayKey.slice(0, 4);
+      const entries = pvData.vacationEntries || [];
+      const perYear = Number(String(pvData.vacationPerYear || "").replace(",", ".")) || 0;
+      const countDays = (from, to) => {
+        let n = 0;
+        if (!from || !to || to < from) return 0;
+        const span = Math.min(400, daysBetweenKeys(from, to));
+        for (let i = 0; i <= span; i++) {
+          const k = addDaysKey(from, i);
+          if (k.slice(0, 4) === year && dowOf(k) < 5) n++;
+        }
+        return n;
+      };
+      const used = entries.reduce((t, x) => t + countDays(x.from, x.to), 0);
+      const rest = perYear - used;
+      const pct = perYear > 0 ? Math.min(100, Math.round(used / perYear * 100)) : 0;
+      const mine = entries.filter((x) => (x.from || "").slice(0, 4) === year || (x.to || "").slice(0, 4) === year).sort((p, q) => p.from.localeCompare(q.from));
+      const addVac = () => {
+        const f = vacDraft.from;
+        const t2 = vacDraft.to || vacDraft.from;
+        if (!f) {
+          showNotice("Bitte ein Startdatum w\xE4hlen.");
+          return;
+        }
+        if (t2 < f) {
+          showNotice("Das Ende liegt vor dem Start.");
+          return;
+        }
+        savePvData(__spreadProps(__spreadValues({}, pvData), { vacationEntries: [...entries, { id: newId("v"), from: f, to: t2 }] }));
+        setVacDraft({ from: "", to: "" });
+      };
+      return H(
+        "div",
+        { key: "vac", className: "vac-card", style: { marginBottom: 14 } },
+        H("div", { className: "reflect-label", style: { marginTop: 6 } }, "\u{1F334} Urlaubstage " + year),
+        H("div", { className: "income-row", style: { marginBottom: 8 } }, H("span", { className: "income-label" }, "Urlaubstage pro Jahr"), H("input", { className: "income-input", type: "number", inputMode: "decimal", style: { width: 80 }, value: pvData.vacationPerYear || "", onChange: (ev) => updatePvField("vacationPerYear", ev.target.value), placeholder: "z.B. 30" })),
+        perYear > 0 ? H("div", { style: { display: "flex", flexDirection: "column", gap: 4, marginBottom: 8 } }, H("div", { className: "biz-summary-row" }, H("span", null, "Genommen"), H("strong", null, used + " von " + perYear)), H("div", { className: "biz-summary-row" }, H("span", null, rest >= 0 ? "Noch \xFCbrig" : "Zu viel genommen"), H("strong", { style: { color: rest < 0 ? "#FF1212" : void 0 } }, Math.abs(rest) + " Tage")), H("div", { className: "vac-bar" }, H("div", { style: { width: pct + "%" } }))) : H("div", { className: "settings-note", style: { marginTop: 0 } }, "Trag oben deine Urlaubstage pro Jahr ein, dann siehst du, wie viele noch \xFCbrig sind."),
+        H("div", { className: "add-appt" }, H("div", { className: "add-appt-row" }, H("label", { style: { display: "flex", flexDirection: "column", gap: 2, flex: 1, fontSize: 11 } }, "Von", H("input", { type: "date", value: vacDraft.from, onChange: (ev) => setVacDraft({ from: ev.target.value, to: vacDraft.to && vacDraft.to >= ev.target.value ? vacDraft.to : ev.target.value }) })), H("label", { style: { display: "flex", flexDirection: "column", gap: 2, flex: 1, fontSize: 11 } }, "Bis", H("input", { type: "date", value: vacDraft.to, min: vacDraft.from || void 0, onChange: (ev) => setVacDraft({ ...vacDraft, to: ev.target.value }) }))), H("button", { onClick: addVac }, "Urlaub eintragen")),
+        mine.map((x) => H("div", { key: x.id, className: "biz-entry-row" }, H("span", { className: "biz-entry-text" }, fmtDE(x.from).slice(0, 6) + (x.to !== x.from ? " – " + fmtDE(x.to).slice(0, 6) : "") + " \xB7 " + countDays(x.from, x.to) + (countDays(x.from, x.to) === 1 ? " Tag" : " Tage")), H("button", { className: "habit-remove", onClick: () => askConfirm("Diesen Urlaub wirklich l\xF6schen?", () => savePvData(__spreadProps(__spreadValues({}, pvData), { vacationEntries: entries.filter((y) => y.id !== x.id) }))), "aria-label": "Urlaub entfernen" }, "\xD7"))),
+        H("div", { className: "settings-note", style: { marginTop: 6 } }, "Gez\xE4hlt werden Montag bis Freitag. Feiertage im Zeitraum z\xE4hlt die App nicht automatisch heraus.")
+      );
+    };
+    const renderPauseCard = () => {
+      const H = import_react.default.createElement;
+      const list = (appState.pauseDays || []).slice().sort((p, q) => p.from.localeCompare(q.from));
+      const add = () => {
+        const f = pauseDraft.from;
+        const t2 = pauseDraft.to || pauseDraft.from;
+        if (!f) {
+          showNotice("Bitte ein Startdatum w\xE4hlen.");
+          return;
+        }
+        if (f < todayKey) {
+          showNotice("Urlaubstage kannst du nur ab heute eintragen — nicht r\xFCckwirkend.");
+          return;
+        }
+        if (t2 < f) {
+          showNotice("Das Ende liegt vor dem Start.");
+          return;
+        }
+        saveAppState(__spreadProps(__spreadValues({}, appState), { pauseDays: [...appState.pauseDays || [], { id: newId("p"), from: f, to: t2 }] }));
+        setPauseDraft({ from: "", to: "" });
+      };
+      return H(
+        "div",
+        { key: "pause", className: "pause-card", onClick: (ev) => ev.stopPropagation(), style: { display: "flex", flexDirection: "column", gap: 6, margin: "6px 0" } },
+        H("div", { className: "reflect-label", style: { marginTop: 4 } }, "\u{1F334} Urlaubstage — hier z\xE4hlt nichts"),
+        H("div", { className: "settings-note", style: { margin: 0 } }, "An diesen Tagen z\xE4hlen Habits/KPIs nicht (kein ✗, kein Vorwurf am n\xE4chsten Tag), und gesperrte Serientermine fallen aus. Nur ab heute eintragbar."),
+        H("div", { className: "add-appt" }, H("div", { className: "add-appt-row" }, H("label", { style: { display: "flex", flexDirection: "column", gap: 2, flex: 1, fontSize: 11 } }, "Von", H("input", { type: "date", value: pauseDraft.from, min: todayKey, onChange: (ev) => setPauseDraft({ from: ev.target.value, to: pauseDraft.to && pauseDraft.to >= ev.target.value ? pauseDraft.to : ev.target.value }) })), H("label", { style: { display: "flex", flexDirection: "column", gap: 2, flex: 1, fontSize: 11 } }, "Bis", H("input", { type: "date", value: pauseDraft.to, min: pauseDraft.from || todayKey, onChange: (ev) => setPauseDraft({ ...pauseDraft, to: ev.target.value }) }))), H("button", { onClick: add }, "Urlaubstage eintragen")),
+        list.map((r) => H("div", { key: r.id, className: "biz-entry-row" }, H("span", { className: "biz-entry-text" }, "\u{1F334} " + fmtDE(r.from).slice(0, 6) + (r.to !== r.from ? " – " + fmtDE(r.to).slice(0, 6) : "") + (r.to < todayKey ? "  (vorbei)" : "")), H("button", { className: "habit-remove", onClick: () => askConfirm("Diese Urlaubstage wirklich l\xF6schen?", () => saveAppState(__spreadProps(__spreadValues({}, appState), { pauseDays: (appState.pauseDays || []).filter((y) => y.id !== r.id) }))), "aria-label": "Urlaubstage entfernen" }, "\xD7")))
+      );
+    };
+    const renderPauseToggle = () => {
+      const H = import_react.default.createElement;
+      return H(import_react.default.Fragment, { key: "pausetoggle" }, isPauseDay(selectedDay) && H("div", { className: "settings-note", style: { marginTop: 2, fontWeight: 700 } }, "\u{1F334} Urlaubstag — heute z\xE4hlt nichts."), H("button", { className: "tiny-archive-link", style: { alignSelf: "flex-start" }, onClick: (ev) => {
+        ev.stopPropagation();
+        setPauseOpen(!pauseOpen);
+      } }, pauseOpen ? "▾ Urlaubstage schlie\xDFen" : "\u{1F334} Urlaubstage (z\xE4hlt nicht)"), pauseOpen && renderPauseCard());
+    };
     const secIcon = (key) => {
       const icons = appState.sectionIcons || {};
       const v = icons[key];
@@ -15022,7 +15190,12 @@ ${stamp}
       if (rule.recurrence === "yearly") return d === sd && m === sm;
       return false;
     }
+    function isPauseDay(dayKey) {
+      const list = appState && appState.pauseDays || [];
+      return list.some((r) => dayKey >= r.from && dayKey <= r.to);
+    }
     function habitOnDay(h, dayKey) {
+      if (isPauseDay(dayKey)) return false;
       return !h.days || h.days.length === 0 || h.days.includes(dowOf(dayKey));
     }
     function habitStats(h) {
@@ -15065,6 +15238,7 @@ ${stamp}
       return [st, st + (parseInt(a.duration, 10) || 60)];
     }
     function findLockedConflict(dayKey, startMin, endMin, ignore) {
+      if (isPauseDay(dayKey)) return null;
       const list = apptsFor(dayKey, "*");
       for (const a of list) {
         if (!isApptLocked(a)) continue;
@@ -15219,6 +15393,48 @@ ${stamp}
         isBirthday: false
       });
     }
+    function copyApptText() {
+      const e = apptEdit;
+      if (!e) return;
+      const lines = [];
+      if (e.title && e.title.trim()) lines.push(e.title.trim());
+      const dateTxt = fmtDE(e.startDate) + (e.allDay ? ", ganzt\xE4gig" : e.startTime ? ", " + e.startTime + (e.endTime ? " – " + ((e.endDate && e.endDate !== e.startDate ? fmtDE(e.endDate) + " " : "") + e.endTime) : "") + " Uhr" : "");
+      lines.push(dateTxt);
+      const recNames = { daily: "t\xE4glich", weekly: "w\xF6chentlich", weekdays: "an bestimmten Wochentagen", monthly: "monatlich", yearly: "j\xE4hrlich" };
+      if (e.recurrence && e.recurrence !== "none") {
+        let r = "Wiederholung: " + (recNames[e.recurrence] || e.recurrence);
+        if (e.recurrence === "weekdays" && e.weekdays && e.weekdays.length) r += " (" + e.weekdays.map((d) => WD_SHORT[d]).join(", ") + ")";
+        if (e.until) r += ", bis " + fmtDE(e.until);
+        lines.push(r);
+      }
+      if (e.location && e.location.trim()) lines.push("Ort: " + e.location.trim());
+      if (e.notes && e.notes.trim()) lines.push("Notizen: " + e.notes.trim());
+      if (e.lockedUntil && todayKey <= e.lockedUntil) lines.push("Gesperrt bis " + fmtDE(e.lockedUntil) + (e.lockReason ? " – " + e.lockReason : ""));
+      const text = lines.join("\n");
+      const fallback = () => {
+        try {
+          const ta = document.createElement("textarea");
+          ta.value = text;
+          ta.style.position = "fixed";
+          ta.style.opacity = "0";
+          document.body.appendChild(ta);
+          ta.focus();
+          ta.select();
+          const ok = document.execCommand("copy");
+          document.body.removeChild(ta);
+          showNotice(ok ? "Kopiert ✓" : "Kopieren nicht m\xF6glich.");
+        } catch (err) {
+          showNotice("Kopieren nicht m\xF6glich.");
+        }
+      };
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(() => showNotice("Kopiert ✓"), fallback);
+        } else fallback();
+      } catch (err) {
+        fallback();
+      }
+    }
     function saveApptEditor() {
       const e = apptEdit;
       if (!e || !e.title.trim()) return;
@@ -15228,20 +15444,45 @@ ${stamp}
           playApptDoneSound();
           setApptEdit(null);
         };
+        const lockPatch = { title: newTitle };
+        let lockDur = "";
+        if (!e.allDay && e.startTime) {
+          const [sy, sm2, sd] = e.startDate.split("-").map(Number);
+          const [sh, smin] = e.startTime.split(":").map(Number);
+          const [ey, em2, ed] = (e.endDate || e.startDate).split("-").map(Number);
+          const [eh, emin] = (e.endTime || e.startTime).split(":").map(Number);
+          const diff = Math.round((new Date(ey, em2 - 1, ed, eh, emin) - new Date(sy, sm2 - 1, sd, sh, smin)) / 6e4);
+          if (diff > 0) lockDur = String(diff);
+          lockPatch.time = e.startTime;
+          lockPatch.duration = lockDur;
+        }
+        const lockConflict = (scope) => {
+          if (e.allDay) return false;
+          const rec = scope === "all" ? e.recurrence : "none";
+          const c = slotConflict(e.startDate, e.startTime, e.allDay, lockDur, { recurrence: rec, weekdays: e.weekdays || [], endDate: e.until || "" }, { id: e.id, seriesId: e.seriesId });
+          if (c) {
+            showNotice(`\u{1F512} Diese Zeit ist durch „${c.appt.title}“ gesperrt (${fmtDE(c.day)}).`);
+            return true;
+          }
+          return false;
+        };
         if (e.id && e.recurring && e.seriesId) {
           setSeriesChoice({
             title: newTitle,
             onOne: () => {
-              detachOccurrence(e.seriesId, e.dayKey, e.dayKey, { title: newTitle, lockedUntil: e.lockedUntil, lockReason: (e.lockReason || "").trim() });
+              if (lockConflict("one")) return;
+              detachOccurrence(e.seriesId, e.dayKey, e.dayKey, __spreadProps(__spreadValues({}, lockPatch), { lockedUntil: e.lockedUntil, lockReason: (e.lockReason || "").trim() }));
               done();
             },
             onAll: () => {
-              updateRecurringSeries(e.seriesId, { title: newTitle });
+              if (lockConflict("all")) return;
+              updateRecurringSeries(e.seriesId, lockPatch);
               done();
             }
           });
         } else if (e.id) {
-          updateAppointment(e.dayKey, e.id, { title: newTitle });
+          if (lockConflict("one")) return;
+          updateAppointment(e.dayKey, e.id, lockPatch);
           done();
         }
         return;
@@ -15320,7 +15561,7 @@ ${stamp}
       };
       const proceed = (scope) => {
         if (e.lock) {
-          askConfirm(`\u201E${patch.title}\u201C f\xFCr 31 Tage sperren? Bis ${fmtDE(lockUntil)} ist der Termin nicht l\xF6schbar und nur der Titel \xE4nderbar \u2014 das l\xE4sst sich nicht r\xFCckg\xE4ngig machen.`, () => finish(scope), "Ja, sperren");
+          askConfirm(`\u201E${patch.title}\u201C f\xFCr 31 Tage sperren? Bis ${fmtDE(lockUntil)} ist der Termin nicht l\xF6schbar und nur Titel und Uhrzeit \xE4nderbar \u2014 das l\xE4sst sich nicht r\xFCckg\xE4ngig machen.`, () => finish(scope), "Ja, sperren");
         } else {
           finish(scope);
         }
@@ -15578,7 +15819,7 @@ ${stamp}
       const ctx = context || activeTab;
       const anyCtx = ctx === "*";
       const oneOff = (daysData[dayKey] && daysData[dayKey].appointments || []).filter((a) => anyCtx || (a.context || "daily") === ctx).map((a) => __spreadProps(__spreadValues({}, a), { recurring: false }));
-      const recurring = recurringAppts.filter((r) => (anyCtx || (r.context || "daily") === ctx) && matchesRecurrence(r, dayKey)).map((r) => ({ id: `${r.id}-${dayKey}`, seriesId: r.id, time: r.time, title: r.title, recurring: true, recurrence: r.recurrence, weekdays: r.weekdays || [], until: r.endDate || "", exceptions: r.exceptions || [], duration: r.duration || "", allDay: !!r.allDay, isBirthday: !!r.isBirthday, location: r.location || "", notes: r.notes || "", lockedUntil: r.lockedUntil || "", lockReason: r.lockReason || "" }));
+      const recurring = recurringAppts.filter((r) => (anyCtx || (r.context || "daily") === ctx) && matchesRecurrence(r, dayKey) && !(r.lockedUntil && isPauseDay(dayKey))).map((r) => ({ id: `${r.id}-${dayKey}`, seriesId: r.id, time: r.time, title: r.title, recurring: true, recurrence: r.recurrence, weekdays: r.weekdays || [], until: r.endDate || "", exceptions: r.exceptions || [], duration: r.duration || "", allDay: !!r.allDay, isBirthday: !!r.isBirthday, location: r.location || "", notes: r.notes || "", lockedUntil: r.lockedUntil || "", lockReason: r.lockReason || "" }));
       return [...oneOff, ...recurring].sort((a, b) => a.time.localeCompare(b.time));
     }
     const styles = `
@@ -15897,7 +16138,13 @@ ${stamp}
     .timeline-block.locked .habit-check { border-color: #fff; color: #fff; }
     .timeline-allday.locked { background: #FF1212; border: 1px solid #7A0000; color: #fff; font-weight: 700; }
     .appt-editor .pop-close { position: relative !important; }
-    .appt-editor.locked .appt-editor-title { pointer-events: auto; opacity: 1; }
+    .appt-editor.locked .appt-editor-title, .appt-editor.locked input.appt-editor-time { pointer-events: auto; opacity: 1; }
+    .appt-editor-copy { background: none; border: none; font-size: 22px; line-height: 1; padding: 6px 12px; cursor: pointer; color: inherit; position: relative; z-index: 2; }
+    .train-group { font-weight: 700; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--amber); margin-top: 6px; }
+    .train-ex-inputs { flex-wrap: wrap; }
+    .train-ex-inputs label { min-width: 54px; }
+    .vac-bar { height: 8px; border-radius: 6px; background: var(--hairline); overflow: hidden; }
+    .vac-bar > div { height: 100%; background: var(--amber); }
     .appt-lock-banner { background: #FF1212; color: #fff; border-radius: 10px; padding: 10px 12px; font-size: 13px; font-weight: 700; line-height: 1.4; }
     .appt-editor.locked input, .appt-editor.locked textarea, .appt-editor.locked select,
     .appt-editor.locked .appt-toggle, .appt-editor.locked .wd-chip { pointer-events: none; opacity: 0.6; }
@@ -17080,7 +17327,7 @@ ${stamp}
     } }, savedFlash === "off" ? "\u2713 Wecker ausgeschaltet" : "Wecker jetzt ausschalten"), /* @__PURE__ */ import_react.default.createElement("label", { style: { marginTop: 10 } }, "Verlassen der App beim Wecker erschweren"), /* @__PURE__ */ import_react.default.createElement("div", { className: "theme-row" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (appState.blockExit !== false ? " active" : ""), onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { blockExit: true })) }, "An"), /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (appState.blockExit === false ? " active" : ""), onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { blockExit: false })) }, "Aus")), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: -2 } }, "Bei \u201eAn\u201c fragt der Browser nach, wenn du die Seite w\xE4hrend des Weckers schlie\xDFen willst, und der Wecker klingelt beim Zur\xFCckkommen sofort weiter. Ein echtes Sperren des Handys kann eine Website technisch nicht \u2014 der Startbildschirm-Knopf bleibt immer erreichbar."), alarmModeDraft === "text" && /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("label", { style: { marginTop: 6 } }, "Pflichttext zum Abschreiben (Ziele, Affirmationen, ein Leitsatz)"), /* @__PURE__ */ import_react.default.createElement("textarea", { className: "settings-textarea" + (savedFlash === "text" ? " saved" : ""), value: sentencesDraft, onChange: (e) => setSentencesDraft(e.target.value), rows: 5 }), /* @__PURE__ */ import_react.default.createElement("button", { className: "save-btn" + (savedFlash === "text" ? " saved" : ""), onClick: () => {
         updateSentences();
         flashSaved("text");
-      } }, savedFlash === "text" ? "\u2713 Text gespeichert" : "Text speichern")), alarmModeDraft !== "none" && /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("label", { style: { marginTop: 6 } }, "Eigener Wecker-Sound"), customAudioName ? /* @__PURE__ */ import_react.default.createElement("div", { className: "audio-current" }, "\u2713 ", customAudioName) : /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note" }, "Standard: eigens komponiertes motivierendes Wecker-Riff (in der App erzeugt). Eigene MP3 hochladen \u2014 sie bleibt dauerhaft gespeichert und steht beim n\xE4chsten Start wieder bereit. Spotify-Songs lassen sich technisch nicht einbinden, daf\xFCr br\xE4uchte es einen echten Server + Spotify-Premium-Login."), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note" }, "Eigener Sound (Musik von deinem Ger\xE4t):")), /* @__PURE__ */ import_react.default.createElement("div", { className: "audio-file-row" }, /* @__PURE__ */ import_react.default.createElement("input", { type: "file", accept: "audio/*", onChange: handleCustomAudioSelect }), customAudioName && /* @__PURE__ */ import_react.default.createElement("button", { className: "audio-clear-btn", onClick: clearCustomAudio }, "Entfernen")), /* @__PURE__ */ import_react.default.createElement("button", { className: "test-btn", onClick: triggerTestAlarm, style: { marginTop: 8 } }, "Wecker jetzt testen"))), showSettings && /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-pop" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "pop-close", onClick: () => setShowSettings(false), "aria-label": "Schlie\xDFen" }, "\xD7"), /* @__PURE__ */ import_react.default.createElement("label", null, "Sounds"), /* @__PURE__ */ import_react.default.createElement("div", { className: "theme-row" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (appState.soundsEnabled ? " active" : ""), onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { soundsEnabled: true })) }, "An"), /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (!appState.soundsEnabled ? " active" : ""), onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { soundsEnabled: false })) }, "Aus")), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: -4 } }, "Gilt f\xFCr Erfolgs-/Jubel-/Klick-T\xF6ne. Der Wecker selbst klingelt immer, unabh\xE4ngig davon."), /* @__PURE__ */ import_react.default.createElement("label", { style: { marginTop: 6 } }, "Hintergrund"), /* @__PURE__ */ import_react.default.createElement("div", { className: "theme-row" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (appState.theme === "dark" ? " active" : ""), onClick: () => setTheme("dark") }, "Schwarz"), /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn light" + (appState.theme === "light" ? " active" : ""), onClick: () => setTheme("light") }, "Wei\xDF")), /* @__PURE__ */ import_react.default.createElement("div", { className: "theme-row", style: { flexWrap: "wrap", marginTop: 6 } }, (appState.theme === "light" ? [["creme", "Creme"], ["weiss", "Tiefwei\xDF"], ["hellgrau", "Hellgrau"], ["sand", "Sand"]] : [["schwarz", "Tiefschwarz"], ["warm", "Warmbraun"], ["grau", "Anthrazit"], ["marine", "Marine"], ["wald", "Waldgr\xFCn"]]).map(([id, label]) => /* @__PURE__ */ import_react.default.createElement("button", { key: id, className: "theme-btn" + ((appState.bgChoice || (appState.theme === "light" ? "creme" : "schwarz")) === id ? " active" : ""), onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { bgChoice: id })) }, label))), /* @__PURE__ */ import_react.default.createElement("label", { style: { marginTop: 6 } }, "Farbton"), /* @__PURE__ */ import_react.default.createElement("div", { className: "theme-row", style: { flexWrap: "wrap" } }, [["amber", "Amber"], ["blau", "Blau"], ["gruen", "Gr\xFCn"], ["lila", "Lila"], ["rot", "Rot"]].map(([id, label]) => /* @__PURE__ */ import_react.default.createElement("button", { key: id, className: "theme-btn" + ((appState.accentChoice || "amber") === id ? " active" : ""), onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { accentChoice: id })) }, label))), /* @__PURE__ */ import_react.default.createElement("label", { style: { marginTop: 6 } }, "Schriftart"), /* @__PURE__ */ import_react.default.createElement("div", { className: "theme-row", style: { flexWrap: "wrap" } }, [["elegant", "Elegant"], ["modern", "Modern"], ["rund", "Rund"], ["klassisch", "Klassisch"]].map(([id, label]) => /* @__PURE__ */ import_react.default.createElement("button", { key: id, className: "theme-btn" + ((appState.fontChoice || "elegant") === id ? " active" : ""), onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { fontChoice: id })) }, label))), /* @__PURE__ */ import_react.default.createElement("label", { style: { marginTop: 6 } }, "Darstellung"), /* @__PURE__ */ import_react.default.createElement("div", { className: "theme-row" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (!appState.plainMode ? " active" : ""), onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { plainMode: false })) }, "Gestaltet"), /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (appState.plainMode ? " active" : ""), onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { plainMode: true })) }, "Schlicht")), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: -4 } }, "Schlicht: normale Schrift, kaum Farbe, minimales Design \u2014 \xFCberschreibt Schriftart und Farbton."), /* @__PURE__ */ import_react.default.createElement("button", { className: "test-btn", onClick: () => {
+      } }, savedFlash === "text" ? "\u2713 Text gespeichert" : "Text speichern")), alarmModeDraft !== "none" && /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("label", { style: { marginTop: 6 } }, "Eigener Wecker-Sound"), customAudioName ? /* @__PURE__ */ import_react.default.createElement("div", { className: "audio-current" }, "\u2713 ", customAudioName) : /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note" }, "Standard: eigens komponiertes motivierendes Wecker-Riff (in der App erzeugt). Eigene MP3 hochladen \u2014 sie bleibt dauerhaft gespeichert und steht beim n\xE4chsten Start wieder bereit. Spotify-Songs lassen sich technisch nicht einbinden, daf\xFCr br\xE4uchte es einen echten Server + Spotify-Premium-Login."), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note" }, "Eigener Sound (Musik von deinem Ger\xE4t):")), /* @__PURE__ */ import_react.default.createElement("div", { className: "audio-file-row" }, /* @__PURE__ */ import_react.default.createElement("input", { type: "file", accept: "audio/*", onChange: handleCustomAudioSelect }), customAudioName && /* @__PURE__ */ import_react.default.createElement("button", { className: "audio-clear-btn", onClick: clearCustomAudio }, "Entfernen")), /* @__PURE__ */ import_react.default.createElement("button", { className: "test-btn", onClick: triggerTestAlarm, style: { marginTop: 8 } }, "Wecker jetzt testen"))), showSettings && /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-pop" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "pop-close", onClick: () => setShowSettings(false), "aria-label": "Schlie\xDFen" }, "\xD7"), /* @__PURE__ */ import_react.default.createElement("label", null, "Sounds"), /* @__PURE__ */ import_react.default.createElement("div", { className: "theme-row" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (appState.soundsEnabled ? " active" : ""), onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { soundsEnabled: true })) }, "An"), /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (!appState.soundsEnabled ? " active" : ""), onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { soundsEnabled: false })) }, "Aus")), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: -4 } }, "Gilt f\xFCr Erfolgs-/Jubel-/Klick-T\xF6ne. Der Wecker selbst klingelt immer, unabh\xE4ngig davon."), /* @__PURE__ */ import_react.default.createElement("label", { style: { marginTop: 6 } }, "Hintergrund"), /* @__PURE__ */ import_react.default.createElement("div", { className: "theme-row" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (appState.theme === "dark" ? " active" : ""), onClick: () => setTheme("dark") }, "Schwarz"), /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn light" + (appState.theme === "light" ? " active" : ""), onClick: () => setTheme("light") }, "Wei\xDF")), /* @__PURE__ */ import_react.default.createElement("div", { className: "theme-row", style: { flexWrap: "wrap", marginTop: 6 } }, (appState.theme === "light" ? [["creme", "Creme"], ["weiss", "Tiefwei\xDF"], ["hellgrau", "Hellgrau"], ["sand", "Sand"]] : [["schwarz", "Tiefschwarz"], ["warm", "Warmbraun"], ["grau", "Anthrazit"], ["marine", "Marine"], ["wald", "Waldgr\xFCn"]]).map(([id, label]) => /* @__PURE__ */ import_react.default.createElement("button", { key: id, className: "theme-btn" + ((appState.bgChoice || (appState.theme === "light" ? "creme" : "schwarz")) === id ? " active" : ""), onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { bgChoice: id })) }, label))), /* @__PURE__ */ import_react.default.createElement("label", { style: { marginTop: 6 } }, "Farbton"), /* @__PURE__ */ import_react.default.createElement("div", { className: "theme-row", style: { flexWrap: "wrap" } }, [["amber", "Amber"], ["blau", "Blau"], ["gruen", "Gr\xFCn"], ["lila", "Lila"], ["rot", "Rot"]].map(([id, label]) => /* @__PURE__ */ import_react.default.createElement("button", { key: id, className: "theme-btn" + ((appState.accentChoice || "amber") === id ? " active" : ""), onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { accentChoice: id })) }, label))), /* @__PURE__ */ import_react.default.createElement("label", { style: { marginTop: 6 } }, "Schriftart"), /* @__PURE__ */ import_react.default.createElement("div", { className: "theme-row", style: { flexWrap: "wrap" } }, [["elegant", "Elegant"], ["modern", "Modern"], ["rund", "Rund"], ["klassisch", "Klassisch"]].map(([id, label]) => /* @__PURE__ */ import_react.default.createElement("button", { key: id, className: "theme-btn" + ((appState.fontChoice || "elegant") === id ? " active" : ""), onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { fontChoice: id })) }, label))), /* @__PURE__ */ import_react.default.createElement("label", { style: { marginTop: 6 } }, "Darstellung"), /* @__PURE__ */ import_react.default.createElement("div", { className: "theme-row" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (!appState.plainMode ? " active" : ""), onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { plainMode: false })) }, "Gestaltet"), /* @__PURE__ */ import_react.default.createElement("button", { className: "theme-btn" + (appState.plainMode ? " active" : ""), onClick: () => saveAppState(__spreadProps(__spreadValues({}, appState), { plainMode: true })) }, "Schlicht")), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: -4 } }, "Schlicht: normale Schrift, kaum Farbe, minimales Design \u2014 \xFCberschreibt Schriftart und Farbton."), renderPauseCard(), /* @__PURE__ */ import_react.default.createElement("button", { className: "test-btn", onClick: () => {
       setShowSettings(false);
       setTourPaused(false);
       setActiveTab(TOUR_STEPS[0].tab);
@@ -17375,7 +17622,7 @@ ${stamp}
           }
         ), employment === "selbstaendig" && /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("label", null, "Wie viel verdienst du ungef\xE4hr im Jahr?"), /* @__PURE__ */ import_react.default.createElement("div", { className: "income-row", style: { marginBottom: 12 } }, /* @__PURE__ */ import_react.default.createElement("span", { className: "income-label" }, "Gesch\xE4tzter Jahresumsatz"), /* @__PURE__ */ import_react.default.createElement("input", { className: "income-input", type: "number", value: pvData ? pvData.estYearRevenue : "", onChange: (e) => updatePvField("estYearRevenue", e.target.value), placeholder: "z.B. 100000" }), /* @__PURE__ */ import_react.default.createElement("span", { className: "income-unit" }, "\u20AC"))), /* @__PURE__ */ import_react.default.createElement("button", { className: "onboard-next", style: { width: "100%" }, onClick: () => savePvData(__spreadProps(__spreadValues({}, pvData), { businessOnboardingDone: true })) }, "Weiter"), /* @__PURE__ */ import_react.default.createElement("button", { className: "onboard-skip", onClick: () => savePvData(__spreadProps(__spreadValues({}, pvData), { businessOnboardingDone: true })) }, "\xDCberspringen"));
       }
-      return /* @__PURE__ */ import_react.default.createElement("div", { className: "section slide-fade-in" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "section-title", style: { marginBottom: 10 } }, `${secIcon("business")}Business`), /* @__PURE__ */ import_react.default.createElement("div", { className: "employment-toggle" }, /* @__PURE__ */ import_react.default.createElement("button", { className: employment === "selbstaendig" ? "active" : "", onClick: () => updatePvField("employment", "selbstaendig") }, "Selbst\xE4ndig"), /* @__PURE__ */ import_react.default.createElement("button", { className: employment === "angestellt" ? "active" : "", onClick: () => updatePvField("employment", "angestellt") }, "Angestellt")), /* @__PURE__ */ import_react.default.createElement("div", { className: "income-row", style: { marginBottom: 14 } }, /* @__PURE__ */ import_react.default.createElement("span", { className: "income-label" }, "Beruf"), /* @__PURE__ */ import_react.default.createElement("input", { className: "income-input", style: { width: 140, textAlign: "left" }, value: pvData ? pvData.beruf : "", onChange: (e) => updatePvField("beruf", e.target.value), placeholder: "z.B. PV-Vertrieb" })), /* @__PURE__ */ import_react.default.createElement("div", { className: "reflect-label", style: { marginTop: 6 } }, "\u{1F501} Fixkosten (jeden Monat automatisch mitgerechnet)"), fixedCosts.map((x) => /* @__PURE__ */ import_react.default.createElement("div", { key: x.id, className: "biz-entry-row" }, /* @__PURE__ */ import_react.default.createElement("span", { className: "biz-entry-text" }, x.label || "Fixkosten", " \xB7 ", (parseFloat(x.amount) || 0).toFixed(0), " \u20AC/Monat"), /* @__PURE__ */ import_react.default.createElement("button", { className: "habit-remove", onClick: () => askConfirm("Wirklich l\xF6schen?", () => savePvData(__spreadProps(__spreadValues({}, pvData), { fixedCosts: fixedCosts.filter((y) => y.id !== x.id) }))), "aria-label": "Fixkosten entfernen" }, "\xD7"))), showAddFixed ? /* @__PURE__ */ import_react.default.createElement("div", { className: "add-appt" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "add-appt-row" }, /* @__PURE__ */ import_react.default.createElement("input", { autoFocus: true, value: newFixedLabel, onChange: (e) => setNewFixedLabel(e.target.value), placeholder: "z.B. PKV, Miete, Vertrag" }), /* @__PURE__ */ import_react.default.createElement("input", { type: "number", style: { flex: "0 0 90px" }, value: newFixedAmount, onChange: (e) => setNewFixedAmount(e.target.value), placeholder: "\u20AC/Monat" })), /* @__PURE__ */ import_react.default.createElement("button", { onClick: () => {
+      return /* @__PURE__ */ import_react.default.createElement("div", { className: "section slide-fade-in" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "section-title", style: { marginBottom: 10 } }, `${secIcon("business")}Business`), /* @__PURE__ */ import_react.default.createElement("div", { className: "employment-toggle" }, /* @__PURE__ */ import_react.default.createElement("button", { className: employment === "selbstaendig" ? "active" : "", onClick: () => updatePvField("employment", "selbstaendig") }, "Selbst\xE4ndig"), /* @__PURE__ */ import_react.default.createElement("button", { className: employment === "angestellt" ? "active" : "", onClick: () => updatePvField("employment", "angestellt") }, "Angestellt")), /* @__PURE__ */ import_react.default.createElement("div", { className: "income-row", style: { marginBottom: 14 } }, /* @__PURE__ */ import_react.default.createElement("span", { className: "income-label" }, "Beruf"), /* @__PURE__ */ import_react.default.createElement("input", { className: "income-input", style: { width: 140, textAlign: "left" }, value: pvData ? pvData.beruf : "", onChange: (e) => updatePvField("beruf", e.target.value), placeholder: "z.B. PV-Vertrieb" })), employment === "angestellt" && renderVacation(), /* @__PURE__ */ import_react.default.createElement("div", { className: "reflect-label", style: { marginTop: 6 } }, "\u{1F501} Fixkosten (jeden Monat automatisch mitgerechnet)"), fixedCosts.map((x) => /* @__PURE__ */ import_react.default.createElement("div", { key: x.id, className: "biz-entry-row" }, /* @__PURE__ */ import_react.default.createElement("span", { className: "biz-entry-text" }, x.label || "Fixkosten", " \xB7 ", (parseFloat(x.amount) || 0).toFixed(0), " \u20AC/Monat"), /* @__PURE__ */ import_react.default.createElement("button", { className: "habit-remove", onClick: () => askConfirm("Wirklich l\xF6schen?", () => savePvData(__spreadProps(__spreadValues({}, pvData), { fixedCosts: fixedCosts.filter((y) => y.id !== x.id) }))), "aria-label": "Fixkosten entfernen" }, "\xD7"))), showAddFixed ? /* @__PURE__ */ import_react.default.createElement("div", { className: "add-appt" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "add-appt-row" }, /* @__PURE__ */ import_react.default.createElement("input", { autoFocus: true, value: newFixedLabel, onChange: (e) => setNewFixedLabel(e.target.value), placeholder: "z.B. PKV, Miete, Vertrag" }), /* @__PURE__ */ import_react.default.createElement("input", { type: "number", style: { flex: "0 0 90px" }, value: newFixedAmount, onChange: (e) => setNewFixedAmount(e.target.value), placeholder: "\u20AC/Monat" })), /* @__PURE__ */ import_react.default.createElement("button", { onClick: () => {
         if (parseFloat(newFixedAmount) > 0) {
           savePvData(__spreadProps(__spreadValues({}, pvData), { fixedCosts: [...fixedCosts, { id: `f${Date.now()}`, label: newFixedLabel.trim(), amount: newFixedAmount }] }));
           setNewFixedLabel("");
@@ -17580,7 +17827,7 @@ ${stamp}
           e.stopPropagation();
           window.open(h.link, "_blank");
         }, "aria-label": `Link zu ${h.name} \xF6ffnen` }, "\u{1F517}"), /* @__PURE__ */ import_react.default.createElement("button", { className: "wt-edit-icon", onClick: () => startEditHabit(h), "aria-label": `${h.name} bearbeiten` }, "\u270E"), /* @__PURE__ */ import_react.default.createElement("button", { className: "habit-remove", onClick: () => removeHabit(h.id), "aria-label": `${h.name} entfernen` }, "\xD7"));
-      }), appState.habitTemplate.some((h) => !habitOnDay(h, selectedDay)) && /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: 2 } }, "An diesem Tag nicht dran: " + appState.habitTemplate.filter((h) => !habitOnDay(h, selectedDay)).map((h) => h.name).join(", ")), timelineAddingHabit ? /* @__PURE__ */ import_react.default.createElement("span", { className: "timeline-habit-add-form", onClick: (e) => e.stopPropagation() }, /* @__PURE__ */ import_react.default.createElement("button", { className: "pop-close", onClick: () => {
+      }), appState.habitTemplate.some((h) => !habitOnDay(h, selectedDay)) && /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: 2 } }, "An diesem Tag nicht dran: " + appState.habitTemplate.filter((h) => !habitOnDay(h, selectedDay)).map((h) => h.name).join(", ")), renderPauseToggle(), timelineAddingHabit ? /* @__PURE__ */ import_react.default.createElement("span", { className: "timeline-habit-add-form", onClick: (e) => e.stopPropagation() }, /* @__PURE__ */ import_react.default.createElement("button", { className: "pop-close", onClick: () => {
         setTimelineAddingHabit(false);
         setTimelineNewHabitName("");
         setTimelineNewHabitWhy("");
@@ -17703,7 +17950,6 @@ ${stamp}
             className: "timeline-block timeline-appt-overlay" + (apptDone ? " done" : "") + (isApptLocked(a) ? " locked" : "") + (movingAppt && movingAppt.id === a.id ? " moving" : ""),
             style: { top: movingAppt && movingAppt.id === a.id ? movingAppt.top : top, height },
             onTouchStart: (e) => {
-              if (isApptLocked(a)) return;
               const y = e.touches[0].clientY;
               if (apptDragRef.current && apptDragRef.current.timer) clearTimeout(apptDragRef.current.timer);
               apptDragRef.current = {
@@ -17744,7 +17990,7 @@ ${stamp}
                 if (newTime !== a.time) {
                   const cf = findLockedConflict(selectedDay, clamped, clamped + (parseInt(a.duration, 10) || 60), { id: a.id, seriesId: a.seriesId });
                   if (cf) showNotice(`\u{1F512} Diese Zeit ist durch \u201E${cf.title}\u201C gesperrt.`);
-                  else if (a.recurring) setSeriesChoice({ title: a.title, onOne: () => detachOccurrence(a.seriesId, selectedDay, selectedDay, { time: newTime }), onAll: () => updateRecurringSeries(a.seriesId, { time: newTime }) });
+                  else if (a.recurring) setSeriesChoice({ title: a.title, onOne: () => detachOccurrence(a.seriesId, selectedDay, selectedDay, isApptLocked(a) ? { time: newTime, lockedUntil: a.lockedUntil, lockReason: a.lockReason || "" } : { time: newTime }), onAll: () => updateRecurringSeries(a.seriesId, { time: newTime }) });
                   else updateAppointment(selectedDay, a.id, { time: newTime });
                 }
                 setMovingAppt(null);
@@ -17942,7 +18188,7 @@ ${stamp}
             setTimelineApptEndTime(`${pad(t)}:${pad(tappedMinute)}`);
           }
           setApptStep(4);
-        } }, "Weiter"), /* @__PURE__ */ import_react.default.createElement("button", { className: "cancel-add-btn", onClick: () => setApptStep(2) }, "Zur\xFCck")), apptStep === 4 && /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, [["none", "Einmalig"], ["daily", "T\xE4glich"], ["weekly", "W\xF6chentlich"], ["monthly", "Monatlich"], ["yearly", "J\xE4hrlich"]].map(([val, label]) => /* @__PURE__ */ import_react.default.createElement("button", { key: val, className: "appt-recur-btn", onClick: () => saveTimelineAppt(tappedHour, tappedMinute, val) }, label)), /* @__PURE__ */ import_react.default.createElement("button", { className: "cancel-add-btn", onClick: () => setApptStep(3) }, "Zur\xFCck"))), apptEdit && /* @__PURE__ */ import_react.default.createElement("div", { className: "appt-editor" + (apptEditLocked ? " locked" : "") }, /* @__PURE__ */ import_react.default.createElement("div", { className: "appt-editor-head" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "pop-close", style: { position: "static", padding: 0 }, onClick: () => setApptEdit(null), "aria-label": "Schlie\xDFen" }, "\xD7"), /* @__PURE__ */ import_react.default.createElement("button", { className: "appt-editor-save", onClick: saveApptEditor }, "Speichern")), apptEditLocked && /* @__PURE__ */ import_react.default.createElement("div", { className: "appt-lock-banner" }, "\u{1F512} Gesperrt bis " + fmtDE(apptEdit.lockedUntil) + " \u2014 in dieser Zeit ist nur der Titel \xE4nderbar, der Termin ist nicht l\xF6schbar, und niemand legt etwas auf diese Uhrzeit." + (apptEdit.lockReason ? " \u201E" + apptEdit.lockReason + "\u201C" : "")), /* @__PURE__ */ import_react.default.createElement("input", { className: "appt-editor-title", value: apptEdit.title, onChange: (e) => setApptEdit(__spreadProps(__spreadValues({}, apptEdit), { title: e.target.value })), placeholder: "Titel" }), /* @__PURE__ */ import_react.default.createElement("div", { className: "appt-editor-row" }, /* @__PURE__ */ import_react.default.createElement("span", { className: "appt-editor-label" }, "Ganzt\xE4gig"), /* @__PURE__ */ import_react.default.createElement("button", { className: "appt-toggle" + (apptEdit.allDay ? " on" : ""), onClick: () => setApptEdit(__spreadProps(__spreadValues({}, apptEdit), { allDay: !apptEdit.allDay })), "aria-label": "Ganzt\xE4gig umschalten" }, /* @__PURE__ */ import_react.default.createElement("span", { className: "appt-toggle-knob" }))), /* @__PURE__ */ import_react.default.createElement("div", { className: "appt-editor-row" }, /* @__PURE__ */ import_react.default.createElement("input", { type: "date", className: "appt-editor-date", value: apptEdit.startDate, onChange: (e) => setApptEdit(__spreadProps(__spreadValues({}, apptEdit), { startDate: e.target.value })) }), !apptEdit.allDay && /* @__PURE__ */ import_react.default.createElement("input", { type: "time", step: 300, className: "appt-editor-time", value: apptEdit.startTime, onChange: (e) => setApptEdit(__spreadProps(__spreadValues({}, apptEdit), { startTime: e.target.value })) })), !apptEdit.allDay && /* @__PURE__ */ import_react.default.createElement("div", { className: "appt-editor-row" }, /* @__PURE__ */ import_react.default.createElement("input", { type: "date", className: "appt-editor-date", value: apptEdit.endDate, onChange: (e) => setApptEdit(__spreadProps(__spreadValues({}, apptEdit), { endDate: e.target.value })) }), /* @__PURE__ */ import_react.default.createElement("input", { type: "time", step: 300, className: "appt-editor-time", value: apptEdit.endTime, onChange: (e) => setApptEdit(__spreadProps(__spreadValues({}, apptEdit), { endTime: e.target.value })) })), (() => {
+        } }, "Weiter"), /* @__PURE__ */ import_react.default.createElement("button", { className: "cancel-add-btn", onClick: () => setApptStep(2) }, "Zur\xFCck")), apptStep === 4 && /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, [["none", "Einmalig"], ["daily", "T\xE4glich"], ["weekly", "W\xF6chentlich"], ["monthly", "Monatlich"], ["yearly", "J\xE4hrlich"]].map(([val, label]) => /* @__PURE__ */ import_react.default.createElement("button", { key: val, className: "appt-recur-btn", onClick: () => saveTimelineAppt(tappedHour, tappedMinute, val) }, label)), /* @__PURE__ */ import_react.default.createElement("button", { className: "cancel-add-btn", onClick: () => setApptStep(3) }, "Zur\xFCck"))), apptEdit && /* @__PURE__ */ import_react.default.createElement("div", { className: "appt-editor" + (apptEditLocked ? " locked" : "") }, /* @__PURE__ */ import_react.default.createElement("div", { className: "appt-editor-head" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "pop-close", style: { position: "static", padding: 0 }, onClick: () => setApptEdit(null), "aria-label": "Schlie\xDFen" }, "\xD7"), /* @__PURE__ */ import_react.default.createElement("button", { className: "appt-editor-copy", onClick: copyApptText, "aria-label": "Alles kopieren", title: "Alles kopieren" }, "\u{1F4CB}"), /* @__PURE__ */ import_react.default.createElement("button", { className: "appt-editor-save", onClick: saveApptEditor }, "Speichern")), apptEditLocked && /* @__PURE__ */ import_react.default.createElement("div", { className: "appt-lock-banner" }, "\u{1F512} Gesperrt bis " + fmtDE(apptEdit.lockedUntil) + " \u2014 in dieser Zeit sind nur Titel und Uhrzeit \xE4nderbar, der Termin ist nicht l\xF6schbar, und niemand legt etwas auf diese Uhrzeit." + (apptEdit.lockReason ? " \u201E" + apptEdit.lockReason + "\u201C" : "")), /* @__PURE__ */ import_react.default.createElement("input", { className: "appt-editor-title", value: apptEdit.title, onChange: (e) => setApptEdit(__spreadProps(__spreadValues({}, apptEdit), { title: e.target.value })), placeholder: "Titel" }), /* @__PURE__ */ import_react.default.createElement("div", { className: "appt-editor-row" }, /* @__PURE__ */ import_react.default.createElement("span", { className: "appt-editor-label" }, "Ganzt\xE4gig"), /* @__PURE__ */ import_react.default.createElement("button", { className: "appt-toggle" + (apptEdit.allDay ? " on" : ""), onClick: () => setApptEdit(__spreadProps(__spreadValues({}, apptEdit), { allDay: !apptEdit.allDay })), "aria-label": "Ganzt\xE4gig umschalten" }, /* @__PURE__ */ import_react.default.createElement("span", { className: "appt-toggle-knob" }))), /* @__PURE__ */ import_react.default.createElement("div", { className: "appt-editor-row" }, /* @__PURE__ */ import_react.default.createElement("input", { type: "date", className: "appt-editor-date", value: apptEdit.startDate, onChange: (e) => setApptEdit(__spreadProps(__spreadValues({}, apptEdit), { startDate: e.target.value })) }), !apptEdit.allDay && /* @__PURE__ */ import_react.default.createElement("input", { type: "time", step: 300, className: "appt-editor-time", value: apptEdit.startTime, onChange: (e) => setApptEdit(__spreadProps(__spreadValues({}, apptEdit), { startTime: e.target.value })) })), !apptEdit.allDay && /* @__PURE__ */ import_react.default.createElement("div", { className: "appt-editor-row" }, /* @__PURE__ */ import_react.default.createElement("input", { type: "date", className: "appt-editor-date", value: apptEdit.endDate, onChange: (e) => setApptEdit(__spreadProps(__spreadValues({}, apptEdit), { endDate: e.target.value })) }), /* @__PURE__ */ import_react.default.createElement("input", { type: "time", step: 300, className: "appt-editor-time", value: apptEdit.endTime, onChange: (e) => setApptEdit(__spreadProps(__spreadValues({}, apptEdit), { endTime: e.target.value })) })), (() => {
       const list = apptsFor(apptEdit.startDate).filter((a) => a.id !== apptEdit.id && (a.title || "").trim()).sort((a, b) => String(a.time).localeCompare(String(b.time)));
       return /* @__PURE__ */ import_react.default.createElement("div", { className: "appt-day-load" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "appt-day-load-head" }, formatLongDate(apptEdit.startDate), " \u2014 ", list.length === 0 ? "noch nichts geplant" : list.length === 1 ? "1 Termin" : `${list.length} Termine`), list.slice(0, 6).map((a) => /* @__PURE__ */ import_react.default.createElement("div", { key: a.id, className: "appt-day-load-row" }, /* @__PURE__ */ import_react.default.createElement("span", { className: "appt-day-load-time" }, a.allDay ? "ganzt\xE4gig" : a.time), /* @__PURE__ */ import_react.default.createElement("span", null, a.title))), list.length > 6 && /* @__PURE__ */ import_react.default.createElement("div", { className: "appt-day-load-row" }, `\u2026 und ${list.length - 6} weitere`));
     })(), /* @__PURE__ */ import_react.default.createElement("div", { className: "appt-editor-row" }, /* @__PURE__ */ import_react.default.createElement("span", { className: "appt-editor-label" }, "Wiederholung"), /* @__PURE__ */ import_react.default.createElement("select", { className: "recur-select", value: apptEdit.recurrence, onChange: (e) => setApptEdit(__spreadProps(__spreadValues({}, apptEdit), { recurrence: e.target.value, weekdays: e.target.value === "weekdays" && !(apptEdit.weekdays || []).length ? [dowOf(apptEdit.startDate)] : apptEdit.weekdays })) }, /* @__PURE__ */ import_react.default.createElement("option", { value: "none" }, "Einmalig"), /* @__PURE__ */ import_react.default.createElement("option", { value: "daily" }, "T\xE4glich"), /* @__PURE__ */ import_react.default.createElement("option", { value: "weekly" }, "W\xF6chentlich (am selben Wochentag)"), /* @__PURE__ */ import_react.default.createElement("option", { value: "weekdays" }, "Bestimmte Wochentage"), /* @__PURE__ */ import_react.default.createElement("option", { value: "monthly" }, "Monatlich"), /* @__PURE__ */ import_react.default.createElement("option", { value: "yearly" }, "J\xE4hrlich"))), apptEdit.recurrence === "weekdays" && /* @__PURE__ */ import_react.default.createElement("div", { className: "wd-row" }, WD_SHORT.map((n, i) => /* @__PURE__ */ import_react.default.createElement("button", { key: n, className: "wd-chip" + ((apptEdit.weekdays || []).includes(i) ? " on" : ""), onClick: () => setApptEdit({ ...apptEdit, weekdays: (apptEdit.weekdays || []).includes(i) ? (apptEdit.weekdays || []).filter((x) => x !== i) : [...(apptEdit.weekdays || []), i] }) }, n))), apptEdit.recurrence !== "none" && /* @__PURE__ */ import_react.default.createElement("div", { className: "until-box" }, /* @__PURE__ */ import_react.default.createElement("span", { className: "appt-editor-label" }, "Wiederholen bis"), /* @__PURE__ */ import_react.default.createElement("div", { className: "wd-row" }, [["", "Nie"], ["7", "1 Wo."], ["28", "4 Wo."], ["91", "3 Mon."], ["182", "6 Mon."], ["365", "1 Jahr"]].map(([n, l]) => /* @__PURE__ */ import_react.default.createElement("button", { key: l, className: "wd-chip" + ((n ? apptEdit.until === addDaysKey(apptEdit.startDate, Number(n)) : !apptEdit.until) ? " on" : ""), onClick: () => setApptEdit({ ...apptEdit, until: n ? addDaysKey(apptEdit.startDate, Number(n)) : "" }) }, l))), apptEdit.until ? /* @__PURE__ */ import_react.default.createElement("input", { type: "date", className: "appt-editor-date", value: apptEdit.until, min: apptEdit.startDate, onChange: (e) => setApptEdit({ ...apptEdit, until: e.target.value }) }) : /* @__PURE__ */ import_react.default.createElement("button", { className: "wd-chip", style: { flex: "none", padding: "10px 14px" }, onClick: () => setApptEdit({ ...apptEdit, until: addDaysKey(apptEdit.startDate, 7) }) }, "Eigenes Datum")), apptEdit.recurring && !apptEditLocked && /* @__PURE__ */ import_react.default.createElement("div", { className: "until-box" }, /* @__PURE__ */ import_react.default.createElement("span", { className: "appt-editor-label" }, "Einzelne Tage auslassen"), /* @__PURE__ */ import_react.default.createElement("div", { className: "appt-editor-row" }, /* @__PURE__ */ import_react.default.createElement("input", { type: "date", className: "appt-editor-date", value: apptEdit.skipDate || "", onChange: (e) => setApptEdit({ ...apptEdit, skipDate: e.target.value }) }), /* @__PURE__ */ import_react.default.createElement("button", { className: "wd-chip", style: { flex: "none", padding: "10px 14px" }, onClick: () => {
@@ -17952,7 +18198,7 @@ ${stamp}
     } }, "Auslassen")), (apptEdit.exceptions || []).length > 0 && /* @__PURE__ */ import_react.default.createElement("div", null, (apptEdit.exceptions || []).slice().sort().map((d) => /* @__PURE__ */ import_react.default.createElement("button", { key: d, className: "skip-chip", onClick: () => {
       setSeriesException(apptEdit.seriesId, d, false);
       setApptEdit({ ...apptEdit, exceptions: (apptEdit.exceptions || []).filter((x) => x !== d) });
-    } }, fmtDE(d).slice(0, 6) + " \xD7")), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note" }, "Tipp auf ein Datum, um den Tag wieder einzuschalten."))), !apptEditLocked && !apptEdit.isBirthday && /* @__PURE__ */ import_react.default.createElement("div", { className: "appt-editor-row" }, /* @__PURE__ */ import_react.default.createElement("span", { className: "appt-editor-label" }, "\u{1F512} Unl\xF6schbar \u2014 31 Tage sperren"), /* @__PURE__ */ import_react.default.createElement("button", { className: "appt-toggle" + (apptEdit.lock ? " on" : ""), onClick: () => setApptEdit({ ...apptEdit, lock: !apptEdit.lock }), "aria-label": "31 Tage sperren" }, /* @__PURE__ */ import_react.default.createElement("span", { className: "appt-toggle-knob" }))), !apptEditLocked && apptEdit.lock && /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: -4 } }, "Nach dem Speichern ist der Termin 31 Tage lang knallrot und nicht l\xF6schbar, nur der Titel bleibt \xE4nderbar \u2014 und auf diese Uhrzeit kann kein anderer Termin gelegt werden."), !apptEditLocked && apptEdit.lock && /* @__PURE__ */ import_react.default.createElement("textarea", { className: "appt-editor-input", rows: 3, value: apptEdit.lockReason || "", onChange: (e) => setApptEdit({ ...apptEdit, lockReason: e.target.value }), placeholder: "Warum ist dieser Termin unl\xF6schbar? Diesen Text siehst du, sobald du ihn l\xF6schen willst \u2014 schreib ihn jetzt, solange du motiviert bist." }), /* @__PURE__ */ import_react.default.createElement("input", { className: "appt-editor-input", value: apptEdit.location, onChange: (e) => setApptEdit(__spreadProps(__spreadValues({}, apptEdit), { location: e.target.value })), placeholder: "Ort hinzuf\xFCgen" }), /* @__PURE__ */ import_react.default.createElement("textarea", { className: "appt-editor-input appt-editor-notes", rows: 5, value: apptEdit.notes, onChange: (e) => setApptEdit(__spreadProps(__spreadValues({}, apptEdit), { notes: e.target.value })), placeholder: "Beschreibung hinzuf\xFCgen" }), apptEdit.recurring && /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: 2 } }, "Wiederkehrender Termin \u2014 beim Speichern fragen wir: nur dieser Termin oder alle?"), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn danger", style: { marginTop: 10 }, onClick: () => {
+    } }, fmtDE(d).slice(0, 6) + " \xD7")), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note" }, "Tipp auf ein Datum, um den Tag wieder einzuschalten."))), !apptEditLocked && !apptEdit.isBirthday && /* @__PURE__ */ import_react.default.createElement("div", { className: "appt-editor-row" }, /* @__PURE__ */ import_react.default.createElement("span", { className: "appt-editor-label" }, "\u{1F512} Unl\xF6schbar \u2014 31 Tage sperren"), /* @__PURE__ */ import_react.default.createElement("button", { className: "appt-toggle" + (apptEdit.lock ? " on" : ""), onClick: () => setApptEdit({ ...apptEdit, lock: !apptEdit.lock }), "aria-label": "31 Tage sperren" }, /* @__PURE__ */ import_react.default.createElement("span", { className: "appt-toggle-knob" }))), !apptEditLocked && apptEdit.lock && /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: -4 } }, "Nach dem Speichern ist der Termin 31 Tage lang knallrot und nicht l\xF6schbar, nur Titel und Uhrzeit bleiben \xE4nderbar \u2014 und auf diese Uhrzeit kann kein anderer Termin gelegt werden."), !apptEditLocked && apptEdit.lock && /* @__PURE__ */ import_react.default.createElement("textarea", { className: "appt-editor-input", rows: 3, value: apptEdit.lockReason || "", onChange: (e) => setApptEdit({ ...apptEdit, lockReason: e.target.value }), placeholder: "Warum ist dieser Termin unl\xF6schbar? Diesen Text siehst du, sobald du ihn l\xF6schen willst \u2014 schreib ihn jetzt, solange du motiviert bist." }), /* @__PURE__ */ import_react.default.createElement("input", { className: "appt-editor-input", value: apptEdit.location, onChange: (e) => setApptEdit(__spreadProps(__spreadValues({}, apptEdit), { location: e.target.value })), placeholder: "Ort hinzuf\xFCgen" }), /* @__PURE__ */ import_react.default.createElement("textarea", { className: "appt-editor-input appt-editor-notes", rows: 5, value: apptEdit.notes, onChange: (e) => setApptEdit(__spreadProps(__spreadValues({}, apptEdit), { notes: e.target.value })), placeholder: "Beschreibung hinzuf\xFCgen" }), apptEdit.recurring && /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginTop: 2 } }, "Wiederkehrender Termin \u2014 beim Speichern fragen wir: nur dieser Termin oder alle?"), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn danger", style: { marginTop: 10 }, onClick: () => {
       const dayKey = apptEdit.dayKey;
       const a = { id: apptEdit.id, recurring: apptEdit.recurring, seriesId: apptEdit.seriesId, title: apptEdit.title, lockedUntil: apptEdit.lockedUntil, lockReason: apptEdit.lockReason };
       if (isApptLocked(a)) {
