@@ -12851,7 +12851,7 @@ try {
   function ymKey(year, monthIdx0) {
     return `${year}-${pad(monthIdx0 + 1)}`;
   }
-  var APP_BUILD = "Aufbau 99 \u2014 26.11.2026";
+  var APP_BUILD = "Aufbau 100 \u2014 26.11.2026";
   var ALARM_CATCHUP_MINUTES = 5;
   function hhmm(d = /* @__PURE__ */ new Date()) {
     return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
@@ -13116,6 +13116,7 @@ try {
     const [openNudge, setOpenNudge] = (0, import_react.useState)(false);
     const [rewardOpen, setRewardOpen] = (0, import_react.useState)("");
     const [lockInfo, setLockInfo] = (0, import_react.useState)(null);
+    const [emDraft, setEmDraft] = (0, import_react.useState)("");
     const [training, setTraining] = (0, import_react.useState)({ exercises: [], log: {} });
     const [trainingOpen, setTrainingOpen] = (0, import_react.useState)(false);
     const [trainDraft, setTrainDraft] = (0, import_react.useState)({ name: "", group: "", newGroup: "", sets: "3", reps: "10", kg: "" });
@@ -13198,8 +13199,9 @@ try {
       }
       noticeTimerRef.current = setTimeout(() => setNoticeMsg(null), 3200);
     }
-    function showLockInfo(a) {
-      setLockInfo({ title: a.title, until: a.lockedUntil, reason: (a.lockReason || "").trim() });
+    function showLockInfo(a, dayKey) {
+      setEmDraft("");
+      setLockInfo({ title: a.title, until: a.lockedUntil, reason: (a.lockReason || "").trim(), id: a.id, seriesId: a.seriesId, recurring: !!a.recurring, habitId: a.habitId || null, dayKey: dayKey || null, em: false });
     }
     const [editConfirmFor, setEditConfirmFor] = (0, import_react.useState)(null);
     const [reflections, setReflections] = (0, import_react.useState)(null);
@@ -14429,6 +14431,58 @@ ${stamp}
         setPauseOpen(!pauseOpen);
       } }, pauseOpen ? "▾ Urlaubstage schlie\xDFen" : "\u{1F334} Urlaubstage (z\xE4hlt nicht)"), pauseOpen && renderPauseCard());
     };
+    const renderLockInfoBox = () => {
+      const H = import_react.default.createElement;
+      const li = lockInfo;
+      const used = appState.emergencyUsed;
+      const words = emDraft.trim().split(/\s+/).filter(Boolean).length;
+      const ok = words >= 10;
+      const finish = (extra) => {
+        const rec = { date: todayKey, title: li.title, reason: emDraft.trim() };
+        saveAppState(__spreadProps(__spreadValues(__spreadValues({}, appState), extra || {}), { emergencyUsed: rec }));
+        setLockInfo(null);
+        setApptEdit(null);
+        setEmDraft("");
+        showNotice("\u{1F6A8} Notfall-L\xF6schen benutzt — das war dein einziges.");
+      };
+      const delOne = () => {
+        removeOneOffAppointment(li.dayKey, li.id);
+        finish();
+      };
+      const delOcc = () => {
+        saveRecurringAppts(recurringAppts.map((r) => r.id === li.seriesId ? __spreadProps(__spreadValues({}, r), { exceptions: [...r.exceptions || [], li.dayKey] }) : r));
+        finish();
+      };
+      const delSeries = () => {
+        saveRecurringAppts(recurringAppts.filter((r) => r.id !== li.seriesId));
+        finish();
+      };
+      const delHabit = () => finish({ habitTemplate: appState.habitTemplate.filter((h) => h.id !== li.habitId) });
+      return H(
+        "div",
+        { className: "delete-confirm", style: { zIndex: 993, border: "2px solid #FF1212", maxHeight: "86vh", overflowY: "auto" } },
+        H("div", { className: "delete-confirm-text", style: { fontWeight: 800, fontSize: 17, color: "#FF3B3B" } }, "\u{1F512} Nicht l\xF6schbar"),
+        H("div", { className: "settings-note" }, "„" + li.title + "“ ist bis " + fmtDE(li.until) + " gesperrt."),
+        H("div", { className: "lock-reason-text" }, li.reason ? "„" + li.reason + "“" : "Du hast diesen Termin selbst gesperrt, damit du dich daran h\xE4ltst. Genau daf\xFCr ist die Sperre da — auch wenn es gerade nervt."),
+        used ? H("div", { className: "settings-note" }, "\u{1F6A8} Dein einmaliges Notfall-L\xF6schen hast du am " + fmtDE(used.date) + " schon benutzt („" + used.title + "“).") : !li.em ? H("button", { className: "delete-confirm-btn", style: { background: "#7A0000", color: "#fff" }, onClick: () => setLockInfo({ ...li, em: true }) }, "\u{1F6A8} Notfall-L\xF6schen (nur 1\xD7 m\xF6glich)") : H(
+          import_react.default.Fragment,
+          null,
+          H("div", { className: "settings-note", style: { fontWeight: 700 } }, "Das geht nur ein einziges Mal — danach nie wieder. Warum ist das ein echter Notfall? (mind. 10 W\xF6rter)"),
+          H("textarea", { className: "excuse-area", rows: 4, style: { width: "100%", boxSizing: "border-box" }, value: emDraft, placeholder: "Begr\xFCnde den Notfall ehrlich…", onChange: (ev) => setEmDraft(ev.target.value) }),
+          H("div", { className: "settings-note", style: { color: ok ? "#2FBF5B" : void 0 } }, words + " / 10 W\xF6rter"),
+          li.habitId ? H("button", { className: "delete-confirm-btn", disabled: !ok, style: { opacity: ok ? 1 : 0.4 }, onClick: () => ok && delHabit() }, "Endg\xFCltig l\xF6schen") : li.recurring && li.seriesId ? H(
+            import_react.default.Fragment,
+            null,
+            H("button", { className: "delete-confirm-btn", disabled: !ok, style: { opacity: ok ? 1 : 0.4 }, onClick: () => ok && delOcc() }, "Nur diesen Termin l\xF6schen"),
+            H("button", { className: "delete-confirm-btn", disabled: !ok, style: { opacity: ok ? 1 : 0.4 }, onClick: () => ok && delSeries() }, "Ganze Serie l\xF6schen")
+          ) : H("button", { className: "delete-confirm-btn", disabled: !ok, style: { opacity: ok ? 1 : 0.4 }, onClick: () => ok && delOne() }, "Endg\xFCltig l\xF6schen")
+        ),
+        H("button", { className: "delete-confirm-btn cancel", onClick: () => {
+          setLockInfo(null);
+          setEmDraft("");
+        } }, li.em ? "Abbrechen — ich halte mich dran" : "Verstanden")
+      );
+    };
     const secIcon = (key) => {
       const icons = appState.sectionIcons || {};
       const v = icons[key];
@@ -15242,7 +15296,7 @@ ${stamp}
     function removeHabit(id) {
       const hh = appState.habitTemplate.find((x) => x.id === id);
       if (hh && isHabitLocked(hh)) {
-        showLockInfo({ title: hh.name, lockedUntil: hh.lockedUntil, lockReason: hh.lockReason });
+        showLockInfo({ title: hh.name, lockedUntil: hh.lockedUntil, lockReason: hh.lockReason, habitId: hh.id });
         return;
       }
       askConfirm("Wirklich l\xF6schen?", () => saveAppState(__spreadProps(__spreadValues({}, appState), { habitTemplate: appState.habitTemplate.filter((h) => h.id !== id) })));
@@ -15732,7 +15786,7 @@ ${stamp}
     }
     function requestRemoveAppointment(dayKey, appt) {
       if (isApptLocked(appt)) {
-        showLockInfo(appt);
+        showLockInfo(appt, dayKey);
         return;
       }
       if (appt.recurring) {
@@ -18366,7 +18420,7 @@ ${stamp}
       const dayKey = apptEdit.dayKey;
       const a = { id: apptEdit.id, recurring: apptEdit.recurring, seriesId: apptEdit.seriesId, title: apptEdit.title, lockedUntil: apptEdit.lockedUntil, lockReason: apptEdit.lockReason };
       if (isApptLocked(a)) {
-        showLockInfo(a);
+        showLockInfo(a, dayKey);
         return;
       }
       setApptEdit(null);
@@ -18386,7 +18440,7 @@ ${stamp}
       const fn = seriesChoice.onAll;
       setSeriesChoice(null);
       fn();
-    } }, "Alle Termine der Serie"), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn cancel", onClick: () => setSeriesChoice(null) }, "Abbrechen")), lockInfo && /* @__PURE__ */ import_react.default.createElement("div", { className: "delete-confirm", style: { zIndex: 993, border: "2px solid #FF1212" } }, /* @__PURE__ */ import_react.default.createElement("div", { className: "delete-confirm-text", style: { fontWeight: 800, fontSize: 17, color: "#FF3B3B" } }, "\u{1F512} Nicht l\xF6schbar"), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note" }, "\u201E" + lockInfo.title + "\u201C ist bis " + fmtDE(lockInfo.until) + " gesperrt."), /* @__PURE__ */ import_react.default.createElement("div", { className: "lock-reason-text" }, lockInfo.reason ? "\u201E" + lockInfo.reason + "\u201C" : "Du hast diesen Termin selbst gesperrt, damit du dich daran h\xE4ltst. Genau daf\xFCr ist die Sperre da \u2014 auch wenn es gerade nervt."), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn", onClick: () => setLockInfo(null) }, "Verstanden")), missedForced && (() => {
+    } }, "Alle Termine der Serie"), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn cancel", onClick: () => setSeriesChoice(null) }, "Abbrechen")), lockInfo && renderLockInfoBox(), missedForced && (() => {
       const words = excuseDraft.trim().split(/\s+/).filter(Boolean).length;
       const ok = words >= 10;
       const prev = excuseLog.length ? excuseLog[excuseLog.length - 1] : null;
