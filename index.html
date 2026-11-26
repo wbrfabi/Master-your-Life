@@ -12851,7 +12851,7 @@ try {
   function ymKey(year, monthIdx0) {
     return `${year}-${pad(monthIdx0 + 1)}`;
   }
-  var APP_BUILD = "Aufbau 100 \u2014 26.11.2026";
+  var APP_BUILD = "Aufbau 101 \u2014 26.11.2026";
   var ALARM_CATCHUP_MINUTES = 5;
   function hhmm(d = /* @__PURE__ */ new Date()) {
     return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
@@ -14453,6 +14453,10 @@ ${stamp}
         saveRecurringAppts(recurringAppts.map((r) => r.id === li.seriesId ? __spreadProps(__spreadValues({}, r), { exceptions: [...r.exceptions || [], li.dayKey] }) : r));
         finish();
       };
+      const delFollowing = () => {
+        endSeriesBefore(li.seriesId, li.dayKey);
+        finish();
+      };
       const delSeries = () => {
         saveRecurringAppts(recurringAppts.filter((r) => r.id !== li.seriesId));
         finish();
@@ -14474,6 +14478,7 @@ ${stamp}
             import_react.default.Fragment,
             null,
             H("button", { className: "delete-confirm-btn", disabled: !ok, style: { opacity: ok ? 1 : 0.4 }, onClick: () => ok && delOcc() }, "Nur diesen Termin l\xF6schen"),
+            H("button", { className: "delete-confirm-btn", disabled: !ok, style: { opacity: ok ? 1 : 0.4 }, onClick: () => ok && delFollowing() }, "Diesen und alle folgenden l\xF6schen"),
             H("button", { className: "delete-confirm-btn", disabled: !ok, style: { opacity: ok ? 1 : 0.4 }, onClick: () => ok && delSeries() }, "Ganze Serie l\xF6schen")
           ) : H("button", { className: "delete-confirm-btn", disabled: !ok, style: { opacity: ok ? 1 : 0.4 }, onClick: () => ok && delOne() }, "Endg\xFCltig l\xF6schen")
         ),
@@ -15686,6 +15691,11 @@ ${stamp}
               detachOccurrence(e.seriesId, e.dayKey, e.dayKey, __spreadProps(__spreadValues({}, lockPatch), { lockedUntil: e.lockedUntil, lockReason: (e.lockReason || "").trim() }));
               done();
             },
+            onFollowing: () => {
+              if (lockConflict("all")) return;
+              splitSeriesFrom(e.seriesId, e.dayKey, lockPatch);
+              done();
+            },
             onAll: () => {
               if (lockConflict("all")) return;
               updateRecurringSeries(e.seriesId, lockPatch);
@@ -15741,6 +15751,8 @@ ${stamp}
         } else if (e.recurring && e.seriesId) {
           if (scope === "one") {
             detachOccurrence(e.seriesId, e.dayKey, e.startDate, patch);
+          } else if (scope === "following") {
+            splitSeriesFrom(e.seriesId, e.dayKey, __spreadProps(__spreadValues({}, patch), { recurrence: e.recurrence, weekdays, endDate: until }), e.startDate);
           } else if (e.recurrence === "none") {
             const rule0 = recurringAppts.find((r) => r.id === e.seriesId);
             saveRecurringAppts(recurringAppts.filter((r) => r.id !== e.seriesId));
@@ -15779,7 +15791,7 @@ ${stamp}
         }
       };
       if (e.id && e.recurring && e.seriesId) {
-        setSeriesChoice({ title: patch.title, onOne: () => proceed("one"), onAll: () => proceed("all") });
+        setSeriesChoice({ title: patch.title, onOne: () => proceed("one"), onFollowing: e.recurrence !== "none" ? () => proceed("following") : void 0, onAll: () => proceed("all") });
       } else {
         proceed(null);
       }
@@ -15823,6 +15835,28 @@ ${stamp}
       const appointments = (existing.appointments || []).map((a) => a.id === id ? __spreadValues(__spreadValues({}, a), patch) : a).sort((a, b) => a.time.localeCompare(b.time));
       days[dayKey] = __spreadProps(__spreadValues({}, existing), { appointments });
       saveDaysData(days);
+    }
+    function splitSeriesFrom(seriesId, fromDay, patch, newStart) {
+      const r = recurringAppts.find((x) => x.id === seriesId);
+      if (!r) return;
+      const ns = newStart || fromDay;
+      if (fromDay <= r.startDate) {
+        updateRecurringSeries(seriesId, __spreadProps(__spreadValues({}, patch), { startDate: ns === fromDay ? r.startDate : ns }));
+        return;
+      }
+      const shift = daysBetweenKeys(fromDay, ns);
+      const before = __spreadProps(__spreadValues({}, r), { endDate: addDaysKey(fromDay, -1), exceptions: (r.exceptions || []).filter((x) => x < fromDay) });
+      const after = __spreadProps(__spreadValues(__spreadValues({}, r), patch), { id: newId("r"), startDate: ns, exceptions: (r.exceptions || []).filter((x) => x >= fromDay).map((x) => addDaysKey(x, shift)) });
+      saveRecurringAppts([...recurringAppts.filter((x) => x.id !== seriesId), before, after]);
+    }
+    function endSeriesBefore(seriesId, fromDay) {
+      const r = recurringAppts.find((x) => x.id === seriesId);
+      if (!r) return;
+      if (fromDay <= r.startDate) {
+        saveRecurringAppts(recurringAppts.filter((x) => x.id !== seriesId));
+        return;
+      }
+      saveRecurringAppts(recurringAppts.map((x) => x.id === seriesId ? __spreadProps(__spreadValues({}, x), { endDate: addDaysKey(fromDay, -1), exceptions: (x.exceptions || []).filter((d) => d < fromDay) }) : x));
     }
     function updateRecurringSeries(seriesId, patch) {
       saveRecurringAppts(recurringAppts.map((r) => r.id === seriesId ? __spreadValues(__spreadValues({}, r), patch) : r));
@@ -18208,7 +18242,7 @@ ${stamp}
                 if (newTime !== a.time) {
                   const cf = findLockedConflict(selectedDay, clamped, clamped + (parseInt(a.duration, 10) || 60), { id: a.id, seriesId: a.seriesId });
                   if (cf) showNotice(`\u{1F512} Diese Zeit ist durch \u201E${cf.title}\u201C gesperrt.`);
-                  else if (a.recurring) setSeriesChoice({ title: a.title, onOne: () => detachOccurrence(a.seriesId, selectedDay, selectedDay, isApptLocked(a) ? { time: newTime, lockedUntil: a.lockedUntil, lockReason: a.lockReason || "" } : { time: newTime }), onAll: () => updateRecurringSeries(a.seriesId, { time: newTime }) });
+                  else if (a.recurring) setSeriesChoice({ title: a.title, onOne: () => detachOccurrence(a.seriesId, selectedDay, selectedDay, isApptLocked(a) ? { time: newTime, lockedUntil: a.lockedUntil, lockReason: a.lockReason || "" } : { time: newTime }), onFollowing: () => splitSeriesFrom(a.seriesId, selectedDay, { time: newTime }), onAll: () => updateRecurringSeries(a.seriesId, { time: newTime }) });
                   else updateAppointment(selectedDay, a.id, { time: newTime });
                 }
                 setMovingAppt(null);
@@ -18328,7 +18362,10 @@ ${stamp}
           const checked = !!checks[h.id];
           return /* @__PURE__ */ import_react.default.createElement("td", { key: wd.key, className: "wt-check-cell" + (habitOnDay(h, wd.key) ? "" : " off") }, /* @__PURE__ */ import_react.default.createElement("button", { className: "wt-check" + (checked ? " checked" : ""), onClick: () => toggleHabit(wd.key, h.id), "aria-label": `${h.name} am ${wd.date.getDate()}. abhaken` }, checked ? "\u2713" : ""));
         }));
-      })))), deleteConfirm && /* @__PURE__ */ import_react.default.createElement("div", { className: "delete-confirm" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "delete-confirm-text" }, '"', deleteConfirm.appt.title, '" l\xF6schen \u2014'), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn", onClick: confirmDeleteThisOccurrence }, "Nur diesen Tag"), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn danger", onClick: confirmDeleteWholeSeries }, "Ganze Serie (alle Wiederholungen)"), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn cancel", onClick: () => setDeleteConfirm(null) }, "Abbrechen")))
+      })))), deleteConfirm && /* @__PURE__ */ import_react.default.createElement("div", { className: "delete-confirm" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "delete-confirm-text" }, '"', deleteConfirm.appt.title, '" l\xF6schen \u2014'), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn", onClick: confirmDeleteThisOccurrence }, "Nur diesen Tag"), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn", onClick: () => {
+      endSeriesBefore(deleteConfirm.appt.seriesId, deleteConfirm.dayKey);
+      setDeleteConfirm(null);
+    } }, "Diesen und alle folgenden"), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn danger", onClick: confirmDeleteWholeSeries }, "Ganze Serie (alle Wiederholungen)"), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn cancel", onClick: () => setDeleteConfirm(null) }, "Abbrechen")))
     ), activeTab === "daily" && /* @__PURE__ */ import_react.default.createElement("div", { className: "reorder-block", style: { order: appState.sectionOrder.indexOf("planning") } }, /* @__PURE__ */ import_react.default.createElement("div", { className: "section-move-row planning-header" }, /* @__PURE__ */ import_react.default.createElement("button", { className: "collapse-header", style: { flex: 1 }, onClick: () => setShowTomorrowPlanning((v) => !v) }, /* @__PURE__ */ import_react.default.createElement("span", { className: "collapse-arrow" + (showTomorrowPlanning ? " open" : "") }, "\u25B8"), /* @__PURE__ */ import_react.default.createElement("span", { className: "collapse-title" }, "\u{1F319} Planung f\xFCr morgen")), /* @__PURE__ */ import_react.default.createElement("div", __spreadValues({ className: "move-btns drag-handle" + (draggingId === "planning" ? " dragging" : "") }, makeDragHandlers("planning", moveSection)), /* @__PURE__ */ import_react.default.createElement("span", { className: "drag-dots" }, "\u283F"))), showTomorrowPlanning && /* @__PURE__ */ import_react.default.createElement("div", { className: "section" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note", style: { marginBottom: 10 } }, "Abends 3 Priorit\xE4ten f\xFCr ", formatLongDate(shiftDays(todayKey, 1)), ' eintragen \u2014 morgens erscheinen sie oben unter "Heute geplant".'), prioritiesFor(shiftDays(todayKey, 1)).map((p, i) => /* @__PURE__ */ import_react.default.createElement(
       "input",
       {
@@ -18436,7 +18473,11 @@ ${stamp}
       const fn = seriesChoice.onOne;
       setSeriesChoice(null);
       fn();
-    } }, "Nur dieser Termin"), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn danger", onClick: () => {
+    } }, "Nur dieser Termin"), seriesChoice.onFollowing && /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn", onClick: () => {
+      const fn = seriesChoice.onFollowing;
+      setSeriesChoice(null);
+      fn();
+    } }, "Dieser und alle folgenden"), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn danger", onClick: () => {
       const fn = seriesChoice.onAll;
       setSeriesChoice(null);
       fn();
