@@ -12851,7 +12851,7 @@ try {
   function ymKey(year, monthIdx0) {
     return `${year}-${pad(monthIdx0 + 1)}`;
   }
-  var APP_BUILD = "Aufbau 101 \u2014 26.11.2026";
+  var APP_BUILD = "Aufbau 102 \u2014 26.11.2026";
   var ALARM_CATCHUP_MINUTES = 5;
   function hhmm(d = /* @__PURE__ */ new Date()) {
     return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
@@ -14504,6 +14504,12 @@ ${stamp}
       setActiveTab(TOUR_STEPS[0].tab);
       setTourStep(0);
     }, [ready, reflections, appState.onboardingDone, appState.tourSeen, appState.anfangsPromptDismissed]);
+    (0, import_react.useEffect)(() => {
+      if (!ready || appState.emergencyResetV102) return;
+      const next = __spreadProps(__spreadValues({}, appState), { emergencyResetV102: true });
+      delete next.emergencyUsed;
+      saveAppState(next);
+    }, [ready, appState.emergencyResetV102]);
     (0, import_react.useEffect)(() => {
       if (!ready || Object.keys(daysData).length === 0) return;
       if (!appState.habitTemplate.some((h) => !h.startDate)) return;
