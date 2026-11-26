@@ -12851,7 +12851,7 @@ try {
   function ymKey(year, monthIdx0) {
     return `${year}-${pad(monthIdx0 + 1)}`;
   }
-  var APP_BUILD = "Aufbau 95 \u2014 25.11.2026";
+  var APP_BUILD = "Aufbau 98 \u2014 26.11.2026";
   var ALARM_CATCHUP_MINUTES = 5;
   function hhmm(d = /* @__PURE__ */ new Date()) {
     return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
@@ -13118,10 +13118,36 @@ try {
     const [lockInfo, setLockInfo] = (0, import_react.useState)(null);
     const [training, setTraining] = (0, import_react.useState)({ exercises: [], log: {} });
     const [trainingOpen, setTrainingOpen] = (0, import_react.useState)(false);
-    const [trainDraft, setTrainDraft] = (0, import_react.useState)({ name: "", group: "", sets: "3", reps: "10", kg: "" });
+    const [trainDraft, setTrainDraft] = (0, import_react.useState)({ name: "", group: "", newGroup: "", sets: "3", reps: "10", kg: "" });
     const [vacDraft, setVacDraft] = (0, import_react.useState)({ from: "", to: "" });
     const [pauseDraft, setPauseDraft] = (0, import_react.useState)({ from: "", to: "" });
     const [pauseOpen, setPauseOpen] = (0, import_react.useState)(false);
+    const [trainAddGroup, setTrainAddGroup] = (0, import_react.useState)(null);
+    const [trainShowAll, setTrainShowAll] = (0, import_react.useState)(false);
+    const [trainHist, setTrainHist] = (0, import_react.useState)(null);
+    const [trainGHist, setTrainGHist] = (0, import_react.useState)([]);
+    const [restEnd, setRestEnd] = (0, import_react.useState)(null);
+    const [restTick, setRestTick] = (0, import_react.useState)(0);
+    (0, import_react.useEffect)(() => {
+      if (!restEnd) return;
+      const id = setInterval(() => {
+        const n = Date.now();
+        setRestTick(n);
+        if (n >= restEnd) {
+          setRestEnd(null);
+          try {
+            playSuccessChime();
+          } catch (err) {
+          }
+          try {
+            buzz(220);
+          } catch (err) {
+          }
+          showNotice("\u23F1 Pause vorbei \u2014 weiter geht\u2019s!");
+        }
+      }, 400);
+      return () => clearInterval(id);
+    }, [restEnd]);
     const [excuseLog, setExcuseLog] = (0, import_react.useState)([]);
     const [excuseDraft, setExcuseDraft] = (0, import_react.useState)("");
     const saveTraining = (0, import_react.useCallback)((next) => {
@@ -13144,7 +13170,7 @@ try {
         window.storage.get("training", false).then((res) => {
           if (res && res.value) {
             const t = JSON.parse(res.value);
-            if (t && Array.isArray(t.exercises)) setTraining({ exercises: t.exercises, log: t.log || {} });
+            if (t && Array.isArray(t.exercises)) setTraining({ exercises: t.exercises, log: t.log || {}, groups: Array.isArray(t.groups) ? t.groups : [], plan: t.plan || {} });
           }
         }).catch(() => {
         });
@@ -14058,13 +14084,17 @@ ${stamp}
       const exs = tl.exercises || [];
       const log = tl.log || {};
       const today = log[todayKey] || {};
-      const doneToday = exs.filter((x) => today[x.id]).length;
       const trainedDays = Object.keys(log).filter((d) => Object.keys(log[d] || {}).length > 0).sort();
       const last30 = trainedDays.filter((d) => d > addDaysKey(todayKey, -30)).length;
       const lastDay = trainedDays.length ? trainedDays[trainedDays.length - 1] : null;
       const dots = Array.from({ length: 14 }, (_, i) => addDaysKey(todayKey, i - 13));
       const srOf = (x) => Array.isArray(x.setReps) && x.setReps.length ? x.setReps.map(String) : Array.from({ length: Math.max(1, Number(x.sets) || 3) }, () => String(x.reps || "10"));
       const kgNum = (v) => Number(String(v == null ? "" : v).replace(",", ".")) || 0;
+      const restMin = (x) => x.rest == null || x.rest === "" ? 2 : Number(String(x.rest).replace(",", ".")) || 0;
+      const startRest = (x) => {
+        const m = restMin(x);
+        if (m > 0) setRestEnd(Date.now() + Math.round(m * 60000));
+      };
       const setEx = (id, patch) => saveTraining({ ...tl, exercises: exs.map((x) => x.id === id ? { ...x, ...patch } : x) });
       const setSR = (x, arr) => setEx(x.id, { setReps: arr });
       const bumpReps = (x, d) => setSR(x, srOf(x).map((r) => String(Math.max(0, (Number(r) || 0) + d))));
@@ -14084,6 +14114,7 @@ ${stamp}
         saveTraining({ ...tl, log: { ...log, [todayKey]: { ...today, [x.id]: { setReps: srOf(x), kg: x.kg } } } });
         playSuccessChime();
         buzz(22);
+        startRest(x);
       };
       const prevOf = (x) => {
         for (let i = trainedDays.length - 1; i >= 0; i--) {
@@ -14094,19 +14125,53 @@ ${stamp}
       };
       const fmtE = (e) => srOf(e).join("/") + (e.kg ? " \xB7 " + e.kg + " kg" : "");
       const vol = (e) => srOf(e).reduce((t, r) => t + (Number(r) || 0), 0) * (kgNum(e.kg) || 1);
-      const addEx = () => {
+      const addEx = (g) => {
         const nm = trainDraft.name.trim();
         if (!nm) return;
         const n = Math.max(1, Math.min(10, Number(trainDraft.sets) || 3));
-        saveTraining({ ...tl, exercises: [...exs, { id: newId("e"), name: nm, group: (trainDraft.group || "").trim(), setReps: Array.from({ length: n }, () => String(trainDraft.reps || "10")), kg: trainDraft.kg || "" }] });
+        saveTraining({ ...tl, exercises: [...exs, { id: newId("e"), name: nm, group: g, setReps: Array.from({ length: n }, () => String(trainDraft.reps || "10")), kg: trainDraft.kg || "", rest: "2" }] });
         setTrainDraft({ ...trainDraft, name: "", kg: "" });
       };
-      const groupNames = [];
+      const addGroup = () => {
+        const g = (trainDraft.newGroup || "").trim();
+        if (!g) return;
+        if ((tl.groups || []).includes(g) || exs.some((x) => (x.group || "").trim() === g)) {
+          showNotice("Diese Muskelgruppe gibt es schon.");
+          return;
+        }
+        saveTraining({ ...tl, groups: [...tl.groups || [], g] });
+        setTrainDraft({ ...trainDraft, newGroup: "" });
+        setTrainAddGroup(g);
+      };
+      const allGroups = [...tl.groups || []];
       exs.forEach((x) => {
         const g = (x.group || "").trim();
-        if (!groupNames.includes(g)) groupNames.push(g);
+        if (!allGroups.includes(g)) allGroups.push(g);
       });
-      groupNames.sort((p, q) => (p === "" ? 0 : 1) - (q === "" ? 0 : 1));
+      allGroups.sort((p, q) => (p === "" ? 1 : 0) - (q === "" ? 1 : 0));
+      const labelOf = (g) => g || "Sonstige";
+      const planToday = (tl.plan || {})[todayKey] || [];
+      const togglePlan = (g) => {
+        const next = planToday.includes(g) ? planToday.filter((y) => y !== g) : [...planToday, g];
+        saveTraining({ ...tl, plan: { ...tl.plan || {}, [todayKey]: next } });
+      };
+      const visibleGroups = trainShowAll ? allGroups : planToday.filter((g) => allGroups.includes(g));
+      const planExs = planToday.length ? exs.filter((x) => planToday.includes((x.group || "").trim())) : exs;
+      const doneToday = planExs.filter((x) => today[x.id]).length;
+      const histOf = (x) => trainedDays.filter((d) => log[d] && log[d][x.id]).reverse().map((d) => ({ day: d, e: log[d][x.id] }));
+      const renderHist = (x) => {
+        const h = histOf(x);
+        const best = h.reduce((m, r) => Math.max(m, vol(r.e)), 0);
+        return H(
+          "div",
+          { className: "train-hist", style: { display: "flex", flexDirection: "column", gap: 4 } },
+          h.length === 0 ? H("div", { className: "settings-note", style: { margin: 0 } }, "Noch nichts eingetragen.") : h.map((r, i) => {
+            const older = h[i + 1];
+            const trend = older ? vol(r.e) > vol(older.e) ? " ▲" : vol(r.e) < vol(older.e) ? " ▼" : " =" : "";
+            return H("div", { key: r.day, className: "biz-entry-row" }, H("span", { className: "biz-entry-text" }, fmtDE(r.day) + " \xB7 " + fmtE(r.e) + trend + (vol(r.e) === best && h.length > 1 ? "  \u{1F3C6} Bestwert" : "")));
+          })
+        );
+      };
       const renderEx = (x) => {
         const sr = srOf(x);
         const p = prevOf(x);
@@ -14120,7 +14185,8 @@ ${stamp}
             "div",
             { className: "train-ex-inputs" },
             sr.map((r, i) => H("label", { key: i }, "Satz " + (i + 1), H("input", { className: "train-in", type: "number", inputMode: "numeric", value: r, "aria-label": "Wiederholungen Satz " + (i + 1), onChange: (ev) => setSR(x, sr.map((v, j) => j === i ? ev.target.value : v)) }))),
-            H("label", { key: "kg" }, "kg", H("input", { className: "train-in", type: "number", inputMode: "decimal", value: x.kg || "", "aria-label": "kg", onChange: (ev) => setEx(x.id, { kg: ev.target.value }) }))
+            H("label", { key: "kg" }, "kg", H("input", { className: "train-in", type: "number", inputMode: "decimal", value: x.kg || "", "aria-label": "kg", onChange: (ev) => setEx(x.id, { kg: ev.target.value }) })),
+            H("label", { key: "rest" }, "Pause (Min.)", H("input", { className: "train-in train-rest", type: "number", inputMode: "decimal", step: "0.5", value: x.rest == null ? "2" : x.rest, "aria-label": "Pause in Minuten", onChange: (ev) => setEx(x.id, { rest: ev.target.value }) }))
           ),
           p ? H("div", { className: "settings-note", style: { marginTop: 0 } }, "Letztes Mal (" + fmtDE(p.day).slice(0, 6) + "): " + fmtE(p.e) + (t && vol(t) > vol(p.e) ? "   ▲ gesteigert" : t && vol(t) < vol(p.e) ? "   ▼ weniger" : "")) : null,
           H(
@@ -14132,33 +14198,68 @@ ${stamp}
             H("button", { className: "train-btn", onClick: () => delSet(x), disabled: sr.length < 2 }, "− Satz"),
             H("button", { className: "train-btn", onClick: () => bumpKg(x, 2.5) }, "▲ +2,5 kg"),
             H("button", { className: "train-btn", onClick: () => bumpKg(x, -2.5) }, "▼ −2,5 kg"),
+            H("button", { className: "train-btn", onClick: () => startRest(x) }, "⏱ Pause"),
             H("button", { className: "train-btn primary", onClick: () => logEx(x) }, t ? "✓ Neu eintragen" : "Heute eintragen")
+          ),
+          H("button", { className: "tiny-archive-link", style: { alignSelf: "flex-start" }, onClick: () => setTrainHist(trainHist === x.id ? null : x.id) }, (trainHist === x.id ? "▾ " : "▸ ") + "\u{1F4C8} Verlauf aller Tage (" + histOf(x).length + ")"),
+          trainHist === x.id && renderHist(x)
+        );
+      };
+      const groupSessions = (inG) => {
+        const days = trainedDays.filter((d) => inG.some((x) => log[d] && log[d][x.id])).reverse();
+        return days.map((d) => {
+          const items = inG.filter((x) => log[d][x.id]).map((x) => {
+            const e = log[d][x.id];
+            let prev = null;
+            for (let i = trainedDays.indexOf(d) - 1; i >= 0; i--) {
+              if (log[trainedDays[i]][x.id]) {
+                prev = log[trainedDays[i]][x.id];
+                break;
+              }
+            }
+            return { x, e, trend: prev ? vol(e) > vol(prev) ? "up" : vol(e) < vol(prev) ? "down" : "same" : "new" };
+          });
+          return { day: d, items, total: items.reduce((t, r) => t + vol(r.e), 0) };
+        });
+      };
+      const renderGroupHist = (g, inG) => {
+        const sess = groupSessions(inG);
+        const open = trainGHist.includes(g);
+        const maxT = sess.reduce((m, r) => Math.max(m, r.total), 0) || 1;
+        const ups = sess.reduce((t, r) => t + r.items.filter((i) => i.trend === "up").length, 0);
+        const downs = sess.reduce((t, r) => t + r.items.filter((i) => i.trend === "down").length, 0);
+        return H(
+          import_react.default.Fragment,
+          { key: "gh-" + g },
+          H("button", { className: "train-btn", style: { alignSelf: "flex-start", marginLeft: 0 }, onClick: () => setTrainGHist(open ? trainGHist.filter((y) => y !== g) : [...trainGHist, g]) }, (open ? "▾ " : "▸ ") + "\u{1F4C8} Erfolge \xB7 letzte Trainings " + labelOf(g) + " (" + sess.length + ")"),
+          open && H(
+            "div",
+            { className: "train-ghist", style: { display: "flex", flexDirection: "column", gap: 8 } },
+            sess.length === 0 ? H("div", { className: "settings-note", style: { margin: 0 } }, "Noch kein Training eingetragen — trag oben eine \xDCbung mit „Heute eintragen“ ein.") : H("div", { className: "settings-note", style: { margin: 0 } }, sess.length + " Trainings \xB7 " + ups + "\xD7 gesteigert \xB7 " + downs + "\xD7 weniger. Der Balken zeigt das Gesamtvolumen (Wdh. \xD7 kg)."),
+            sess.slice(0, 12).map((r) => H(
+              "div",
+              { key: r.day, style: { border: "1px solid var(--hairline)", borderRadius: 10, padding: "8px 10px", display: "flex", flexDirection: "column", gap: 3 } },
+              H("div", { style: { fontWeight: 700, fontSize: 13 } }, fmtDE(r.day)),
+              H("div", { className: "vac-bar" }, H("div", { style: { width: Math.round(r.total / maxT * 100) + "%" } })),
+              r.items.map((i) => H("div", { key: i.x.id, style: { fontSize: 13, display: "flex", justifyContent: "space-between", gap: 8 } }, H("span", null, i.x.name), H("span", { style: { color: i.trend === "up" ? "#2FBF5B" : i.trend === "down" ? "#FF3B3B" : "inherit" } }, fmtE(i.e) + (i.trend === "up" ? " ▲" : i.trend === "down" ? " ▼" : i.trend === "same" ? " =" : " ★neu"))))
+            )),
+            sess.length > 12 && H("div", { className: "settings-note", style: { margin: 0 } }, "Die letzten 12 Trainings werden angezeigt, \xE4ltere bleiben gespeichert.")
           )
         );
       };
-      const list = [];
-      groupNames.forEach((g) => {
+      const renderGroup = (g) => {
         const inG = exs.filter((x) => (x.group || "").trim() === g);
-        if (g) list.push(H("div", { key: "g-" + g, className: "train-group" }, g + "  \xB7  " + inG.filter((x) => today[x.id]).length + "/" + inG.length));
-        inG.forEach((x) => list.push(renderEx(x)));
-      });
-      const knownGroups = groupNames.filter((g) => g);
-      return H(
-        "div",
-        { className: "section train-card", "data-tour": "training" },
-        H("button", { className: "train-head", onClick: () => setTrainingOpen(!trainingOpen) }, H("span", { className: "train-title" }, "\u{1F4AA} Training"), H("span", { className: "train-sum" }, exs.length === 0 ? "\xDCbungen anlegen" : "heute " + doneToday + "/" + exs.length + " \xB7 " + last30 + " Tage in 30"), H("span", null, trainingOpen ? "▾" : "▸")),
-        trainingOpen && H(
+        const adding = trainAddGroup === g;
+        return H(
           "div",
-          { className: "train-body" },
-          H("div", { className: "train-dots" }, dots.map((d) => H("span", { key: d, className: "train-dot" + (log[d] && Object.keys(log[d]).length ? " on" : "") + (d === todayKey ? " today" : "") }, WD_SHORT[dowOf(d)]))),
-          lastDay ? H("div", { className: "settings-note", style: { marginTop: 0 } }, "Letztes Training: " + fmtDE(lastDay).slice(0, 6) + "  \xB7  Die Tage merkt sich die App, sobald du eine \xDCbung eintr\xE4gst.") : H("div", { className: "settings-note", style: { marginTop: 0 } }, "Lege Training (z.B. Brust) und \xDCbungen an, trag pro Satz die Wiederholungen ein und best\xE4tige nach dem Training. Die App zeigt dir, ob du dich steigerst."),
-          list,
-          H(
+          { key: "grp-" + g, className: "train-groupbox", style: { display: "flex", flexDirection: "column", gap: 8 } },
+          H("div", { className: "train-group", style: { display: "flex", justifyContent: "space-between", alignItems: "center" } }, H("span", null, labelOf(g) + "  \xB7  " + inG.filter((x) => today[x.id]).length + "/" + inG.length), g && H("button", { className: "habit-remove", "aria-label": "Muskelgruppe l\xF6schen", onClick: () => askConfirm("„" + g + "“ mit allen " + inG.length + " \xDCbungen l\xF6schen?", () => saveTraining({ ...tl, groups: (tl.groups || []).filter((y) => y !== g), exercises: exs.filter((x) => (x.group || "").trim() !== g), plan: Object.fromEntries(Object.entries(tl.plan || {}).map(([k, v]) => [k, v.filter((y) => y !== g)])) })) }, "\xD7")),
+          inG.map(renderEx),
+          inG.length > 0 && renderGroupHist(g, inG),
+          adding ? H(
             "div",
             { className: "train-ex" },
-            H("input", { className: "goal-reward-input", list: "train-groups", value: trainDraft.group || "", placeholder: "Training (z.B. Brust, R\xFCcken, Beine)", onChange: (ev) => setTrainDraft({ ...trainDraft, group: ev.target.value }) }),
-            H("datalist", { id: "train-groups" }, knownGroups.map((g) => H("option", { key: g, value: g }))),
-            H("input", { className: "goal-reward-input", value: trainDraft.name, placeholder: "Neue \xDCbung, z.B. Bankdr\xFCcken", onChange: (ev) => setTrainDraft({ ...trainDraft, name: ev.target.value }), onKeyDown: (ev) => ev.key === "Enter" && addEx() }),
+            H("input", { className: "goal-reward-input", value: trainDraft.name, autoFocus: true, placeholder: "Neue \xDCbung f\xFCr " + labelOf(g) + ", z.B. Rudern", onChange: (ev) => setTrainDraft({ ...trainDraft, name: ev.target.value }), onKeyDown: (ev) => ev.key === "Enter" && addEx(g) }),
             H(
               "div",
               { className: "train-ex-inputs" },
@@ -14166,8 +14267,36 @@ ${stamp}
               H("label", null, "Wdh. je Satz", H("input", { className: "train-in", type: "number", inputMode: "numeric", value: trainDraft.reps, onChange: (ev) => setTrainDraft({ ...trainDraft, reps: ev.target.value }) })),
               H("label", null, "kg (optional)", H("input", { className: "train-in", type: "number", inputMode: "decimal", value: trainDraft.kg, onChange: (ev) => setTrainDraft({ ...trainDraft, kg: ev.target.value }) }))
             ),
-            H("div", { className: "settings-note", style: { margin: 0 } }, "Danach kannst du jeden Satz einzeln \xE4ndern (z.B. 12 / 10 / 8)."),
-            H("button", { className: "train-btn primary", style: { marginLeft: 0 }, onClick: addEx }, "+ \xDCbung hinzuf\xFCgen")
+            H("div", { className: "settings-note", style: { margin: 0 } }, "Pause zwischen den S\xE4tzen: standardm\xE4\xDFig 2 Minuten, pro \xDCbung \xE4nderbar."),
+            H("button", { className: "train-btn primary", style: { marginLeft: 0 }, onClick: () => addEx(g) }, "+ \xDCbung hinzuf\xFCgen"),
+            H("button", { className: "tiny-archive-link", style: { alignSelf: "flex-start" }, onClick: () => setTrainAddGroup(null) }, "Fertig")
+          ) : H("button", { className: "train-btn", style: { alignSelf: "flex-start", marginLeft: 0 }, onClick: () => setTrainAddGroup(g) }, "+ \xDCbung zu " + labelOf(g))
+        );
+      };
+      const nonEmptyGroups = allGroups.filter((g) => g !== "" || exs.some((x) => !(x.group || "").trim()));
+      return H(
+        "div",
+        { className: "section train-card", "data-tour": "training" },
+        H("button", { className: "train-head", onClick: () => setTrainingOpen(!trainingOpen) }, H("span", { className: "train-title" }, "\u{1F4AA} Training"), H("span", { className: "train-sum" }, exs.length === 0 ? "Muskelgruppen anlegen" : (planToday.length ? planToday.map(labelOf).join(" + ") + " \xB7 " : "") + "heute " + doneToday + "/" + planExs.length + " \xB7 " + last30 + " Tage in 30"), H("span", null, trainingOpen ? "▾" : "▸")),
+        trainingOpen && H(
+          "div",
+          { className: "train-body" },
+          H("div", { className: "train-dots" }, dots.map((d) => H("span", { key: d, className: "train-dot" + (log[d] && Object.keys(log[d]).length ? " on" : "") + (d === todayKey ? " today" : "") }, WD_SHORT[dowOf(d)]))),
+          lastDay ? H("div", { className: "settings-note", style: { marginTop: 0 } }, "Letztes Training: " + fmtDE(lastDay).slice(0, 6)) : null,
+          nonEmptyGroups.length === 0 ? H("div", { className: "settings-note", style: { marginTop: 0 } }, "Lege zuerst eine Muskelgruppe an (z.B. R\xFCcken, Brust). Danach f\xFCgst du ihr beliebig viele \xDCbungen hinzu.") : H(
+            "div",
+            { className: "train-plan", style: { display: "flex", flexDirection: "column", gap: 8 } },
+            H("div", { className: "reflect-label", style: { margin: 0 } }, "Was trainierst du heute?"),
+            H("div", { className: "train-chips" }, nonEmptyGroups.map((g) => H("button", { key: g, className: "train-chip" + (planToday.includes(g) ? " on" : ""), onClick: () => togglePlan(g), "aria-pressed": planToday.includes(g) }, (planToday.includes(g) ? "✓ " : "") + labelOf(g)))),
+            planToday.length === 0 && !trainShowAll ? H("div", { className: "settings-note", style: { margin: 0 } }, "Tippe die Muskelgruppen an, die du heute trainierst (mehrere m\xF6glich).") : null
+          ),
+          visibleGroups.map(renderGroup),
+          nonEmptyGroups.length > 0 && H("button", { className: "tiny-archive-link", style: { alignSelf: "flex-start" }, onClick: () => setTrainShowAll(!trainShowAll) }, trainShowAll ? "▾ Nur heutige Gruppen zeigen" : "▸ Alle Gruppen anzeigen / bearbeiten"),
+          H(
+            "div",
+            { className: "train-ex" },
+            H("input", { className: "goal-reward-input", value: trainDraft.newGroup || "", placeholder: "Neue Muskelgruppe, z.B. R\xFCcken", onChange: (ev) => setTrainDraft({ ...trainDraft, newGroup: ev.target.value }), onKeyDown: (ev) => ev.key === "Enter" && addGroup() }),
+            H("button", { className: "train-btn primary", style: { marginLeft: 0 }, onClick: addGroup }, "+ Muskelgruppe anlegen")
           ),
           doneToday > 0 && H("button", { className: "tiny-archive-link", style: { alignSelf: "flex-start" }, onClick: () => askConfirm("Das heutige Training zur\xFCcksetzen?", () => {
             const l2 = { ...log };
@@ -15457,7 +15586,6 @@ ${stamp}
           lockPatch.duration = lockDur;
         }
         const lockConflict = (scope) => {
-          return false;
           if (e.allDay) return false;
           const rec = scope === "all" ? e.recurrence : "none";
           const c = slotConflict(e.startDate, e.startTime, e.allDay, lockDur, { recurrence: rec, weekdays: e.weekdays || [], endDate: e.until || "" }, { id: e.id, seriesId: e.seriesId });
@@ -15520,7 +15648,7 @@ ${stamp}
       const extra = { duration: durationMin, allDay: e.allDay, context: activeTab, location: patch.location, notes: patch.notes, lockedUntil: lockUntil, lockReason: (e.lockReason || "").trim(), weekdays, until };
       const finish = (scope) => {
         const rec = scope === "one" ? "none" : e.recurrence;
-        const conflict = lockUntil ? null : slotConflict(e.startDate, e.startTime, e.allDay, durationMin, { recurrence: rec, weekdays, endDate: until }, { id: e.id, seriesId: e.seriesId });
+        const conflict = slotConflict(e.startDate, e.startTime, e.allDay, durationMin, { recurrence: rec, weekdays, endDate: until }, { id: e.id, seriesId: e.seriesId });
         if (conflict) {
           showNotice(`\u{1F512} Diese Zeit ist durch \u201E${conflict.appt.title}\u201C gesperrt (${fmtDE(conflict.day)}).`);
           return;
@@ -16137,11 +16265,16 @@ ${stamp}
       box-shadow: 0 0 0 1px #7A0000, 0 3px 16px rgba(255, 18, 18, 0.6) !important;
     }
     .timeline-block.locked .habit-check { border-color: #fff; color: #fff; }
-    .timeline-block.locked.moving { z-index: 20; box-shadow: 0 10px 26px rgba(0, 0, 0, 0.55) !important; opacity: 0.94; transform: scale(1.03); }
     .timeline-allday.locked { background: #FF1212; border: 1px solid #7A0000; color: #fff; font-weight: 700; }
     .appt-editor .pop-close { position: relative !important; }
     .appt-editor.locked .appt-editor-title, .appt-editor.locked input.appt-editor-time { pointer-events: auto; opacity: 1; }
     .appt-editor-copy { background: none; border: none; font-size: 22px; line-height: 1; padding: 6px 12px; cursor: pointer; color: inherit; position: relative; z-index: 2; }
+    .rest-bar { position: fixed; left: 50%; transform: translateX(-50%); bottom: 86px; z-index: 995; background: var(--ink-900); color: var(--paper); border: 2px solid var(--amber); border-radius: 18px; padding: 10px 16px; display: flex; gap: 12px; align-items: center; box-shadow: 0 8px 28px rgba(0,0,0,0.45); font-size: 14px; }
+    .rest-bar b { font-size: 24px; font-variant-numeric: tabular-nums; color: var(--amber); }
+    .rest-bar button { white-space: nowrap; background: rgba(255,255,255,0.12); color: var(--paper); border: 1px solid var(--hairline); border-radius: 12px; padding: 6px 12px; font-size: 13px; cursor: pointer; }
+    .train-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .train-chip { border: 1.5px solid var(--hairline); background: transparent; color: inherit; border-radius: 999px; padding: 8px 14px; font-size: 14px; cursor: pointer; }
+    .train-chip.on { background: var(--amber); color: #1C1610; border-color: var(--amber); font-weight: 700; }
     .train-group { font-weight: 700; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--amber); margin-top: 6px; }
     .train-ex-inputs { flex-wrap: wrap; }
     .train-ex-inputs label { min-width: 54px; }
@@ -17927,19 +18060,6 @@ ${stamp}
         const durMin = parseInt(a.duration, 10) || 60;
         const top = (startHour - 6) * 48 + startMin / 60 * 48;
         const height = Math.max(30, durMin / 60 * 48 - 4);
-        const _ovSpan = (x) => {
-          const [h, m] = x.time.split(":").map(Number);
-          const st0 = h * 60 + m;
-          return [st0, st0 + (parseInt(x.duration, 10) || 60)];
-        };
-        const _ovMine = _ovSpan(a);
-        const _ovList = apptsFor(selectedDay).filter((x) => !x.allDay && !x.isBirthday && (x.title || "").trim()).filter((x) => {
-          const q = _ovSpan(x);
-          return q[0] < _ovMine[1] && q[1] > _ovMine[0];
-        });
-        const _ovCols = Math.max(1, _ovList.length);
-        const _ovCol = Math.max(0, _ovList.findIndex((x) => x.id === a.id));
-        const overlapStyle = _ovCols > 1 ? { left: `calc(58px + (100% - 58px) * ${_ovCol} / ${_ovCols})`, right: "auto", width: `calc((100% - 58px) / ${_ovCols} - 3px)` } : {};
         const checks = daysData[selectedDay] && daysData[selectedDay].checks || {};
         const apptDone = !!checks[a.id];
         if (editingApptId === a.id) {
@@ -17963,7 +18083,7 @@ ${stamp}
           {
             key: a.id,
             className: "timeline-block timeline-appt-overlay" + (apptDone ? " done" : "") + (isApptLocked(a) ? " locked" : "") + (movingAppt && movingAppt.id === a.id ? " moving" : ""),
-            style: __spreadValues({ top: movingAppt && movingAppt.id === a.id ? movingAppt.top : top, height }, overlapStyle),
+            style: { top: movingAppt && movingAppt.id === a.id ? movingAppt.top : top, height },
             onTouchStart: (e) => {
               const y = e.touches[0].clientY;
               if (apptDragRef.current && apptDragRef.current.timer) clearTimeout(apptDragRef.current.timer);
@@ -18003,7 +18123,7 @@ ${stamp}
                 const clamped = Math.min(23 * 60 + 55, Math.max(6 * 60, raw));
                 const newTime = `${pad(Math.floor(clamped / 60))}:${pad(clamped % 60)}`;
                 if (newTime !== a.time) {
-                  const cf = isApptLocked(a) ? null : findLockedConflict(selectedDay, clamped, clamped + (parseInt(a.duration, 10) || 60), { id: a.id, seriesId: a.seriesId });
+                  const cf = findLockedConflict(selectedDay, clamped, clamped + (parseInt(a.duration, 10) || 60), { id: a.id, seriesId: a.seriesId });
                   if (cf) showNotice(`\u{1F512} Diese Zeit ist durch \u201E${cf.title}\u201C gesperrt.`);
                   else if (a.recurring) setSeriesChoice({ title: a.title, onOne: () => detachOccurrence(a.seriesId, selectedDay, selectedDay, isApptLocked(a) ? { time: newTime, lockedUntil: a.lockedUntil, lockReason: a.lockReason || "" } : { time: newTime }), onAll: () => updateRecurringSeries(a.seriesId, { time: newTime }) });
                   else updateAppointment(selectedDay, a.id, { time: newTime });
@@ -18237,7 +18357,7 @@ ${stamp}
       const fn = seriesChoice.onAll;
       setSeriesChoice(null);
       fn();
-    } }, "Alle Termine der Reihe"), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn cancel", onClick: () => setSeriesChoice(null) }, "Abbrechen")), lockInfo && /* @__PURE__ */ import_react.default.createElement("div", { className: "delete-confirm", style: { zIndex: 993, border: "2px solid #FF1212" } }, /* @__PURE__ */ import_react.default.createElement("div", { className: "delete-confirm-text", style: { fontWeight: 800, fontSize: 17, color: "#FF3B3B" } }, "\u{1F512} Nicht l\xF6schbar"), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note" }, "\u201E" + lockInfo.title + "\u201C ist bis " + fmtDE(lockInfo.until) + " gesperrt."), /* @__PURE__ */ import_react.default.createElement("div", { className: "lock-reason-text" }, lockInfo.reason ? "\u201E" + lockInfo.reason + "\u201C" : "Du hast diesen Termin selbst gesperrt, damit du dich daran h\xE4ltst. Genau daf\xFCr ist die Sperre da \u2014 auch wenn es gerade nervt."), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn", onClick: () => setLockInfo(null) }, "Verstanden")), missedForced && (() => {
+    } }, "Alle Termine der Serie"), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn cancel", onClick: () => setSeriesChoice(null) }, "Abbrechen")), lockInfo && /* @__PURE__ */ import_react.default.createElement("div", { className: "delete-confirm", style: { zIndex: 993, border: "2px solid #FF1212" } }, /* @__PURE__ */ import_react.default.createElement("div", { className: "delete-confirm-text", style: { fontWeight: 800, fontSize: 17, color: "#FF3B3B" } }, "\u{1F512} Nicht l\xF6schbar"), /* @__PURE__ */ import_react.default.createElement("div", { className: "settings-note" }, "\u201E" + lockInfo.title + "\u201C ist bis " + fmtDE(lockInfo.until) + " gesperrt."), /* @__PURE__ */ import_react.default.createElement("div", { className: "lock-reason-text" }, lockInfo.reason ? "\u201E" + lockInfo.reason + "\u201C" : "Du hast diesen Termin selbst gesperrt, damit du dich daran h\xE4ltst. Genau daf\xFCr ist die Sperre da \u2014 auch wenn es gerade nervt."), /* @__PURE__ */ import_react.default.createElement("button", { className: "delete-confirm-btn", onClick: () => setLockInfo(null) }, "Verstanden")), missedForced && (() => {
       const words = excuseDraft.trim().split(/\s+/).filter(Boolean).length;
       const ok = words >= 10;
       const prev = excuseLog.length ? excuseLog[excuseLog.length - 1] : null;
@@ -18247,6 +18367,9 @@ ${stamp}
         saveAppState({ ...appState, lastMissedBannerDate: todayKey });
         setExcuseDraft("");
       } }, "Ehrlich begr\xFCndet \u2014 weiter")));
+    })(), restEnd && (() => {
+      const left = Math.max(0, Math.ceil((restEnd - Date.now()) / 1000));
+      return /* @__PURE__ */ import_react.default.createElement("div", { className: "rest-bar", "data-tick": restTick }, /* @__PURE__ */ import_react.default.createElement("span", null, "\u23F1 Pause"), /* @__PURE__ */ import_react.default.createElement("b", null, Math.floor(left / 60) + ":" + String(left % 60).padStart(2, "0")), /* @__PURE__ */ import_react.default.createElement("button", { onClick: () => setRestEnd(restEnd + 30000) }, "+30 s"), /* @__PURE__ */ import_react.default.createElement("button", { onClick: () => setRestEnd(null) }, "Stop"));
     })(), noticeMsg && /* @__PURE__ */ import_react.default.createElement("div", { className: "day-flash notice-flash" }, noticeMsg), openNudge && !missedForced && (() => {
       const items = [...(appState.habitTemplate || []), ...(appState.kpiTemplate || [])].filter((h) => (h.name || "").trim() && habitOnDay(h, todayKey)).slice(0, 4);
       const nToday = apptsFor(todayKey).filter((x) => (x.title || "").trim()).length;
