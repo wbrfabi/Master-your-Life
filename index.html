@@ -12851,7 +12851,7 @@ try {
   function ymKey(year, monthIdx0) {
     return `${year}-${pad(monthIdx0 + 1)}`;
   }
-  var APP_BUILD = "Aufbau 98 \u2014 26.11.2026";
+  var APP_BUILD = "Aufbau 99 \u2014 26.11.2026";
   var ALARM_CATCHUP_MINUTES = 5;
   function hhmm(d = /* @__PURE__ */ new Date()) {
     return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
@@ -14090,6 +14090,12 @@ ${stamp}
       const dots = Array.from({ length: 14 }, (_, i) => addDaysKey(todayKey, i - 13));
       const srOf = (x) => Array.isArray(x.setReps) && x.setReps.length ? x.setReps.map(String) : Array.from({ length: Math.max(1, Number(x.sets) || 3) }, () => String(x.reps || "10"));
       const kgNum = (v) => Number(String(v == null ? "" : v).replace(",", ".")) || 0;
+      const kgOf = (x) => {
+        const n = srOf(x).length;
+        const arr = Array.isArray(x.setKg) && x.setKg.length ? x.setKg.map((v) => v == null ? "" : String(v)) : [];
+        const base = x.kg == null ? "" : String(x.kg);
+        return Array.from({ length: n }, (_, i) => i < arr.length ? arr[i] : arr.length ? arr[arr.length - 1] : base);
+      };
       const restMin = (x) => x.rest == null || x.rest === "" ? 2 : Number(String(x.rest).replace(",", ".")) || 0;
       const startRest = (x) => {
         const m = restMin(x);
@@ -14098,20 +14104,23 @@ ${stamp}
       const setEx = (id, patch) => saveTraining({ ...tl, exercises: exs.map((x) => x.id === id ? { ...x, ...patch } : x) });
       const setSR = (x, arr) => setEx(x.id, { setReps: arr });
       const bumpReps = (x, d) => setSR(x, srOf(x).map((r) => String(Math.max(0, (Number(r) || 0) + d))));
-      const bumpKg = (x, d) => {
-        const v = Math.max(0, Math.round((kgNum(x.kg) + d) * 10) / 10);
-        setEx(x.id, { kg: v > 0 ? String(v) : "" });
-      };
+      const setKgs = (x, arr) => setEx(x.id, { setKg: arr, kg: arr[0] || "" });
+      const bumpKg = (x, d) => setKgs(x, kgOf(x).map((k) => {
+        const v = Math.max(0, Math.round((kgNum(k) + d) * 10) / 10);
+        return v > 0 ? String(v) : "";
+      }));
       const addSet = (x) => {
         const a2 = srOf(x);
-        setSR(x, [...a2, a2[a2.length - 1] || "10"]);
+        const k2 = kgOf(x);
+        setEx(x.id, { setReps: [...a2, a2[a2.length - 1] || "10"], setKg: [...k2, k2[k2.length - 1] || ""] });
       };
       const delSet = (x) => {
         const a2 = srOf(x);
-        if (a2.length > 1) setSR(x, a2.slice(0, -1));
+        const k2 = kgOf(x);
+        if (a2.length > 1) setEx(x.id, { setReps: a2.slice(0, -1), setKg: k2.slice(0, -1) });
       };
       const logEx = (x) => {
-        saveTraining({ ...tl, log: { ...log, [todayKey]: { ...today, [x.id]: { setReps: srOf(x), kg: x.kg } } } });
+        saveTraining({ ...tl, log: { ...log, [todayKey]: { ...today, [x.id]: { setReps: srOf(x), setKg: kgOf(x), kg: kgOf(x)[0] || "" } } } });
         playSuccessChime();
         buzz(22);
         startRest(x);
@@ -14123,13 +14132,22 @@ ${stamp}
         }
         return null;
       };
-      const fmtE = (e) => srOf(e).join("/") + (e.kg ? " \xB7 " + e.kg + " kg" : "");
-      const vol = (e) => srOf(e).reduce((t, r) => t + (Number(r) || 0), 0) * (kgNum(e.kg) || 1);
+      const fmtE = (e) => {
+        const r = srOf(e);
+        const k = kgOf(e);
+        const same = k.every((v) => String(v) === String(k[0]));
+        if (same) return r.join("/") + (k[0] ? " \xB7 " + k[0] + " kg" : "");
+        return r.map((v, n) => v + (k[n] ? "\xD7" + k[n] : "")).join(" \xB7 ") + " kg";
+      };
+      const vol = (e) => {
+        const k = kgOf(e);
+        return srOf(e).reduce((t, r, n) => t + (Number(r) || 0) * (kgNum(k[n]) || 1), 0);
+      };
       const addEx = (g) => {
         const nm = trainDraft.name.trim();
         if (!nm) return;
         const n = Math.max(1, Math.min(10, Number(trainDraft.sets) || 3));
-        saveTraining({ ...tl, exercises: [...exs, { id: newId("e"), name: nm, group: g, setReps: Array.from({ length: n }, () => String(trainDraft.reps || "10")), kg: trainDraft.kg || "", rest: "2" }] });
+        saveTraining({ ...tl, exercises: [...exs, { id: newId("e"), name: nm, group: g, setReps: Array.from({ length: n }, () => String(trainDraft.reps || "10")), setKg: Array.from({ length: n }, () => String(trainDraft.kg || "")), kg: trainDraft.kg || "", rest: "2" }] });
         setTrainDraft({ ...trainDraft, name: "", kg: "" });
       };
       const addGroup = () => {
@@ -14180,12 +14198,23 @@ ${stamp}
           "div",
           { key: x.id, className: "train-ex" + (t ? " done" : "") },
           H("div", { className: "train-ex-top" }, H("span", { className: "train-ex-name" }, (t ? "✓ " : "") + x.name), H("button", { className: "habit-remove", onClick: () => askConfirm("„" + x.name + "“ wirklich l\xF6schen?", () => saveTraining({ ...tl, exercises: exs.filter((y) => y.id !== x.id) })), "aria-label": "\xDCbung l\xF6schen" }, "\xD7")),
-          H("div", { className: "settings-note", style: { margin: 0 } }, "Wiederholungen pro Satz (z.B. 12 / 10 / 8)"),
+          H("div", { className: "settings-note", style: { margin: 0 } }, "Pro Satz Wiederholungen und kg (z.B. 12 \xD7 20 kg, 10 \xD7 22,5 kg)"),
           H(
             "div",
             { className: "train-ex-inputs" },
-            sr.map((r, i) => H("label", { key: i }, "Satz " + (i + 1), H("input", { className: "train-in", type: "number", inputMode: "numeric", value: r, "aria-label": "Wiederholungen Satz " + (i + 1), onChange: (ev) => setSR(x, sr.map((v, j) => j === i ? ev.target.value : v)) }))),
-            H("label", { key: "kg" }, "kg", H("input", { className: "train-in", type: "number", inputMode: "decimal", value: x.kg || "", "aria-label": "kg", onChange: (ev) => setEx(x.id, { kg: ev.target.value }) })),
+            H(
+              "div",
+              { style: { display: "flex", flexDirection: "column", gap: 6, width: "100%" } },
+              sr.map((r, i) => H(
+                "div",
+                { key: i, style: { display: "flex", alignItems: "center", gap: 8 } },
+                H("span", { style: { width: 48, fontSize: 12, opacity: 0.75 } }, "Satz " + (i + 1)),
+                H("input", { className: "train-in", style: { flex: 1, minWidth: 0 }, type: "number", inputMode: "numeric", value: r, placeholder: "Wdh.", "aria-label": "Wiederholungen Satz " + (i + 1), onChange: (ev) => setSR(x, sr.map((v, j2) => j2 === i ? ev.target.value : v)) }),
+                H("span", { style: { fontSize: 12, opacity: 0.75 } }, "Wdh. \xD7"),
+                H("input", { className: "train-in", style: { flex: 1, minWidth: 0 }, type: "number", inputMode: "decimal", value: kgOf(x)[i], placeholder: "kg", "aria-label": "kg Satz " + (i + 1), onChange: (ev) => setKgs(x, kgOf(x).map((v, j2) => j2 === i ? ev.target.value : v)) }),
+                H("span", { style: { fontSize: 12, opacity: 0.75 } }, "kg")
+              ))
+            ),
             H("label", { key: "rest" }, "Pause (Min.)", H("input", { className: "train-in train-rest", type: "number", inputMode: "decimal", step: "0.5", value: x.rest == null ? "2" : x.rest, "aria-label": "Pause in Minuten", onChange: (ev) => setEx(x.id, { rest: ev.target.value }) }))
           ),
           p ? H("div", { className: "settings-note", style: { marginTop: 0 } }, "Letztes Mal (" + fmtDE(p.day).slice(0, 6) + "): " + fmtE(p.e) + (t && vol(t) > vol(p.e) ? "   ▲ gesteigert" : t && vol(t) < vol(p.e) ? "   ▼ weniger" : "")) : null,
@@ -14265,7 +14294,7 @@ ${stamp}
               { className: "train-ex-inputs" },
               H("label", null, "S\xE4tze", H("input", { className: "train-in", type: "number", inputMode: "numeric", value: trainDraft.sets, onChange: (ev) => setTrainDraft({ ...trainDraft, sets: ev.target.value }) })),
               H("label", null, "Wdh. je Satz", H("input", { className: "train-in", type: "number", inputMode: "numeric", value: trainDraft.reps, onChange: (ev) => setTrainDraft({ ...trainDraft, reps: ev.target.value }) })),
-              H("label", null, "kg (optional)", H("input", { className: "train-in", type: "number", inputMode: "decimal", value: trainDraft.kg, onChange: (ev) => setTrainDraft({ ...trainDraft, kg: ev.target.value }) }))
+              H("label", null, "kg alle S\xE4tze (optional)", H("input", { className: "train-in", type: "number", inputMode: "decimal", value: trainDraft.kg, onChange: (ev) => setTrainDraft({ ...trainDraft, kg: ev.target.value }) }))
             ),
             H("div", { className: "settings-note", style: { margin: 0 } }, "Pause zwischen den S\xE4tzen: standardm\xE4\xDFig 2 Minuten, pro \xDCbung \xE4nderbar."),
             H("button", { className: "train-btn primary", style: { marginLeft: 0 }, onClick: () => addEx(g) }, "+ \xDCbung hinzuf\xFCgen"),
